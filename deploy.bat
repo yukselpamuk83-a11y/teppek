@@ -4,7 +4,7 @@ echo.
 
 REM GitHub'a otomatik push
 git add .
-git commit -m "Otomatik güncelleme - %date% %time%"
+git commit -m "Otomatik güncelleme - %date% %time%" --author="yukselpamuk83-a11y <yukselpamuk83@gmail.com>"
 git push origin main
 
 echo.
