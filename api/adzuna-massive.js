@@ -3,12 +3,19 @@
 // İlk yükleme: Tüm veriler
 // Günlük: Son 24 saatin ilanları
 
-import { createClient } from '@supabase/supabase-js';
+// Supabase import - Vercel'de çalışması için dinamik
+let createClient;
+try {
+  const supabaseModule = require('@supabase/supabase-js');
+  createClient = supabaseModule.createClient;
+} catch (error) {
+  console.log('Supabase yüklü değil, fetch mode çalışacak');
+}
 
 // Supabase bağlantısı (veritabanı için)
 const supabaseUrl = process.env.SUPABASE_URL || 'https://rjtzvcykmqquozppdbeg.supabase.co';
 const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqdHp2Y3lrbXFxdW96cHBkYmVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjgyMzM0MjUsImV4cCI6MjA0MzgwOTQyNX0.3Secqgbh-eVFWNe7WuPVQWCfRYDiRr9pMgdVqGYJ1UM';
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient ? createClient(supabaseUrl, supabaseKey) : null;
 
 // Adzuna API Keys - 5 farklı key
 const API_KEYS = [
@@ -91,6 +98,14 @@ export default async function handler(req, res) {
   try {
     // MODE: SERVE - Veritabanından veri sun
     if (mode === 'serve') {
+      if (!supabase) {
+        return res.status(200).json({
+          success: false,
+          error: 'Veritabanı bağlantısı yok (Supabase yüklü değil)',
+          message: 'Lütfen fetch mode kullanın veya Supabase kütüphanesini yükleyin'
+        });
+      }
+      
       const offset = (parseInt(page) - 1) * parseInt(limit);
       
       // Supabase'den veri çek
@@ -185,8 +200,8 @@ export default async function handler(req, res) {
             
             allListings.push(...listings);
               
-              // Veritabanına kaydet (batch insert)
-              if (listings.length > 0) {
+              // Veritabanına kaydet (batch insert) - Supabase varsa
+              if (listings.length > 0 && supabase) {
                 try {
                   const { error } = await supabase
                     .from('listings')
@@ -203,6 +218,8 @@ export default async function handler(req, res) {
                 } catch (dbError) {
                   console.error('DB hatası:', dbError);
                 }
+              } else if (listings.length > 0) {
+                console.log(`📝 ${countryData.name}: ${listings.length} ilan çekildi (DB kaydı yok)`);
               }
             }
             
