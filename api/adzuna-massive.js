@@ -44,29 +44,20 @@ const ADZUNA_COUNTRIES = [
 ];
 
 // Veri çekme işlemi için yardımcı fonksiyon
-async function fetchAdzunaData(country, city, page, apiKey, searchTerm = 'all', maxDaysOld = null) {
+async function fetchAdzunaData(country, page, apiKey, maxDaysOld = 7) {
   try {
+    // Ülke genelinden veri çek (şehir belirtmeden)
     let url = `https://api.adzuna.com/v1/api/jobs/${country.code}/search/${page}?` +
       `app_id=${apiKey.app_id}&app_key=${apiKey.app_key}` +
       `&results_per_page=50` + // Maksimum sonuç
-      `&where=${encodeURIComponent(city)}` +
-      `&sort_by=date` +
+      `&sort_by=date` + // En yeni ilanlar önce
+      `&max_days_old=${maxDaysOld}` + // Son 7 günün ilanları
       `&content-type=application/json`;
-    
-    // Son 24 saat filtresi
-    if (maxDaysOld) {
-      url += `&max_days_old=${maxDaysOld}`;
-    }
-    
-    // Arama terimi
-    if (searchTerm !== 'all') {
-      url += `&what=${encodeURIComponent(searchTerm)}`;
-    }
     
     const response = await fetch(url);
     
     if (!response.ok) {
-      console.error(`API Hatası: ${country.code}/${city} - ${response.status}`);
+      console.error(`API Hatası: ${country.code} - ${response.status}`);
       return { results: [], count: 0 };
     }
     
@@ -74,7 +65,7 @@ async function fetchAdzunaData(country, city, page, apiKey, searchTerm = 'all', 
     return data;
     
   } catch (error) {
-    console.error(`Fetch hatası: ${country.code}/${city}`, error);
+    console.error(`Fetch hatası: ${country.code}`, error);
     return { results: [], count: 0 };
   }
 }
@@ -143,57 +134,56 @@ export default async function handler(req, res) {
       
       console.log(`🌍 ${countriesToFetch.length} ülkeden veri çekiliyor...`);
       
-      // Her ülke ve şehir için veri çek
+      // Her ülkeden veri çek (şehir belirtmeden, ülke geneli)
       for (const countryData of countriesToFetch) {
-        for (const city of countryData.cities) {
-          if (totalApiCalls >= maxApiCallsPerRun) break;
+        if (totalApiCalls >= maxApiCallsPerRun) break;
+        
+        // API key'i dönüşümlü kullan
+        const apiKey = API_KEYS[totalApiCalls % API_KEYS.length];
+        
+        // Son 7 günün ilanları (initial'da da günlük güncellemede de)
+        const maxDaysOld = 7;
+        
+        // Kaç sayfa çekeceğiz? (her sayfa 50 ilan)
+        const maxPages = initial ? 50 : 10; // İlk yüklemede 2500 ilan/ülke, günlükte 500
+        
+        console.log(`🌍 ${countryData.name} ülkesi işleniyor...`);
+        
+        for (let pageNum = 1; pageNum <= maxPages && totalApiCalls < maxApiCallsPerRun; pageNum++) {
+          const data = await fetchAdzunaData(
+            countryData, 
+            pageNum, 
+            apiKey, 
+            maxDaysOld
+          );
           
-          // API key'i dönüşümlü kullan
-          const apiKey = API_KEYS[totalApiCalls % API_KEYS.length];
+          totalApiCalls++;
           
-          // İlk yüklemede tüm veriler, günlük güncellemede son 1 gün
-          const maxDaysOld = initial ? null : 1;
-          
-          // Kaç sayfa çekeceğiz? (her sayfa 50 ilan)
-          const maxPages = initial ? 20 : 2; // İlk yüklemede 1000 ilan/şehir
-          
-          for (let pageNum = 1; pageNum <= maxPages && totalApiCalls < maxApiCallsPerRun; pageNum++) {
-            const data = await fetchAdzunaData(
-              countryData, 
-              city, 
-              pageNum, 
-              apiKey, 
-              'all', 
-              maxDaysOld
-            );
+          if (data.results && data.results.length > 0) {
+            // Veriyi dönüştür
+            const listings = data.results.map(job => ({
+              adzuna_id: job.id,
+              title: job.title,
+              company: job.company?.display_name,
+              description: job.description?.substring(0, 500),
+              location_city: job.location?.area?.[job.location.area.length - 1] || job.location?.display_name || countryData.name,
+              location_country: countryData.code,
+              location_lat: job.latitude,
+              location_lng: job.longitude,
+              location_address: job.location?.display_name,
+              salary_min: job.salary_min,
+              salary_max: job.salary_max,
+              salary_currency: 'USD',
+              salary_is_predicted: job.salary_is_predicted,
+              employment_type: job.contract_type,
+              contract_time: job.contract_time,
+              category: job.category?.label,
+              apply_url: job.redirect_url,
+              created_at: job.created,
+              source: 'adzuna'
+            }));
             
-            totalApiCalls++;
-            
-            if (data.results && data.results.length > 0) {
-              // Veriyi dönüştür
-              const listings = data.results.map(job => ({
-                adzuna_id: job.id,
-                title: job.title,
-                company: job.company?.display_name,
-                description: job.description?.substring(0, 500),
-                location_city: city,
-                location_country: countryData.code,
-                location_lat: job.latitude,
-                location_lng: job.longitude,
-                location_address: job.location?.display_name,
-                salary_min: job.salary_min,
-                salary_max: job.salary_max,
-                salary_currency: 'USD',
-                salary_is_predicted: job.salary_is_predicted,
-                employment_type: job.contract_type,
-                contract_time: job.contract_time,
-                category: job.category?.label,
-                apply_url: job.redirect_url,
-                created_at: job.created,
-                source: 'adzuna'
-              }));
-              
-              allListings.push(...listings);
+            allListings.push(...listings);
               
               // Veritabanına kaydet (batch insert)
               if (listings.length > 0) {
@@ -208,7 +198,7 @@ export default async function handler(req, res) {
                   if (error) {
                     console.error('Supabase insert hatası:', error);
                   } else {
-                    console.log(`✅ ${city}, ${countryData.code}: ${listings.length} ilan kaydedildi`);
+                    console.log(`✅ ${countryData.name}: ${listings.length} ilan kaydedildi (Sayfa ${pageNum})`);
                   }
                 } catch (dbError) {
                   console.error('DB hatası:', dbError);
@@ -228,7 +218,8 @@ export default async function handler(req, res) {
         apiCallsUsed: totalApiCalls,
         maxApiCalls: maxApiCallsPerRun,
         countries: [...new Set(allListings.map(l => l.location_country))].length,
-        cities: [...new Set(allListings.map(l => l.location_city))].length
+        daysOld: 7,
+        averagePerCountry: Math.round(allListings.length / countriesToFetch.length)
       };
       
       console.log('📊 Çekme İstatistikleri:', stats);
