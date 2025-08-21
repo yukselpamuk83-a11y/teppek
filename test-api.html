@@ -14,6 +14,7 @@
 <body>
     <h1>🔍 Teppek API Test</h1>
     
+    <button onclick="testNew()">Test 0: New Test API</button>
     <button onclick="testSimple()">Test 1: Simple API</button>
     <button onclick="testMassive()">Test 2: Massive API (Fetch)</button>
     <button onclick="testServe()">Test 3: Massive API (Serve)</button>
@@ -32,6 +33,16 @@
                 <pre>${JSON.stringify(data, null, 2)}</pre>
             `;
             resultsDiv.appendChild(div);
+        }
+        
+        async function testNew() {
+            try {
+                const response = await fetch('https://teppek.com/api/test-simple');
+                const data = await response.json();
+                addResult('New Test API', data.success, data);
+            } catch (error) {
+                addResult('New Test API', false, { error: error.message });
+            }
         }
         
         async function testSimple() {
