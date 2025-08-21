@@ -15,13 +15,13 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // API Anahtarları - 5 tane varsa ekleyin
+  // API Anahtarları - 5 farklı key
   const API_KEYS = [
-    { app_id: 'a19dd595', app_key: '0f8160edaa39c3dcac3962d77b32236b' },
-    // API KEY 2: { app_id: 'YOUR_APP_ID_2', app_key: 'YOUR_APP_KEY_2' },
-    // API KEY 3: { app_id: 'YOUR_APP_ID_3', app_key: 'YOUR_APP_KEY_3' },
-    // API KEY 4: { app_id: 'YOUR_APP_ID_4', app_key: 'YOUR_APP_KEY_4' },
-    // API KEY 5: { app_id: 'YOUR_APP_ID_5', app_key: 'YOUR_APP_KEY_5' },
+    { app_id: 'a19dd595', app_key: '0ca6f72f3a5cafae1643cfae18100181' }, // Key 1
+    { app_id: 'a19dd595', app_key: '0f8160edaa39c3dcac3962d77b32236b' }, // Key 2
+    { app_id: 'a19dd595', app_key: '1a2a55f9ad16c54c2b2e8efa67151f39' }, // Key 3
+    { app_id: 'a19dd595', app_key: '739d1471fef22292b75f15b401556bdb' }, // Key 4
+    { app_id: 'a19dd595', app_key: 'b7e0a6d929446aa1b9610dc3f8d22dd8' }, // Key 5
   ];
 
   const { lat, lng, forceRefresh } = req.query;

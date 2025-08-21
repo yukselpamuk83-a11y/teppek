@@ -10,14 +10,13 @@ const supabaseUrl = process.env.SUPABASE_URL || 'https://rjtzvcykmqquozppdbeg.su
 const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqdHp2Y3lrbXFxdW96cHBkYmVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjgyMzM0MjUsImV4cCI6MjA0MzgwOTQyNX0.3Secqgbh-eVFWNe7WuPVQWCfRYDiRr9pMgdVqGYJ1UM';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Adzuna API Keys - 5 tane kullanacağız
+// Adzuna API Keys - 5 farklı key
 const API_KEYS = [
-  { app_id: 'a19dd595', app_key: '0f8160edaa39c3dcac3962d77b32236b' },
-  // Diğer 4 API key'inizi buraya ekleyin
+  { app_id: 'a19dd595', app_key: '0ca6f72f3a5cafae1643cfae18100181' }, // Key 1
   { app_id: 'a19dd595', app_key: '0f8160edaa39c3dcac3962d77b32236b' }, // Key 2
-  { app_id: 'a19dd595', app_key: '0f8160edaa39c3dcac3962d77b32236b' }, // Key 3
-  { app_id: 'a19dd595', app_key: '0f8160edaa39c3dcac3962d77b32236b' }, // Key 4
-  { app_id: 'a19dd595', app_key: '0f8160edaa39c3dcac3962d77b32236b' }, // Key 5
+  { app_id: 'a19dd595', app_key: '1a2a55f9ad16c54c2b2e8efa67151f39' }, // Key 3
+  { app_id: 'a19dd595', app_key: '739d1471fef22292b75f15b401556bdb' }, // Key 4
+  { app_id: 'a19dd595', app_key: 'b7e0a6d929446aa1b9610dc3f8d22dd8' }, // Key 5
 ];
 
 // Adzuna'nın desteklediği TÜM ülkeler

@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   }
 
   const APP_ID = 'a19dd595';
-  const APP_KEY = '0f8160edaa39c3dcac3962d77b32236b';
+  const APP_KEY = '0ca6f72f3a5cafae1643cfae18100181'; // İlk key kullanılıyor
   
   try {
     // Sadece Londra'dan basit veri çek
