@@ -1,0 +1,8 @@
+{
+  "name": "teppek",
+  "version": "1.0.0",
+  "scripts": {
+    "deploy": "vercel --prod",
+    "dev": "vercel dev"
+  }
+}
