@@ -244,8 +244,10 @@
                 
                 const fetchListings = async () => {
                     try {
-                        console.log('🌍 Dünya genelinden iş ilanları yükleniyor...');
-                        const response = await fetch(`https://teppek.com/api/listings-multi-smart?lat=${userLocation.lat}&lng=${userLocation.lng}`);
+                        console.log('🌍 100.000+ iş ilanı yükleniyor...');
+                        // Veritabanından sayfalı veri çek
+                        const currentPage = 1; // İlk sayfa
+                        const response = await fetch(`https://teppek.com/api/adzuna-massive?mode=serve&page=${currentPage}&limit=500`);
                         const result = await response.json();
                         
                         if (result.success && result.listings) {
