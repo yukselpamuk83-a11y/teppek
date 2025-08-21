@@ -4,7 +4,7 @@
 
 let cachedData = null;
 let lastFetchTime = null;
-const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 saat cache (günde 4 güncelleme)
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 saat cache (günde 1 güncelleme)
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
