@@ -57,11 +57,11 @@
         
         async function testMassive() {
             try {
-                const response = await fetch('https://teppek.com/api/adzuna-massive?mode=fetch&initial=false&country=gb');
+                const response = await fetch('https://teppek.com/api/adzuna-massive-simple?country=gb&page=1');
                 const data = await response.json();
-                addResult('Massive API (Fetch)', data.success, data);
+                addResult('Massive API Simple', data.success, data);
             } catch (error) {
-                addResult('Massive API (Fetch)', false, { error: error.message });
+                addResult('Massive API Simple', false, { error: error.message });
             }
         }
         
