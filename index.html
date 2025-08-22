@@ -245,13 +245,12 @@
                 const fetchListings = async () => {
                     try {
                         console.log('🌍 100.000+ iş ilanı yükleniyor...');
-                        // Veritabanından sayfalı veri çek
-                        const currentPage = 1; // İlk sayfa
-                        const response = await fetch(`https://teppek.com/api/adzuna-massive?mode=serve&page=${currentPage}&limit=500`);
+                        // Yeni jobs API'sinden veri çek
+                        const response = await fetch(`https://teppek.com/api/jobs?per_page=100`);
                         const result = await response.json();
                         
-                        if (result.success && result.listings) {
-                            console.log(`✅ ${result.count} adet iş ilanı yüklendi!`);
+                        if (result.results && result.results.length > 0) {
+                            console.log(`✅ ${result.results.length} adet iş ilanı yüklendi!`);
                             if (result.stats) {
                                 console.log(`📊 İstatistikler:`, result.stats);
                                 console.log(`🌍 Ülkeler:`, Object.keys(result.stats.byCountry).join(', '));
@@ -264,8 +263,28 @@
                                     `💾 Cache'den (${result.cacheInfo.cacheHours} saatlik)` : 
                                     `🔄 Yeni veri çekildi`);
                             }
+                            // API verilerini harita formatına dönüştür
+                            const formattedJobs = result.results.map(job => ({
+                                id: `job-${job.id}`,
+                                type: 'job',
+                                title: job.title,
+                                company: job.company || 'Bilinmeyen Şirket',
+                                location: {
+                                    lat: parseFloat(job.lat) || 0,
+                                    lng: parseFloat(job.lon) || 0
+                                },
+                                address: `${job.city || ''}, ${job.region || ''}, ${job.country || ''}`.replace(/^,\s*|,\s*$/g, ''),
+                                description: `${job.title} pozisyonu için ${job.company} şirketi`,
+                                salary_min: job.salary_min,
+                                salary_max: job.salary_max,
+                                applyUrl: job.url,
+                                contact: null,
+                                source: job.provider || 'adzuna',
+                                postedDate: job.posted_at
+                            })).filter(job => job.location.lat && job.location.lng);
+                            
                             // Mevcut verilere ekle
-                            setData(prevData => [...prevData, ...result.listings]);
+                            setData(prevData => [...prevData, ...formattedJobs]);
                         }
                     } catch (error) {
                         console.error('Adzuna API hatası:', error);
