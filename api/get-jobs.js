@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
   } = req.query;
 
   const pageNum = Math.max(1, parseInt(page));
-  const limitNum = Math.min(2000, Math.max(1, parseInt(limit)));
+  const limitNum = Math.min(100000, Math.max(1, parseInt(limit)));
   const offset = (pageNum - 1) * limitNum;
 
   const pool = new Pool({

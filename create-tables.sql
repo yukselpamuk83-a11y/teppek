@@ -30,10 +30,14 @@ CREATE TABLE jobs (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Minimal indeksler
-CREATE INDEX idx_jobs_location ON jobs(lat, lon);  -- Harita sorguları
-CREATE INDEX idx_jobs_country ON jobs(country);    -- Ülke filtresi
+-- Optimized indeksler 100K+ ilan için
+CREATE INDEX idx_jobs_location ON jobs(lat, lon);           -- Harita sorguları
+CREATE INDEX idx_jobs_country ON jobs(country);             -- Ülke filtresi  
+CREATE INDEX idx_jobs_city ON jobs(city);                   -- Şehir filtresi
 CREATE INDEX idx_jobs_remote ON jobs(remote) WHERE remote = true;
+CREATE INDEX idx_jobs_salary ON jobs(salary_min, salary_max); -- Maaş filtresi
+CREATE INDEX idx_jobs_created_at ON jobs(created_at DESC);   -- Tarih sıralaması
+CREATE INDEX idx_jobs_title_search ON jobs USING gin(to_tsvector('english', title)); -- Metin arama
 
 -- Minimal test data
 INSERT INTO jobs (
