@@ -398,7 +398,35 @@
                                     <h2 className="text-xl font-bold">Sonuçlar</h2>
                                     <button onClick={() => setIsMobilePanelOpen(false)} className="text-gray-500 text-2xl">&times;</button>
                                 </div>
-                                <FilterComponent onFilterChange={setActiveFilters} setCurrentPage={setCurrentPage} isSubscribed={isSubscribed} onSubscribeToggle={() => setIsSubscribed(!isSubscribed)} />
+                                <FilterComponent onFilterChange={(filters) => {
+                                    if (filters.clearData) {
+                                        // Temiz veri ile data'yı güncelle
+                                        const formattedJobs = filters.clearData.map(job => ({
+                                            id: `db-${job.id}`,
+                                            type: 'job',
+                                            title: job.title,
+                                            company: job.company || 'Şirket Belirtilmemiş',
+                                            name: job.company,
+                                            location: {
+                                                lat: parseFloat(job.lat),
+                                                lng: parseFloat(job.lon)
+                                            },
+                                            address: `${job.city || ''}, ${job.country || ''}`.replace(/^,\\s*|,\\s*$/g, ''),
+                                            salary_min: job.salary_min,
+                                            salary_max: job.salary_max,
+                                            currency: job.currency,
+                                            applyUrl: job.source === 'manual' ? null : job.url,
+                                            contact: job.source === 'manual' ? job.contact : null,
+                                            source: job.source || 'unknown',
+                                            postedDate: job.created_at
+                                        })).filter(job => job.location.lat && job.location.lng);
+                                        
+                                        setData(formattedJobs);
+                                        setActiveFilters({ type: 'all', keyword: '' });
+                                    } else {
+                                        setActiveFilters(filters);
+                                    }
+                                }} setCurrentPage={setCurrentPage} isSubscribed={isSubscribed} onSubscribeToggle={() => setIsSubscribed(!isSubscribed)} />
                                 <ListComponent data={paginatedData} onRowClick={handleRowClick} isSubscribed={isSubscribed} userLocation={userLocation} onPremiumClick={() => setShowSubscriptionModal(true)} />
                                 <PaginationComponent currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                             </div>
@@ -424,7 +452,35 @@
                                 </div>
                             </div>
                             <div className="h-1/3 flex flex-col p-4 border-t bg-white">
-                                <FilterComponent onFilterChange={setActiveFilters} setCurrentPage={setCurrentPage} isSubscribed={isSubscribed} onSubscribeToggle={() => setIsSubscribed(!isSubscribed)} />
+                                <FilterComponent onFilterChange={(filters) => {
+                                    if (filters.clearData) {
+                                        // Temiz veri ile data'yı güncelle
+                                        const formattedJobs = filters.clearData.map(job => ({
+                                            id: `db-${job.id}`,
+                                            type: 'job',
+                                            title: job.title,
+                                            company: job.company || 'Şirket Belirtilmemiş',
+                                            name: job.company,
+                                            location: {
+                                                lat: parseFloat(job.lat),
+                                                lng: parseFloat(job.lon)
+                                            },
+                                            address: `${job.city || ''}, ${job.country || ''}`.replace(/^,\\s*|,\\s*$/g, ''),
+                                            salary_min: job.salary_min,
+                                            salary_max: job.salary_max,
+                                            currency: job.currency,
+                                            applyUrl: job.source === 'manual' ? null : job.url,
+                                            contact: job.source === 'manual' ? job.contact : null,
+                                            source: job.source || 'unknown',
+                                            postedDate: job.created_at
+                                        })).filter(job => job.location.lat && job.location.lng);
+                                        
+                                        setData(formattedJobs);
+                                        setActiveFilters({ type: 'all', keyword: '' });
+                                    } else {
+                                        setActiveFilters(filters);
+                                    }
+                                }} setCurrentPage={setCurrentPage} isSubscribed={isSubscribed} onSubscribeToggle={() => setIsSubscribed(!isSubscribed)} />
                                 <ListComponent data={paginatedData} onRowClick={handleRowClick} isSubscribed={isSubscribed} userLocation={userLocation} onPremiumClick={() => setShowSubscriptionModal(true)} />
                                 <PaginationComponent currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                             </div>
@@ -729,11 +785,29 @@
                 setCurrentPage(1);
             };
 
-            const handleClear = () => {
+            const handleClear = async () => {
+                // UI'yi hemen temizle
                 setLocalKeyword('');
                 setLocalFilterType('all');
-                onFilterChange({ type: 'all', keyword: '' });
                 setCurrentPage(1);
+                
+                // Database'den optimize edilmiş temiz veri çek
+                try {
+                    console.log('🧹 Filtreleri temizleniyor - optimize edilmiş veri çekiliyor...');
+                    
+                    const response = await fetch(`https://teppek.com/api/get-jobs?clear=true&limit=100000&page=1`);
+                    const result = await response.json();
+                    
+                    if (result.success && result.jobs) {
+                        // Parent component'e temiz veriyi aktar
+                        onFilterChange({ type: 'all', keyword: '', clearData: result.jobs });
+                        console.log(`✅ ${result.jobs.length} ilan temiz olarak yüklendi!`);
+                    }
+                } catch (error) {
+                    console.error('Temizleme hatası:', error);
+                    // Fallback - normal filtreleme
+                    onFilterChange({ type: 'all', keyword: '' });
+                }
             };
 
             return (

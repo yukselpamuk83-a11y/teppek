@@ -23,7 +23,8 @@ module.exports = async (req, res) => {
     city = '',        // Şehir filtresi  
     remote = '',      // Remote iş filtresi (true/false)
     page = '1',       // Sayfa numarası
-    limit = '20'      // Sayfa başına kayıt
+    limit = '20',     // Sayfa başına kayıt
+    clear = ''        // Filtreleri temizle (hızlı tüm veri)
   } = req.query;
 
   const pageNum = Math.max(1, parseInt(page));
@@ -39,37 +40,41 @@ module.exports = async (req, res) => {
   try {
     client = await pool.connect();
     
-    // WHERE koşullarını oluştur
-    const conditions = [];
-    const params = [];
+    // Eğer clear=true ise, hiçbir filtre uygulanmaz (hızlı tüm veri)
+    let whereClause = '';
+    let params = [];
     
-    if (q.trim()) {
-      params.push(`%${q.trim().toLowerCase()}%`);
-      conditions.push(`(
-        LOWER(title) LIKE $${params.length} OR 
-        LOWER(company) LIKE $${params.length} OR
-        LOWER(description) LIKE $${params.length}
-      )`);
-    }
-    
-    if (country.trim()) {
-      params.push(country.trim().toUpperCase());
-      conditions.push(`country = $${params.length}`);
-    }
-    
-    if (city.trim()) {
-      params.push(city.trim().toLowerCase());
-      conditions.push(`LOWER(city) = $${params.length}`);
-    }
-    
-    if (remote === 'true') {
-      conditions.push('remote = true');
-    } else if (remote === 'false') {
-      conditions.push('remote = false');
-    }
+    if (clear !== 'true') {
+      // Normal filtreleme
+      const conditions = [];
+      
+      if (q.trim()) {
+        params.push(`%${q.trim().toLowerCase()}%`);
+        conditions.push(`(
+          LOWER(title) LIKE $${params.length} OR 
+          LOWER(company) LIKE $${params.length}
+        )`);
+      }
+      
+      if (country.trim()) {
+        params.push(country.trim().toUpperCase());
+        conditions.push(`country = $${params.length}`);
+      }
+      
+      if (city.trim()) {
+        params.push(city.trim().toLowerCase());
+        conditions.push(`LOWER(city) = $${params.length}`);
+      }
+      
+      if (remote === 'true') {
+        conditions.push('remote = true');
+      } else if (remote === 'false') {
+        conditions.push('remote = false');
+      }
 
-    const whereClause = conditions.length > 0 ? 
-      `WHERE ${conditions.join(' AND ')}` : '';
+      whereClause = conditions.length > 0 ? 
+        `WHERE ${conditions.join(' AND ')}` : '';
+    }
 
     // Frontend için tüm form alanları + ilan türü ayırımı
     const mainQuery = `
