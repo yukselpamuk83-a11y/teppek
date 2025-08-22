@@ -74,7 +74,7 @@ module.exports = async (req, res) => {
     // Frontend için tüm form alanları + ilan türü ayırımı
     const mainQuery = `
       SELECT 
-        id, adzuna_id, title, company, description, city, country, 
+        id, adzuna_id, title, company, city, country, 
         lat, lon, url, contact, salary_min, salary_max, currency, 
         remote, source, created_at
       FROM jobs

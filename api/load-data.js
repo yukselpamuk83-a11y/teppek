@@ -75,14 +75,13 @@ async function saveToDatabase(client, job, country) {
   
   const query = `
     INSERT INTO jobs (
-      adzuna_id, title, company, description, country, city, 
+      adzuna_id, title, company, country, city, 
       lat, lon, url, salary_min, salary_max, currency, remote, source
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
     ) ON CONFLICT (adzuna_id) DO UPDATE SET
       title = EXCLUDED.title,
       company = EXCLUDED.company,
-      description = EXCLUDED.description,
       salary_min = EXCLUDED.salary_min,
       salary_max = EXCLUDED.salary_max
     RETURNING id;
@@ -100,32 +99,21 @@ async function saveToDatabase(client, job, country) {
   const isRemote = job.title.toLowerCase().includes('remote') || 
                    job.title.toLowerCase().includes('work from home');
   
-  // Description'ı temizle (HTML tag'leri kaldır, kısalt)
-  let description = null;
-  if (job.description) {
-    description = job.description
-      .replace(/<[^>]*>/g, '') // HTML tag'leri kaldır
-      .replace(/\s+/g, ' ')    // Çoklu boşlukları tek boşluğa çevir
-      .trim()
-      .substring(0, 500);      // 500 karakter sınırı
-  }
-
-  // Form uyumlu values array
+  // Minimal values array - sadece gerekli alanlar  
   const values = [
     job.id.toString(),                                    // Adzuna ID
-    job.title.substring(0, 500).trim(),                  // Title
-    job.company?.display_name?.substring(0, 200) || null, // Company
-    description,                                         // Description
+    job.title.substring(0, 200).trim(),                  // Title (kısaltıldı)
+    job.company?.display_name?.substring(0, 100) || null, // Company (kısaltıldı)
     country.toUpperCase(),                               // Country code
-    city?.substring(0, 100) || null,                    // City
+    city?.substring(0, 50) || null,                     // City (kısaltıldı)
     parseFloat(job.latitude),                           // Lat
     parseFloat(job.longitude),                          // Lon  
-    job.redirect_url,                                   // Apply URL (API ilanları)
-    Math.round(job.salary_min),                         // Min salary (zorunlu)
-    Math.round(job.salary_max),                         // Max salary (zorunlu)
+    job.redirect_url,                                   // Apply URL
+    Math.round(job.salary_min),                         // Min salary
+    Math.round(job.salary_max),                         // Max salary
     job.salary_currency?.substring(0, 3) || 'USD',      // Currency
     isRemote,                                           // Remote flag
-    'adzuna'                                            // Source (API)
+    'adzuna'                                            // Source
   ];
   
   try {
