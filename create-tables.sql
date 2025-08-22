@@ -8,6 +8,7 @@ CREATE TABLE jobs (
   -- Harita ve popup için kritik
   title VARCHAR(500) NOT NULL,               -- İlan başlığı
   company VARCHAR(200),                      -- Şirket adı
+  description TEXT,                          -- İlan açıklaması (popup için)
   lat DECIMAL(10, 8) NOT NULL,              -- Enlem (harita)
   lon DECIMAL(11, 8) NOT NULL,              -- Boylam (harita)
   url TEXT NOT NULL,                        -- Başvuru linki
