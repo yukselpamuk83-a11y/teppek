@@ -256,7 +256,7 @@
                             console.log(`🌍 Toplam: ${result.stats.total_jobs} ilan`);
                             console.log(`📄 Sayfa: ${result.stats.current_page}/${result.stats.total_pages}`);
                             
-                            // Database mapping - Popup için tüm alanlar
+                            // Database mapping - API ve Manuel ilanları ayır
                             const formattedJobs = result.jobs.map(job => ({
                                 id: `db-${job.id}`,
                                 type: 'job',
@@ -271,8 +271,10 @@
                                 salary_min: job.salary_min,
                                 salary_max: job.salary_max,
                                 currency: job.currency,
-                                applyUrl: job.url,
-                                source: 'adzuna',
+                                // İlan türüne göre iletişim/başvuru
+                                applyUrl: job.source === 'manual' ? null : job.url,  // API ilanlarında başvuru linki
+                                contact: job.source === 'manual' ? job.contact : null, // Manuel ilanlarda iletişim
+                                source: job.source || 'unknown',
                                 isRemote: job.remote,
                                 postedDate: job.created_at
                             })).filter(job => job.location.lat && job.location.lng);
@@ -600,22 +602,25 @@
                     let popupContent;
                     if (canView) {
                         const sponsoredPopupClass = item.isSponsored ? 'bg-yellow-50' : '';
-                        // Başvuru butonu - API veya manuel ilana göre
+                        // İlan türüne göre başvuru/iletişim
                         let applyButton = '';
-                        if (item.applyUrl) {
-                            // API'den gelen ilanlar (Adzuna)
+                        if (item.source === 'manual' && item.contact) {
+                            // Manuel ilanlar - İletişim bilgisi göster
+                            applyButton = `<div style="background-color: #f0f9ff; padding: 12px; border-radius: 8px; margin-top: 12px; border: 1px solid #bfdbfe;">
+                                <div style="font-weight: 600; color: #1e40af; margin-bottom: 6px; display: flex; align-items: center;">
+                                    <i class="fa-solid fa-envelope" style="margin-right: 6px; font-size: 14px;"></i>
+                                    İletişim Bilgileri
+                                </div>
+                                <div style="color: #1e40af; word-break: break-all; font-size: 14px;">${item.contact}</div>
+                            </div>`;
+                        } else if (item.applyUrl) {
+                            // API ilanları - Başvuru butonu
                             applyButton = `<a href="${item.applyUrl}" target="_blank" rel="noopener noreferrer" 
-                               style="display: block; width: 100%; background-color: #2563eb; color: white; font-weight: bold; padding: 10px 16px; border-radius: 8px; text-align: center; margin-top: 12px; text-decoration: none; transition: background-color 0.3s;"
+                               style="display: block; width: 100%; background-color: #2563eb; color: white; font-weight: bold; padding: 12px 16px; border-radius: 8px; text-align: center; margin-top: 12px; text-decoration: none; transition: background-color 0.3s;"
                                onmouseover="this.style.backgroundColor='#1d4ed8'" 
                                onmouseout="this.style.backgroundColor='#2563eb'">
                                 <i class="fa-solid fa-external-link-alt" style="margin-right: 8px;"></i>İlana Başvur
                             </a>`;
-                        } else if (item.contact) {
-                            // Manuel eklenen ilanlar
-                            applyButton = `<div style="background-color: #f3f4f6; padding: 10px; border-radius: 8px; margin-top: 12px;">
-                                <div style="font-weight: 600; color: #374151; margin-bottom: 4px;">İletişim Bilgileri:</div>
-                                <div style="color: #2563eb; word-break: break-all;">${item.contact}</div>
-                            </div>`;
                         }
                         
                         // Adzuna attribution - HER ZAMAN göster (Adzuna ilanları için zorunlu)
@@ -638,15 +643,12 @@
                                 ${item.company || item.name}
                             </div>
                             
-                            <!-- Maaş Bilgisi -->
-                            ${item.type === 'job' && (item.salary_min || item.salary_max) ? 
-                                `<div style="font-size: 15px; font-weight: bold; color: #059669; margin-bottom: 12px; padding: 8px; background-color: #f0fdf4; border-radius: 6px; display: flex; align-items: center;">
-                                    <i class="fa-solid fa-dollar-sign" style="margin-right: 8px; font-size: 14px;"></i>
-                                    ${item.currency || 'USD'} ${item.salary_min?.toLocaleString() || '?'} - ${item.salary_max?.toLocaleString() || '?'}
-                                    ${item.isRemote ? '<span style="color: #059669; margin-left: 8px;"><i class="fa-solid fa-house" style="margin-right: 4px; font-size: 12px;"></i>Remote</span>' : ''}
-                                </div>` : 
-                                item.isRemote ? '<div style="margin-bottom: 12px; color: #059669; font-weight: bold; padding: 8px; background-color: #f0fdf4; border-radius: 6px; display: flex; align-items: center;"><i class="fa-solid fa-house" style="margin-right: 8px; font-size: 14px;"></i>Remote İş</div>' : 
-                                ''}
+                            <!-- Maaş Bilgisi (Artık tüm ilanlarda var) -->
+                            <div style="font-size: 15px; font-weight: bold; color: #059669; margin-bottom: 12px; padding: 8px; background-color: #f0fdf4; border-radius: 6px; display: flex; align-items: center;">
+                                <i class="fa-solid fa-dollar-sign" style="margin-right: 8px; font-size: 14px;"></i>
+                                ${item.currency || 'USD'} ${item.salary_min?.toLocaleString() || '?'} - ${item.salary_max?.toLocaleString() || '?'}
+                                ${item.isRemote ? '<span style="color: #059669; margin-left: 8px;"><i class="fa-solid fa-house" style="margin-right: 4px; font-size: 12px;"></i>Remote</span>' : ''}
+                            </div>
                             
                             <!-- Açıklama (İlk 150 karakter) -->
                             <div style="font-size: 14px; color: #4b5563; margin-bottom: 12px; line-height: 1.4; border-left: 3px solid #e5e7eb; padding-left: 12px;">

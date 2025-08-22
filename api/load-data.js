@@ -32,11 +32,12 @@ const COUNTRIES = [
   'at', 'be', 'br', 'ch', 'in', 'mx', 'nz', 'pl', 'ru', 'za'
 ];
 
-// Adzuna'dan veri çek - Optimize edilmiş
+// API'dan veri çek - Sadece maaşlı ilanlar
 async function fetchFromAdzuna(country, page, apiKey, maxDays = 7) {
   const url = `https://api.adzuna.com/v1/api/jobs/${country}/search/${page}?` +
     `app_id=${apiKey.app_id}&app_key=${apiKey.app_key}` +
     `&results_per_page=50&sort_by=date&max_days_old=${maxDays}` +
+    `&salary_min=1` + // Sadece maaş bilgisi olan ilanlar
     `&what_exclude=internship%20volunteer%20unpaid` + // gereksiz ilanları filtrele
     `&content-type=application/json`;
   
@@ -48,9 +49,9 @@ async function fetchFromAdzuna(country, page, apiKey, maxDays = 7) {
   return response.json();
 }
 
-// MINIMAL database insertion - Sadece frontend'in ihtiyacı olan alanlar
+// API database insertion - Form alanlarına uygun + maaş zorunlu
 async function saveToDatabase(client, job, country) {
-  // Frontend için kritik alanları kontrol et
+  // Form gereksinimlerine uygun kontrol
   if (!job.id || !job.title || !job.redirect_url) {
     return false;
   }
@@ -60,7 +61,12 @@ async function saveToDatabase(client, job, country) {
     return false;
   }
   
-  // Spam ve kötü kalite kontrolü
+  // MAAŞ BİLGİSİ ZORUNLU - Form uyumlu
+  if (!job.salary_min || !job.salary_max) {
+    return false;
+  }
+  
+  // Kalite kontrolü
   if (job.title.length < 5 || 
       job.title.toLowerCase().includes('earn money') ||
       job.title.toLowerCase().includes('work from home $')) {
@@ -70,9 +76,9 @@ async function saveToDatabase(client, job, country) {
   const query = `
     INSERT INTO jobs (
       adzuna_id, title, company, description, country, city, 
-      lat, lon, url, salary_min, salary_max, currency, remote
+      lat, lon, url, salary_min, salary_max, currency, remote, source
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
     ) ON CONFLICT (adzuna_id) DO UPDATE SET
       title = EXCLUDED.title,
       company = EXCLUDED.company,
@@ -104,7 +110,7 @@ async function saveToDatabase(client, job, country) {
       .substring(0, 500);      // 500 karakter sınırı
   }
 
-  // Minimal values array
+  // Form uyumlu values array
   const values = [
     job.id.toString(),                                    // Adzuna ID
     job.title.substring(0, 500).trim(),                  // Title
@@ -114,11 +120,12 @@ async function saveToDatabase(client, job, country) {
     city?.substring(0, 100) || null,                    // City
     parseFloat(job.latitude),                           // Lat
     parseFloat(job.longitude),                          // Lon  
-    job.redirect_url,                                   // Apply URL
-    job.salary_min ? Math.round(job.salary_min) : null, // Min salary
-    job.salary_max ? Math.round(job.salary_max) : null, // Max salary
+    job.redirect_url,                                   // Apply URL (API ilanları)
+    Math.round(job.salary_min),                         // Min salary (zorunlu)
+    Math.round(job.salary_max),                         // Max salary (zorunlu)
     job.salary_currency?.substring(0, 3) || 'USD',      // Currency
-    isRemote                                            // Remote flag
+    isRemote,                                           // Remote flag
+    'adzuna'                                            // Source (API)
   ];
   
   try {

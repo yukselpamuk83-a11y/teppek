@@ -71,11 +71,12 @@ module.exports = async (req, res) => {
     const whereClause = conditions.length > 0 ? 
       `WHERE ${conditions.join(' AND ')}` : '';
 
-    // Frontend için temel alanlar (description olmadan)
+    // Frontend için tüm form alanları + ilan türü ayırımı
     const mainQuery = `
       SELECT 
-        id, adzuna_id, title, company, city, country, 
-        lat, lon, url, salary_min, salary_max, currency, remote, created_at
+        id, adzuna_id, title, company, description, city, country, 
+        lat, lon, url, contact, salary_min, salary_max, currency, 
+        remote, source, created_at
       FROM jobs
       ${whereClause}
       ORDER BY created_at DESC

@@ -11,19 +11,22 @@ CREATE TABLE jobs (
   description TEXT,                          -- İlan açıklaması (popup için)
   lat DECIMAL(10, 8) NOT NULL,              -- Enlem (harita)
   lon DECIMAL(11, 8) NOT NULL,              -- Boylam (harita)
-  url TEXT NOT NULL,                        -- Başvuru linki
+  -- Başvuru bilgileri (farklı ilan türleri için)
+  url TEXT,                                 -- API ilanları için başvuru linki  
+  contact TEXT,                             -- Manuel ilanlar için iletişim
   
   -- Filtreleme ve arama için
   country VARCHAR(2) NOT NULL,              -- Ülke kodu (GB, US, etc)
   city VARCHAR(100),                        -- Şehir
   remote BOOLEAN DEFAULT false,             -- Remote iş mi
   
-  -- Maaş bilgileri (opsiyonel)
-  salary_min INTEGER,
-  salary_max INTEGER,
+  -- Maaş bilgileri (zorunlu - form uyumlu)
+  salary_min INTEGER NOT NULL,             -- Minimum maaş (zorunlu)
+  salary_max INTEGER NOT NULL,             -- Maximum maaş (zorunlu) 
   currency VARCHAR(3) DEFAULT 'USD',
   
   -- Meta
+  source VARCHAR(20) DEFAULT 'manual',      -- 'adzuna', 'manual', 'other-api'
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
