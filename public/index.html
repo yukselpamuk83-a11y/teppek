@@ -377,9 +377,12 @@
                 <>
                     {showSubscriptionModal && <SubscriptionModal onClose={() => setShowSubscriptionModal(false)} />}
                     
+                    {/* Header Navigation */}
+                    <HeaderComponent />
+                    
                     {isMobile ? (
                         // --- MOBİL GÖRÜNÜM ---
-                        <div className="h-full w-full relative">
+                        <div className="h-[calc(100vh-60px)] w-full relative">
                             <MapComponent data={processedData} selectedLocation={selectedLocation} isSubscribed={isSubscribed} userLocation={userLocation} onPremiumClick={() => setShowSubscriptionModal(true)} />
                             
                             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] flex gap-4">
@@ -442,7 +445,7 @@
                         </div>
                     ) : (
                         // --- WEB/MASAÜSTÜ GÖRÜNÜM ---
-                        <div className="h-full w-full flex flex-col">
+                        <div className="h-[calc(100vh-60px)] w-full flex flex-col">
                             <div className="flex h-2/3">
                                 <div className="w-[35%] h-full p-4 bg-gray-50 overflow-y-auto">
                                     <EntryFormComponent onAddEntry={handleAddEntry} userLocation={userLocation} />
@@ -491,6 +494,30 @@
         }
         
         // --- ALT BİLEŞENLER ---
+
+        function HeaderComponent() {
+            return (
+                <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-[1000]">
+                    {/* Logo */}
+                    <div className="flex items-center space-x-4">
+                        <h1 className="text-2xl font-bold text-blue-600">Teppek</h1>
+                        <span className="text-sm text-gray-500">Global İş Platformu</span>
+                    </div>
+                    
+                    {/* Navigation Buttons */}
+                    <div className="flex items-center space-x-4">
+                        <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                            <i className="fa-solid fa-building mr-2"></i>
+                            Firma Girişi
+                        </button>
+                        <button className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold">
+                            <i className="fa-solid fa-user mr-2"></i>
+                            Aday Girişi
+                        </button>
+                    </div>
+                </header>
+            );
+        }
 
         function EntryFormComponent({ onAddEntry, userLocation }) {
             const [entryType, setEntryType] = useState('job');
