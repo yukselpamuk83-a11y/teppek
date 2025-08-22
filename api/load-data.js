@@ -76,14 +76,17 @@ async function saveToDatabase(client, job, country) {
   const query = `
     INSERT INTO jobs (
       adzuna_id, title, company, country, city, 
-      lat, lon, url, salary_min, salary_max, currency, remote, source
+      lat, lon, url, salary_min, salary_max, currency, remote, source,
+      marker_html, popup_html, icon_type
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
     ) ON CONFLICT (adzuna_id) DO UPDATE SET
       title = EXCLUDED.title,
       company = EXCLUDED.company,
       salary_min = EXCLUDED.salary_min,
-      salary_max = EXCLUDED.salary_max
+      salary_max = EXCLUDED.salary_max,
+      marker_html = EXCLUDED.marker_html,
+      popup_html = EXCLUDED.popup_html
     RETURNING id;
   `;
   
@@ -99,7 +102,27 @@ async function saveToDatabase(client, job, country) {
   const isRemote = job.title.toLowerCase().includes('remote') || 
                    job.title.toLowerCase().includes('work from home');
   
-  // Minimal values array - sadece gerekli alanlar  
+  // Pre-computed marker HTML
+  const markerHtml = `<div class="marker-container"><div class="icon-wrapper" style="border-color: #0097A7;"><i class="fa-solid fa-briefcase" style="color: #0097A7;"></i></div><div class="marker-label">${job.title.substring(0, 50)}</div></div>`;
+  
+  // Pre-computed popup HTML
+  const address = `${city || ''}, ${country.toUpperCase()}`.replace(/^,\s*|,\s*$/g, '');
+  const popupHtml = `
+    <div class="custom-popup-container">
+        <div style="font-size: 18px; font-weight: bold; color: #1f2937; margin-bottom: 8px;">${job.title}</div>
+        <div style="font-size: 15px; font-weight: bold; color: #059669; margin-bottom: 12px; padding: 8px; background-color: #f0fdf4; border-radius: 6px; display: flex; align-items: center;">
+            <i class="fa-solid fa-dollar-sign" style="margin-right: 8px; font-size: 14px;"></i>
+            ${job.salary_currency || 'USD'} ${Math.round(job.salary_min)?.toLocaleString() || '?'} - ${Math.round(job.salary_max)?.toLocaleString() || '?'}
+        </div>
+        <div style="font-size: 14px; color: #4b5563; margin-bottom: 12px; line-height: 1.4; border-left: 3px solid #e5e7eb; padding-left: 12px;">
+            <i class="fa-solid fa-building" style="margin-right: 8px; color: #6b7280;"></i>${job.company?.display_name || 'Şirket bilgisi mevcut değil'}
+            <br><i class="fa-solid fa-location-dot" style="margin-right: 8px; color: #6b7280; margin-top: 4px;"></i>${address}
+        </div>
+        <a href="${job.redirect_url}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #059669; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-bottom: 8px;">İlana Başvur</a>
+        <div style="text-align: center; margin-top: 8px; font-size: 11px; color: #9ca3af;">Powered by Adzuna</div>
+    </div>`;
+  
+  // Minimal values array + pre-computed HTML
   const values = [
     job.id.toString(),                                    // Adzuna ID
     job.title.substring(0, 200).trim(),                  // Title (kısaltıldı)
@@ -113,7 +136,10 @@ async function saveToDatabase(client, job, country) {
     Math.round(job.salary_max),                         // Max salary
     job.salary_currency?.substring(0, 3) || 'USD',      // Currency
     isRemote,                                           // Remote flag
-    'adzuna'                                            // Source
+    'adzuna',                                           // Source
+    markerHtml,                                         // Pre-computed marker
+    popupHtml,                                          // Pre-computed popup
+    'job'                                               // Icon type
   ];
   
   try {

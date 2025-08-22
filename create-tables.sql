@@ -27,7 +27,13 @@ CREATE TABLE jobs (
   
   -- Meta
   source VARCHAR(20) DEFAULT 'manual',      -- 'adzuna', 'manual', 'other-api'
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- Harita için pre-computed veriler
+  marker_html TEXT,                         -- Hazır marker HTML
+  popup_html TEXT,                          -- Hazır popup HTML
+  icon_type VARCHAR(20) DEFAULT 'job',      -- Marker icon türü
+  distance_km DECIMAL(8,2)                  -- Kullanıcıya uzaklık (güncellenecek)
 );
 
 -- Optimized indeksler 100K+ ilan için

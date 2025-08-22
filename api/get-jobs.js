@@ -76,7 +76,7 @@ module.exports = async (req, res) => {
       SELECT 
         id, adzuna_id, title, company, city, country, 
         lat, lon, url, contact, salary_min, salary_max, currency, 
-        remote, source, created_at
+        remote, source, created_at, marker_html, popup_html, icon_type
       FROM jobs
       ${whereClause}
       ORDER BY created_at DESC
