@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teppek - Veri Yükleme Testi</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        h1 { color: #333; }
+        .button { padding: 12px 24px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .button:hover { background: #0056b3; }
+        .button:disabled { background: #ccc; cursor: not-allowed; }
+        .result { margin: 15px 0; padding: 15px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+        .status { font-weight: bold; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Teppek Veri Yükleme Testi</h1>
+        
+        <div class="status" id="status">Hazır</div>
+        
+        <button class="button" onclick="testIngest()">📊 Veri Yükleme Testi (GB - 1 gün)</button>
+        <button class="button" onclick="testJobs()">📋 İş İlanlarını Görüntüle</button>
+        <button class="button" onclick="testMultipleCountries()">🌍 Çoklu Ülke Yükleme</button>
+        <button class="button" onclick="clearResults()">🗑️ Temizle</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function addResult(title, type, data) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = `
+                <h3>${title}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            resultsDiv.appendChild(resultDiv);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        function setStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            setStatus('Hazır');
+        }
+        
+        async function testIngest() {
+            setStatus('⏳ Veri yükleniyor...');
+            try {
+                const response = await fetch('https://teppek.com/api/ingest?days=1&countries=gb');
+                const data = await response.json();
+                
+                if (data.ok) {
+                    addResult('✅ Veri Yükleme Başarılı', 'success', data);
+                    setStatus('✅ Veri yükleme tamamlandı');
+                } else {
+                    addResult('❌ Veri Yükleme Hatası', 'error', data);
+                    setStatus('❌ Hata oluştu');
+                }
+            } catch (error) {
+                addResult('❌ Bağlantı Hatası', 'error', { error: error.message });
+                setStatus('❌ Bağlantı hatası');
+            }
+        }
+        
+        async function testJobs() {
+            setStatus('📋 İş ilanları getiriliyor...');
+            try {
+                const response = await fetch('https://teppek.com/api/jobs?per_page=5');
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    addResult('📋 İş İlanları', 'success', {
+                        count: data.results.length,
+                        sample: data.results.slice(0, 2) // İlk 2 ilanı göster
+                    });
+                    setStatus('📋 İş ilanları listelendi');
+                } else {
+                    addResult('⚠️ İlan Bulunamadı', 'info', data);
+                    setStatus('⚠️ Henüz veri yok');
+                }
+            } catch (error) {
+                addResult('❌ İlan Getirme Hatası', 'error', { error: error.message });
+                setStatus('❌ İlan getirilemedi');
+            }
+        }
+        
+        async function testMultipleCountries() {
+            setStatus('🌍 Çoklu ülke yükleniyor...');
+            const countries = ['gb', 'us', 'de'];
+            
+            for (const country of countries) {
+                try {
+                    addResult(`🔄 ${country.toUpperCase()} yükleniyor...`, 'info', { country });
+                    
+                    const response = await fetch(`https://teppek.com/api/ingest?days=1&countries=${country}`);
+                    const data = await response.json();
+                    
+                    if (data.ok) {
+                        addResult(`✅ ${country.toUpperCase()} Başarılı`, 'success', data);
+                    } else {
+                        addResult(`❌ ${country.toUpperCase()} Hata`, 'error', data);
+                    }
+                    
+                    // Ülkeler arası bekleme
+                    if (countries.indexOf(country) < countries.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 3000));
+                    }
+                    
+                } catch (error) {
+                    addResult(`❌ ${country.toUpperCase()} Bağlantı Hatası`, 'error', { error: error.message });
+                }
+            }
+            
+            setStatus('🎉 Çoklu ülke yükleme tamamlandı');
+            
+            // Son olarak tüm ilanları göster
+            setTimeout(() => testJobs(), 2000);
+        }
+    </script>
+</body>
+</html>
