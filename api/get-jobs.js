@@ -71,13 +71,12 @@ module.exports = async (req, res) => {
     const whereClause = conditions.length > 0 ? 
       `WHERE ${conditions.join(' AND ')}` : '';
 
-    // Ana sorgu
+    // Minimal ana sorgu - Sadece gerekli alanlar
     const mainQuery = `
       SELECT 
-        id, provider, provider_id, title, company, description,
-        city, region, country, lat, lon, url, email, phone,
-        salary_min, salary_max, currency, employment_type, 
-        contract_time, remote, posted_at, created_at
+        id, provider_id, title, company, city, country, 
+        lat, lon, url, salary_min, salary_max, currency, 
+        employment_type, remote, posted_at, created_at
       FROM jobs
       ${whereClause}
       ORDER BY posted_at DESC NULLS LAST, created_at DESC

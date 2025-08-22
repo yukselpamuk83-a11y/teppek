@@ -44,46 +44,67 @@ async function fetchFromAdzuna(country, page, apiKey, maxDays = 7) {
   return response.json();
 }
 
-// PostgreSQL'e kaydet
+// Minimal PostgreSQL kaydetme - Sadece gerekli alanlar
 async function saveToDatabase(client, job, country) {
+  // Gerekli alanlar yoksa kaydetme
+  if (!job.id || !job.title || !job.redirect_url) {
+    return false;
+  }
+  
+  // Lokasyon yoksa kaydetme (harita için gerekli)
+  if (!job.latitude || !job.longitude) {
+    return false;
+  }
+  
   const query = `
     INSERT INTO jobs (
-      provider, provider_id, title, company, city, region, country,
-      lat, lon, url, posted_at, salary_min, salary_max, currency,
-      contract_time, remote, raw
+      provider_id, title, company, country, city, 
+      lat, lon, url, salary_min, salary_max, currency,
+      employment_type, remote, posted_at
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
-    ) ON CONFLICT (provider, provider_id) DO NOTHING
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+    ) ON CONFLICT (provider_id) DO UPDATE SET
+      title = EXCLUDED.title,
+      company = EXCLUDED.company,
+      posted_at = EXCLUDED.posted_at
     RETURNING id;
   `;
   
+  // Şehir bilgisini akıllıca çıkar
   const city = Array.isArray(job.location?.area) ? 
-    job.location.area[job.location.area.length - 1] : null;
-  const region = Array.isArray(job.location?.area) ? 
-    job.location.area[job.location.area.length - 2] : null;
+    job.location.area[job.location.area.length - 1] : 
+    (job.location?.display_name?.split(',')[0] || null);
+  
+  // Remote işi tespit et
+  const isRemote = job.title?.toLowerCase().includes('remote') || 
+                   job.description?.toLowerCase().includes('remote') ||
+                   job.contract_time?.toLowerCase().includes('remote') || false;
   
   const values = [
-    'adzuna',
-    String(job.id),
-    job.title || null,
-    job.company?.display_name || null,
-    city || null,
-    region || null,
+    `adzuna-${job.id}`, // Unique ID
+    job.title.substring(0, 500), // Başlık limit
+    job.company?.display_name?.substring(0, 300) || null,
     country.toUpperCase(),
-    job.latitude || null,
-    job.longitude || null,
-    job.redirect_url || null,
-    job.created ? new Date(job.created) : null,
-    job.salary_min || null,
-    job.salary_max || null,
-    job.salary_currency || null,
-    job.contract_time || null,
-    false, // remote
-    job // raw JSON data
+    city?.substring(0, 100) || null,
+    parseFloat(job.latitude),
+    parseFloat(job.longitude),
+    job.redirect_url,
+    job.salary_min ? Math.round(job.salary_min) : null,
+    job.salary_max ? Math.round(job.salary_max) : null,
+    job.salary_currency?.substring(0, 5) || 'USD',
+    job.contract_type?.substring(0, 50) || 'full-time',
+    isRemote,
+    job.created ? new Date(job.created) : new Date()
   ];
   
-  const result = await client.query(query, values);
-  return result.rowCount > 0;
+  try {
+    const result = await client.query(query, values);
+    return result.rowCount > 0;
+  } catch (error) {
+    // Duplicate veya validation hatalarını yoksay
+    if (error.code === '23505') return false; // Duplicate
+    throw error;
+  }
 }
 
 module.exports = async (req, res) => {
