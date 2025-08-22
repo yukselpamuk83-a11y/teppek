@@ -637,18 +637,20 @@
                                 🏢 ${item.company || item.name}
                             </div>
                             
-                            <!-- Maaş Bilgisi -->
-                            ${item.type === 'job' && (item.salary_min || item.salary_max) ? 
+                            <!-- Maaş Bilgisi veya Remote İş -->
+                            ${item.type === 'job' ? 
                                 `<div style="font-size: 15px; font-weight: bold; color: #059669; margin-bottom: 12px; padding: 8px; background-color: #f0fdf4; border-radius: 6px;">
-                                    💰 ${item.currency || 'USD'} ${item.salary_min?.toLocaleString() || '?'} - ${item.salary_max?.toLocaleString() || '?'}
+                                    ${(item.salary_min || item.salary_max) ? 
+                                        `💰 ${item.currency || 'USD'} ${item.salary_min?.toLocaleString() || '?'} - ${item.salary_max?.toLocaleString() || '?'}` :
+                                        '💰 Maaş bilgisi belirtilmemiş'
+                                    }
                                     ${item.isRemote ? '<span style="color: #059669; margin-left: 8px;">🏠 Remote</span>' : ''}
                                 </div>` : 
-                                item.isRemote ? '<div style="margin-bottom: 12px; color: #059669; font-weight: bold; padding: 8px; background-color: #f0fdf4; border-radius: 6px;">🏠 Remote İş</div>' : 
                                 ''}
                             
-                            <!-- Açıklama (İlk 100 karakter) -->
+                            <!-- Açıklama (İlk 150 karakter) -->
                             <div style="font-size: 14px; color: #4b5563; margin-bottom: 12px; line-height: 1.4; border-left: 3px solid #e5e7eb; padding-left: 12px;">
-                                ${item.description ? item.description.substring(0, 100) + (item.description.length > 100 ? '...' : '') : 'Açıklama mevcut değil.'}
+                                ${item.description ? item.description.substring(0, 150) + (item.description.length > 150 ? '...' : '') : 'Açıklama mevcut değil.'}
                             </div>
                             
                             <!-- Lokasyon -->

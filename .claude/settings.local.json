@@ -5,7 +5,8 @@
       "WebFetch(domain:api.adzuna.com)",
       "Bash(git add:*)",
       "Bash(git push:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "WebFetch(domain:teppek.com)"
     ],
     "deny": [],
     "ask": []
