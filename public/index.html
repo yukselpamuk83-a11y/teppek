@@ -308,10 +308,7 @@
             useEffect(() => {
                 const handleResize = () => {
                     setIsMobile(window.innerWidth < 768);
-                    // Harita boyutunu güncelle
-                    if (mapInstance.current) {
-                        setTimeout(() => mapInstance.current.invalidateSize(), 100);
-                    }
+                    // Harita boyutu güncelleme MapComponent içinde yapılacak
                 };
                 window.addEventListener('resize', handleResize);
                 return () => window.removeEventListener('resize', handleResize);
