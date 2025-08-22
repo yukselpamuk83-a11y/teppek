@@ -37,8 +37,8 @@ async function fetchFromAdzuna(country, page, apiKey, maxDays = 7) {
   const url = `https://api.adzuna.com/v1/api/jobs/${country}/search/${page}?` +
     `app_id=${apiKey.app_id}&app_key=${apiKey.app_key}` +
     `&results_per_page=50&sort_by=date&max_days_old=${maxDays}` +
-    `&salary_min=1` + // Sadece maaş bilgisi olan ilanlar
-    `&what_exclude=internship%20volunteer%20unpaid` + // gereksiz ilanları filtrele
+    `&salary_min=20000&salary_max=999999` + // Sadece gerçek maaşlı ilanlar
+    `&what_exclude=internship%20volunteer%20unpaid%20commission%20freelance` + // maaşsızları filtrele
     `&content-type=application/json`;
   
   const response = await fetch(url);
