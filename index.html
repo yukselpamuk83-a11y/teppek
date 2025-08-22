@@ -267,7 +267,7 @@
                                     lng: parseFloat(job.lon)
                                 },
                                 address: `${job.city || ''}, ${job.country || ''}`.replace(/^,\s*|,\s*$/g, ''),
-                                description: job.description || `${job.title} pozisyonu için açıklama mevcut değil.`,
+                                // description alanı kaldırıldı - database'de yok
                                 salary_min: job.salary_min,
                                 salary_max: job.salary_max,
                                 currency: job.currency,
@@ -650,9 +650,10 @@
                                 ${item.isRemote ? '<span style="color: #059669; margin-left: 8px;"><i class="fa-solid fa-house" style="margin-right: 4px; font-size: 12px;"></i>Remote</span>' : ''}
                             </div>
                             
-                            <!-- Açıklama (İlk 150 karakter) -->
+                            <!-- Şirket ve Lokasyon Bilgisi -->
                             <div style="font-size: 14px; color: #4b5563; margin-bottom: 12px; line-height: 1.4; border-left: 3px solid #e5e7eb; padding-left: 12px;">
-                                ${item.description ? item.description.substring(0, 150) + (item.description.length > 150 ? '...' : '') : 'Açıklama mevcut değil.'}
+                                <i class="fa-solid fa-building" style="margin-right: 8px; color: #6b7280;"></i>${item.company || 'Şirket bilgisi mevcut değil'}
+                                <br><i class="fa-solid fa-location-dot" style="margin-right: 8px; color: #6b7280; margin-top: 4px;"></i>${item.address}
                             </div>
                             
                             <!-- Lokasyon -->
@@ -788,7 +789,7 @@
                                                         {item.isSponsored && <span className="px-2 py-1 rounded-full text-xs font-semibold text-yellow-800 bg-yellow-200">Sponsorlu</span>}
                                                     </div>
                                                 </td>
-                                                <td className="p-3"><p className="font-bold">{item.title}</p><p className={`text-gray-600 text-xs mt-1 ${!canView && 'blur-sm'}`}>{item.description.substring(0, 70)}...</p></td>
+                                                <td className="p-3"><p className="font-bold">{item.title}</p><p className={`text-gray-600 text-xs mt-1 ${!canView && 'blur-sm'}`}>{item.company || 'Şirket bilgisi mevcut değil'}</p></td>
                                                 <td className={`p-3 text-gray-700 ${!canView && 'blur-sm'}`}>{item.company || item.name}</td>
                                                 <td className={`p-3 text-gray-700 font-medium whitespace-nowrap ${!canView && 'blur-sm'}`}>{distance.toFixed(1)} km</td>
                                                 <td className="p-3 text-gray-600">{item.address}</td>
