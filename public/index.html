@@ -674,8 +674,17 @@
                         const sponsoredPopupClass = item.isSponsored ? 'bg-yellow-50' : '';
                         // İlan türüne göre başvuru/iletişim
                         let applyButton = '';
-                        if (item.source === 'manual' && item.contact) {
-                            // Manuel ilanlar - İletişim bilgisi göster
+                        if (item.type === 'cv' && item.contact) {
+                            // CV - İletişim bilgisi
+                            applyButton = `<div style="background-color: #fff7ed; padding: 12px; border-radius: 8px; margin-top: 12px; border: 1px solid #fed7aa;">
+                                <div style="font-weight: 600; color: #ea580c; margin-bottom: 6px; display: flex; align-items: center;">
+                                    <i class="fa-solid fa-phone" style="margin-right: 6px; font-size: 14px;"></i>
+                                    İletişim Bilgileri
+                                </div>
+                                <div style="color: #ea580c; word-break: break-all; font-size: 14px;">${item.contact}</div>
+                            </div>`;
+                        } else if (item.type === 'job' && item.source === 'manual' && item.contact) {
+                            // Manuel İş İlanı - İletişim bilgisi
                             applyButton = `<div style="background-color: #f0f9ff; padding: 12px; border-radius: 8px; margin-top: 12px; border: 1px solid #bfdbfe;">
                                 <div style="font-weight: 600; color: #1e40af; margin-bottom: 6px; display: flex; align-items: center;">
                                     <i class="fa-solid fa-envelope" style="margin-right: 6px; font-size: 14px;"></i>
@@ -683,8 +692,8 @@
                                 </div>
                                 <div style="color: #1e40af; word-break: break-all; font-size: 14px;">${item.contact}</div>
                             </div>`;
-                        } else if (item.applyUrl) {
-                            // API ilanları - Başvuru butonu
+                        } else if (item.type === 'job' && item.applyUrl) {
+                            // API İş İlanı - Başvuru butonu
                             applyButton = `<a href="${item.applyUrl}" target="_blank" rel="noopener noreferrer" 
                                style="display: block; width: 100%; background-color: #2563eb; color: white; font-weight: bold; padding: 12px 16px; border-radius: 8px; text-align: center; margin-top: 12px; text-decoration: none; transition: background-color 0.3s;"
                                onmouseover="this.style.backgroundColor='#1d4ed8'" 
@@ -710,17 +719,28 @@
                             <!-- Şirket Adı -->
                             <!-- Başlık alanı - şirket bilgisi kaldırıldı -->
                             
-                            <!-- Maaş Bilgisi (Artık tüm ilanlarda var) -->
+                            <!-- Maaş Bilgisi (Sadece iş ilanları için) -->
+                            ${item.type === 'job' ? `
                             <div style="font-size: 15px; font-weight: bold; color: #059669; margin-bottom: 12px; padding: 8px; background-color: #f0fdf4; border-radius: 6px; display: flex; align-items: center;">
                                 <i class="fa-solid fa-dollar-sign" style="margin-right: 8px; font-size: 14px;"></i>
                                 ${item.currency || 'USD'} ${item.salary_min?.toLocaleString() || '?'} - ${item.salary_max?.toLocaleString() || '?'}
                             </div>
+                            ` : ''}
                             
-                            <!-- Şirket ve Lokasyon Bilgisi -->
+                            <!-- İş İlanı için Şirket Bilgisi / CV için Kişi Bilgisi -->
+                            ${item.type === 'job' ? `
                             <div style="font-size: 14px; color: #4b5563; margin-bottom: 12px; line-height: 1.4; border-left: 3px solid #e5e7eb; padding-left: 12px;">
                                 <i class="fa-solid fa-building" style="margin-right: 8px; color: #6b7280;"></i>${item.company || 'Şirket bilgisi mevcut değil'}
                                 <br><i class="fa-solid fa-location-dot" style="margin-right: 8px; color: #6b7280; margin-top: 4px;"></i>${item.address}
                             </div>
+                            ` : `
+                            <div style="font-size: 14px; color: #4b5563; margin-bottom: 12px; line-height: 1.4; border-left: 3px solid #e5e7eb; padding-left: 12px;">
+                                <i class="fa-solid fa-user" style="margin-right: 8px; color: #6b7280;"></i>${item.name || 'Kişi bilgisi mevcut değil'}
+                                <br><i class="fa-solid fa-briefcase" style="margin-right: 8px; color: #6b7280; margin-top: 4px;"></i>${item.title || 'Ünvan belirtilmemiş'}
+                                ${item.description ? `<br><i class="fa-solid fa-file-text" style="margin-right: 8px; color: #6b7280; margin-top: 4px;"></i>${item.description}` : ''}
+                                <br><i class="fa-solid fa-location-dot" style="margin-right: 8px; color: #6b7280; margin-top: 4px;"></i>${item.address}
+                            </div>
+                            `}
                             
                             <!-- Başvuru Butonu -->
                             ${applyButton}
