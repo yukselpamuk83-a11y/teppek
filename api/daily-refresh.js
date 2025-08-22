@@ -28,11 +28,11 @@ function getAdzunaKeys() {
 
 const COUNTRIES = ['gb', 'us', 'de', 'fr', 'ca', 'au', 'nl', 'it', 'es', 'sg', 'at', 'be', 'br', 'ch', 'in', 'mx', 'nz', 'pl', 'ru', 'za'];
 
-// Son 24 saatin ilanlarını çek
-async function fetchDailyJobs(country, apiKey) {
-  const url = `https://api.adzuna.com/v1/api/jobs/${country}/search/1?` +
+// Aktif ilanları kontrol et (son 14 gün)
+async function fetchActiveJobs(country, apiKey, page = 1) {
+  const url = `https://api.adzuna.com/v1/api/jobs/${country}/search/${page}?` +
     `app_id=${apiKey.app_id}&app_key=${apiKey.app_key}` +
-    `&results_per_page=50&sort_by=date&max_days_old=1` + // Son 1 gün
+    `&results_per_page=50&sort_by=date&max_days_old=14` + // Son 14 gün kontrolü
     `&salary_min=1&salary_max=999999` +
     `&what_exclude=internship%20volunteer%20unpaid%20commission%20freelance` +
     `&content-type=application/json`;
@@ -165,41 +165,60 @@ module.exports = async (req, res) => {
   try {
     client = await pool.connect();
     
-    // 1. Eski ilanları sil (3 günden eski olanlar)
-    const deleteResult = await client.query(`
-      DELETE FROM jobs 
-      WHERE source = 'adzuna' 
-      AND created_at < NOW() - INTERVAL '3 days'
+    // 1. Mevcut database'deki tüm Adzuna ilan ID'lerini al
+    const existingJobsResult = await client.query(`
+      SELECT adzuna_id FROM jobs WHERE source = 'adzuna'
     `);
-    summary.deleted_jobs = deleteResult.rowCount;
+    const existingJobIds = new Set(existingJobsResult.rows.map(row => row.adzuna_id));
 
-    // 2. Her ülkeden son 24 saatin ilanlarını çek
+    // 2. Her ülkeden aktif ilanları çek (son 14 gün kontrolü için)
     const apiKeys = getAdzunaKeys();
     let keyIndex = 0;
+    const activeJobIds = new Set(); // API'den gelen aktif ilan ID'leri
 
     for (const country of COUNTRIES) {
       try {
         const apiKey = apiKeys[keyIndex % apiKeys.length];
         keyIndex++;
         
-        const data = await fetchDailyJobs(country, apiKey);
-        
-        if (!data.results || data.results.length === 0) {
-          continue;
-        }
-        
-        let countryAdded = 0;
-        for (const job of data.results) {
-          try {
-            const inserted = await saveJobToDatabase(client, job, country);
-            if (inserted) countryAdded++;
-          } catch (dbError) {
-            summary.errors.push(`DB error for job ${job.id}: ${dbError.message}`);
+        // Her ülkeden 3 sayfa çek (aktif ilanları tespit etmek için)
+        for (let page = 1; page <= 3; page++) {
+          const data = await fetchActiveJobs(country, apiKey, page);
+          
+          if (!data.results || data.results.length === 0) {
+            break;
           }
+          
+          // API'den gelen aktif ilan ID'lerini kaydet
+          data.results.forEach(job => {
+            if (job.id) {
+              activeJobIds.add(job.id.toString());
+            }
+          });
+          
+          // Yeni ilanları kaydet (sadece son 24 saatin)
+          let countryAdded = 0;
+          for (const job of data.results) {
+            try {
+              // Son 24 saatte yayınlanan ilanları kaydet
+              const jobDate = new Date(job.created || job.updated || Date.now());
+              const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+              
+              if (jobDate >= oneDayAgo) {
+                const inserted = await saveJobToDatabase(client, job, country);
+                if (inserted) countryAdded++;
+              }
+            } catch (dbError) {
+              summary.errors.push(`DB error for job ${job.id}: ${dbError.message}`);
+            }
+          }
+          
+          summary.by_country[country] = (summary.by_country[country] || 0) + countryAdded;
+          summary.new_jobs += countryAdded;
+          
+          // Sayfa arası bekleme
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
-        
-        summary.by_country[country] = countryAdded;
-        summary.new_jobs += countryAdded;
         
         // Rate limiting
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -207,6 +226,24 @@ module.exports = async (req, res) => {
       } catch (apiError) {
         summary.errors.push(`API error ${country}: ${apiError.message}`);
       }
+    }
+
+    // 3. Yayından kaldırılmış ilanları sil
+    const inactiveJobIds = [];
+    for (const existingId of existingJobIds) {
+      if (!activeJobIds.has(existingId)) {
+        inactiveJobIds.push(existingId);
+      }
+    }
+    
+    if (inactiveJobIds.length > 0) {
+      const deleteQuery = `
+        DELETE FROM jobs 
+        WHERE source = 'adzuna' 
+        AND adzuna_id = ANY($1::text[])
+      `;
+      const deleteResult = await client.query(deleteQuery, [inactiveJobIds]);
+      summary.deleted_jobs = deleteResult.rowCount;
     }
 
     summary.completed_at = new Date().toISOString();
