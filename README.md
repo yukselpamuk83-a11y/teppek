@@ -1,223 +1,133 @@
-# 🌍 Teppek - Global İş İlanları Platformu
+# 🌍 Teppek - Küresel İş İlanı Platformu
 
-Haritada görselleştirilen küresel iş ilanları platformu. Adzuna API'sini kullanarak 100,000+ iş ilanını gerçek zamanlı olarak sunar.
+Teppek, Adzuna API'sinden ve manuel kullanıcı girişlerinden gelen iş ilanlarını interaktif bir harita üzerinde görselleştiren modern bir web uygulamasıdır. Proje, Vercel üzerinde sunucusuz (serverless) fonksiyonlarla çalışır ve verileri Supabase (PostgreSQL) veritabanında saklar.
 
-## ✨ Özellikler
+## ✨ Canlı Demo
 
-- 🗺️ **Harita Tabanlı Görünüm**: Leaflet.js ile interaktif harita
-- 🌍 **20+ Ülke Desteği**: Tüm Adzuna destekli ülkelerden veri
-- 📊 **100,000+ İlan**: Paralel API çağrıları ile hızlı veri çekme
-- 🔄 **Otomatik Güncelleme**: Günlük cron job ile veri yenileme
-- 💾 **Supabase Entegrasyonu**: PostgreSQL + PostGIS ile veri saklama
-- ⚡ **Vercel Deployment**: Serverless functions ile hızlı API
+**[https://teppek.com/](https://teppek.com/)**
 
-## 🚀 Canlı Demo
+## 🚀 Temel Özellikler
 
-**🌐 Ana Site**: [https://teppek.com](https://teppek.com)
+-   🗺️ **İnteraktif Harita:** Leaflet.js ve MarkerCluster ile on binlerce ilanı akıcı bir şekilde gösterir.
+-   🔄 **Otomatik Veri Güncelleme:** Vercel Cron Job ile her gün yeni ilanlar otomatik olarak çekilir ve eski ilanlar temizlenir.
+-   ⚡ **Hızlı API:** Vercel Serverless Functions ile oluşturulmuş, filtreleme ve sayfalama destekli hızlı bir API.
+-   💾 **Güçlü Veritabanı:** PostgreSQL ve PostGIS uzantısı sayesinde coğrafi sorgularda yüksek performans.
+-   🔍 **Gelişmiş Filtreleme:** Anahtar kelime, ülke, şehir ve "uzaktan çalışma" seçeneklerine göre ilanları filtreleme.
+-   ➕ **Manuel İlan Ekleme:** Kullanıcıların harita üzerinde kendi iş ilanlarını veya aday profillerini oluşturabilmesi.
 
-**🔧 Test Araçları**:
-- [API Test Sayfası](https://teppek.com/test-api.html)
-- [Veri Yükleme Aracı](https://teppek.com/load-countries-massive.html)
+## 🛠️ Teknoloji Mimarisi
 
-## 📋 API Endpoints
+-   **Frontend:**
+    -   **React:** CDN üzerinden yüklenmiş, modern bir arayüz için.
+    -   **Leaflet.js:** İnteraktif harita görselleştirmesi.
+    -   **Tailwind CSS:** Hızlı ve modern stilendirme.
+    -   **Font Awesome:** İkonlar.
+-   **Backend:**
+    -   **Vercel Serverless Functions:** Node.js tabanlı, ölçeklenebilir API endpoint'leri.
+-   **Veritabanı:**
+    -   **Supabase:** PostgreSQL veritabanı, PostGIS eklentisi ile coğrafi veri desteği.
+-   **Veri Kaynağı:**
+    -   **Adzuna API:** 20'den fazla ülkeden zengin iş ilanı verisi.
 
-### 🔍 Test API'leri
-```bash
-GET https://teppek.com/api/test-simple
-# Basit API test endpoint'i
-```
+## ⚙️ API Endpointleri
 
-### 📊 İlan API'leri
-```bash
-GET https://teppek.com/api/listings-simple
-# 20 adet örnek ilan döner
+Proje, tüm işlemleri Vercel üzerinde çalışan aşağıdaki API'ler üzerinden yönetir:
 
-GET https://teppek.com/api/adzuna-massive-simple?country=gb&page=1
-# Belirli ülkeden sayfalı ilan çekme
+### `GET /api/test`
 
-GET https://teppek.com/api/adzuna-massive?mode=fetch&country=gb&initial=true
-# Büyük veri seti çekme (Supabase gerekli)
-```
+Sistemin genel durumunu, Node.js sürümünü, bellek kullanımını ve ortam değişkenlerinin (environment variables) yapılandırılıp yapılandırılmadığını kontrol eden bir sağlık kontrolü (health check) endpoint'i.
 
-## 🏗️ Teknik Yapı
+### `GET /api/get-jobs`
 
-### Frontend
-- **React**: CDN üzerinden yüklenen React 18
-- **Leaflet.js**: Harita görselleştirme
-- **HTML/CSS/JS**: Sade ve hızlı arayüz
+Frontend'in veritabanından iş ilanlarını çekmek için kullandığı ana endpoint.
 
-### Backend  
-- **Vercel Functions**: Node.js serverless functions
-- **Adzuna API**: 5 paralel API key ile veri çekme
-- **Supabase**: PostgreSQL + PostGIS veritabanı
+**Query Parametreleri:**
 
-### DevOps
-- **GitHub**: Kaynak kod yönetimi
-- **Vercel**: Otomatik deployment
-- **Cron Jobs**: Günlük veri güncelleme
+-   `q` (string): İlan başlığı veya şirket adında arama yapmak için anahtar kelime.
+-   `country` (string): Ülke koduna göre filtreleme (örn: `GB`, `US`).
+-   `city` (string): Şehir adına göre filtreleme.
+-   `remote` (boolean): `true` veya `false` değeri ile uzaktan çalışma ilanlarını filtreleme.
+-   `page` (number): Sayfa numarası (varsayılan: `1`).
+-   `limit` (number): Sayfa başına ilan sayısı (varsayılan: `20`).
+-   `clear` (boolean): `true` yapıldığında tüm filtreleri yok sayar ve veritabanındaki tüm ilanları hızlıca döner.
 
-## 🔧 Kurulum
+### `GET /api/load-data`
 
-### 1. Projeyi Klonla
-```bash
-git clone https://github.com/yukselpamuk83-a11y/teppek.git
-cd teppek
-```
+Adzuna API'sinden toplu veri çekip veritabanını doldurmak için kullanılan bir araç. Genellikle ilk kurulumda kullanılır.
 
-### 2. Bağımlılıkları Yükle (Opsiyonel)
-```bash
-npm install @supabase/supabase-js
-# Sadece Supabase kullanacaksanız
-```
+**Query Parametreleri:**
 
-### 3. Environment Variables (.env)
-```bash
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_supabase_key
-```
+-   `countries` (string): Virgülle ayrılmış ülke kodları (örn: `gb,us,de`).
+-   `days` (number): Son kaç günlük ilanların çekileceği (varsayılan: `7`).
+-   `pages` (number): Her ülke için kaç sayfa veri çekileceği (1 sayfa = 50 ilan, varsayılan: `10`).
 
-### 4. Vercel Deploy
-```bash
-vercel --prod
-```
+### `GET /api/daily-refresh`
 
-## 📂 Dosya Yapısı
+Her gün otomatik olarak çalışan (cron job) ve veritabanını güncel tutan endpoint.
 
-```
-teppek/
-├── 📄 index.html              # Ana uygulama
-├── 📁 api/
-│   ├── 🔧 test-simple.js      # Test API
-│   ├── 📊 listings-simple.js  # Basit ilanlar API
-│   ├── 🌍 adzuna-massive.js   # Büyük veri API (Supabase)
-│   └── 🌍 adzuna-massive-simple.js # Basit büyük veri API
-├── 📁 test/
-│   ├── 🔍 test-api.html       # API test sayfası
-│   └── 📊 load-countries-massive.html # Veri yükleme aracı
-├── ⚙️ vercel.json            # Vercel konfigürasyonu
-├── 📋 create-tables.sql      # Supabase tablo yapısı
-└── 📖 README.md              # Bu dosya
-```
+-   Son 24 saat içinde yayınlanan yeni ilanları çeker.
+-   30 günden eski ilanları veritabanından siler.
 
-## 🔐 API Keys
+## 🗄️ Veritabanı Şeması
 
-### Adzuna API Keys (5 adet)
-```javascript
-const API_KEYS = [
-  { app_id: 'a19dd595', app_key: '0ca6f72f3a5cafae1643cfae18100181' },
-  { app_id: 'a19dd595', app_key: '0f8160edaa39c3dcac3962d77b32236b' },
-  { app_id: 'a19dd595', app_key: '1a2a55f9ad16c54c2b2e8efa67151f39' },
-  { app_id: 'a19dd595', app_key: '739d1471fef22292b75f15b401556bdb' },
-  { app_id: 'a19dd595', app_key: 'b7e0a6d929446aa1b9610dc3f8d22dd8' }
-];
-```
+Veriler, `jobs` adında tek bir tabloda saklanır.
 
-## 🌍 Desteklenen Ülkeler
+**Önemli Alanlar:**
 
-| Ülke | Kod | Status |
-|------|-----|--------|
-| 🇬🇧 İngiltere | `gb` | ✅ Aktif |
-| 🇺🇸 Amerika | `us` | ✅ Aktif |
-| 🇩🇪 Almanya | `de` | ✅ Aktif |
-| 🇫🇷 Fransa | `fr` | ✅ Aktif |
-| 🇨🇦 Kanada | `ca` | ✅ Aktif |
-| 🇦🇺 Avustralya | `au` | ✅ Aktif |
-| 🇳🇱 Hollanda | `nl` | ⚠️ İsteğe Bağlı |
-| 🇮🇹 İtalya | `it` | ⚠️ İsteğe Bağlı |
-| 🇪🇸 İspanya | `es` | ⚠️ İsteğe Bağlı |
-| 🇸🇬 Singapur | `sg` | ⚠️ İsteğe Bağlı |
+-   `adzuna_id`: Adzuna'dan gelen ilanlar için benzersiz ID (mükerrer kaydı önler).
+-   `title`, `company`, `description`: Temel ilan bilgileri.
+-   `lat`, `lon`: Harita gösterimi için enlem ve boylam (üzerinde coğrafi indeks bulunur).
+-   `country`, `city`, `remote`: Filtreleme için kullanılan alanlar.
+-   `source`: Verinin kaynağını belirtir (`adzuna` veya `manual`).
+-   `marker_html`, `popup_html`: Performansı artırmak için sunucu tarafında önceden oluşturulmuş harita işaretçi HTML'leri.
 
-*Toplam 20 ülke desteklenmektedir*
+Tablo, hızlı sorgular için `lat/lon`, `country`, `city`, `salary` gibi birçok alanda **indekslere** sahiptir.
 
-## ⏰ Otomatik Güncellemeler
+## 📦 Kurulum ve Çalıştırma
+
+1.  **Projeyi klonlayın:**
+    ```bash
+    git clone https://github.com/yukselpamuk83-a11y/teppek.git
+    cd teppek
+    ```
+
+2.  **Bağımlılıkları yükleyin:**
+    ```bash
+    npm install
+    ```
+
+3.  **Ortam Değişkenlerini Ayarlayın:**
+    Proje kök dizininde `.env.local` adında bir dosya oluşturun ve aşağıdaki değişkenleri kendi Supabase ve Adzuna bilgilerinizle doldurun.
+    ```env
+    # Supabase Veritabanı URL'si
+    DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@[YOUR-DB-HOST]:5432/postgres"
+
+    # Adzuna API Anahtarları (En az 1 tane gereklidir)
+    ADZUNA_APP_ID_1="YOUR_ADZUNA_APP_ID"
+    ADZUNA_APP_KEY_1="YOUR_ADZUNA_APP_KEY"
+    # ... 5 adede kadar ekleyebilirsiniz (ADZUNA_APP_ID_5)
+    ```
+
+4.  **Yerel Geliştirme Ortamını Başlatın:**
+    ```bash
+    vercel dev
+    ```
+
+## 🚀 Dağıtım (Deployment)
+
+Proje, **Vercel** ile otomatik olarak dağıtılmak üzere yapılandırılmıştır. GitHub deposuna yapılan her `push` işlemi, yeni bir dağıtımı tetikler.
+
+### Otomatik Güncellemeler (Cron Job)
+
+`vercel.json` dosyasında tanımlanan kurala göre, `/api/daily-refresh` endpoint'i her gün **UTC 06:00'da** otomatik olarak çalıştırılır.
 
 ```json
 {
   "crons": [
     {
-      "path": "/api/daily-update",
-      "schedule": "0 3 * * *"
+      "path": "/api/daily-refresh",
+      "schedule": "0 6 * * *"
     }
   ]
 }
 ```
-
-Her gece saat 03:00'da otomatik veri güncellemesi yapılır.
-
-## 🧪 Test Etme
-
-### 1. API Testi
-[https://teppek.com/test-api.html](https://teppek.com/test-api.html) adresinden tüm API'leri test edin.
-
-### 2. Veri Yükleme
-[https://teppek.com/load-countries-massive.html](https://teppek.com/load-countries-massive.html) ile çoklu ülke verisi yükleyin.
-
-### 3. Doğrudan API Testi
-```bash
-# Test API
-curl https://teppek.com/api/test-simple
-
-# İlan API
-curl "https://teppek.com/api/adzuna-massive-simple?country=gb&page=1"
-```
-
-## 🛠️ Geliştirme
-
-### Yeni Özellik Eklemek
-1. `api/` klasörüne yeni endpoint ekleyin
-2. `vercel.json`'da gerekli ayarları yapın
-3. Test sayfasında yeni endpoint'i test edin
-4. GitHub'a push yapın (otomatik deploy)
-
-### Yeni Ülke Eklemek
-`ADZUNA_COUNTRIES` array'ine yeni ülke ekleyin:
-```javascript
-{ code: 'tr', name: 'Turkey' }
-```
-
-## 📊 Performans
-
-- **API Response**: ~200-500ms
-- **Veri Çekme**: 50 ilan/istek
-- **Rate Limiting**: 500ms bekleme süreleri
-- **Paralel İşlem**: 5 API key ile eşzamanlı çekme
-
-## 🔧 Sorun Giderme
-
-### API Çalışmıyor
-1. [Vercel Dashboard](https://vercel.com/dashboard)'dan function loglarını kontrol edin
-2. `test-api.html` ile endpoint'leri tek tek test edin
-3. API key limitlerini kontrol edin
-
-### Veri Yüklenmiyor
-1. Network sekmesinden HTTP hatalarını kontrol edin
-2. Supabase bağlantı ayarlarını doğrulayın
-3. Rate limiting nedeniyle yavaş yükleme normal
-
-## 🤝 Katkıda Bulunma
-
-1. Fork yapın
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Commit yapın (`git commit -m 'Add amazing feature'`)
-4. Push yapın (`git push origin feature/amazing-feature`)
-5. Pull Request açın
-
-## 📄 Lisans
-
-Bu proje MIT lisansı altında yayınlanmıştır.
-
-## 🙏 Teşekkürler
-
-- [Adzuna](https://www.adzuna.com/) - İş ilanları API'si
-- [Supabase](https://supabase.com/) - Veritabanı servisi  
-- [Vercel](https://vercel.com/) - Hosting ve deployment
-- [Leaflet.js](https://leafletjs.com/) - Harita kütüphanesi
-- [OpenStreetMap](https://www.openstreetmap.org/) - Harita verileri
-
-## 📧 İletişim
-
-Sorularınız için [GitHub Issues](https://github.com/yukselpamuk83-a11y/teppek/issues) kullanabilirsiniz.
-
----
-
-**🚀 [Teppek](https://teppek.com) ile küresel iş fırsatlarını keşfedin!**
