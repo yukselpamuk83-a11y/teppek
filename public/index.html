@@ -275,15 +275,13 @@
                                 applyUrl: job.source === 'manual' ? null : job.url,  // API ilanlarında başvuru linki
                                 contact: job.source === 'manual' ? job.contact : null, // Manuel ilanlarda iletişim
                                 source: job.source || 'unknown',
-                                isRemote: job.remote,
+                                // Remote alanı kaldırıldı
                                 postedDate: job.created_at
                             })).filter(job => job.location.lat && job.location.lng);
                             
                             console.log(`🗺️ Haritada gösterilecek: ${formattedJobs.length} ilan`);
                             
-                            // Remote ilanları say
-                            const remoteCount = formattedJobs.filter(job => job.isRemote).length;
-                            console.log(`🏠 Remote ilanlar: ${remoteCount}`);
+                            // Remote sayma kaldırıldı
                             
                             // Ülkelere göre dağılım
                             const countryStats = {};
@@ -644,7 +642,6 @@
                             <div style="font-size: 15px; font-weight: bold; color: #059669; margin-bottom: 12px; padding: 8px; background-color: #f0fdf4; border-radius: 6px; display: flex; align-items: center;">
                                 <i class="fa-solid fa-dollar-sign" style="margin-right: 8px; font-size: 14px;"></i>
                                 ${item.currency || 'USD'} ${item.salary_min?.toLocaleString() || '?'} - ${item.salary_max?.toLocaleString() || '?'}
-                                ${item.isRemote ? '<span style="color: #059669; margin-left: 8px;"><i class="fa-solid fa-house" style="margin-right: 4px; font-size: 12px;"></i>Remote</span>' : ''}
                             </div>
                             
                             <!-- Şirket ve Lokasyon Bilgisi -->
