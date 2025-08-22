@@ -508,8 +508,8 @@
                     type: entryType,
                     title,
                     description,
-                    location: { lat: 41.0, lng: 29.0 }, 
-                    address: 'Yeni Kayıt, İstanbul',
+                    location: { lat: userLocation.lat, lng: userLocation.lng }, 
+                    address: `Yeni Kayıt, ${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}`,
                     source: 'manual', // Manuel eklenen
                     postedDate: new Date().toISOString(),
                     // Popup için ortak alanlar
