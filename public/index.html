@@ -730,9 +730,9 @@
                 <div className="mb-4">
                     <div className="flex flex-col sm:flex-row gap-4">
                         <div className="grid grid-cols-3 gap-2 flex-shrink-0">
-                            <button onClick={() => setLocalFilterType('all')} className={`p-3 rounded-lg font-semibold text-sm ${localFilterType === 'all' ? 'bg-gray-800 text-white' : 'bg-gray-200'}`}>Tümü</button>
-                            <button onClick={() => setLocalFilterType('job')} className={`p-3 rounded-lg font-semibold text-sm ${localFilterType === 'job' ? 'bg-ilan text-white' : 'bg-gray-200'}`}>İş İlanları</button>
-                            <button onClick={() => setLocalFilterType('cv')} className={`p-3 rounded-lg font-semibold text-sm ${localFilterType === 'cv' ? 'bg-cv text-white' : 'bg-gray-200'}`}>Adaylar</button>
+                            <button onClick={() => { setLocalFilterType('all'); onFilterChange({ type: 'all', keyword: localKeyword }); }} className={`p-3 rounded-lg font-semibold text-sm ${localFilterType === 'all' ? 'bg-gray-800 text-white' : 'bg-gray-200'}`}>Tümü</button>
+                            <button onClick={() => { setLocalFilterType('job'); onFilterChange({ type: 'job', keyword: localKeyword }); }} className={`p-3 rounded-lg font-semibold text-sm ${localFilterType === 'job' ? 'bg-ilan text-white' : 'bg-gray-200'}`}>İş İlanları</button>
+                            <button onClick={() => { setLocalFilterType('cv'); onFilterChange({ type: 'cv', keyword: localKeyword }); }} className={`p-3 rounded-lg font-semibold text-sm ${localFilterType === 'cv' ? 'bg-cv text-white' : 'bg-gray-200'}`}>Adaylar</button>
                         </div>
                         <div className="flex-grow flex gap-2">
                             <div className="relative flex-grow">
