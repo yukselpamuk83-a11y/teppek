@@ -436,7 +436,7 @@
                                     <div className="flex justify-end items-center mb-4">
                                         <button onClick={() => setIsMobileFormOpen(false)} className="text-gray-500 text-2xl">&times;</button>
                                     </div>
-                                    <EntryFormComponent onAddEntry={handleAddEntry} />
+                                    <EntryFormComponent onAddEntry={handleAddEntry} userLocation={userLocation} />
                                </div>
                             )}
                         </div>
@@ -445,7 +445,7 @@
                         <div className="h-full w-full flex flex-col">
                             <div className="flex h-2/3">
                                 <div className="w-[35%] h-full p-4 bg-gray-50 overflow-y-auto">
-                                    <EntryFormComponent onAddEntry={handleAddEntry} />
+                                    <EntryFormComponent onAddEntry={handleAddEntry} userLocation={userLocation} />
                                 </div>
                                 <div className="w-[65%] h-full">
                                     <MapComponent data={processedData} selectedLocation={selectedLocation} isSubscribed={isSubscribed} userLocation={userLocation} onPremiumClick={() => setShowSubscriptionModal(true)} />
@@ -492,7 +492,7 @@
         
         // --- ALT BİLEŞENLER ---
 
-        function EntryFormComponent({ onAddEntry }) {
+        function EntryFormComponent({ onAddEntry, userLocation }) {
             const [entryType, setEntryType] = useState('job');
             const [title, setTitle] = useState('');
             const [companyOrName, setCompanyOrName] = useState('');
