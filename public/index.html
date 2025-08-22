@@ -128,6 +128,22 @@
             color: #2563EB; /* blue-600 */
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
+        
+        /* Tooltip stilleri */
+        .custom-tooltip {
+            background: rgba(0, 0, 0, 0.9) !important;
+            border: none !important;
+            border-radius: 8px !important;
+            color: white !important;
+            font-size: 12px !important;
+            padding: 8px 12px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+            max-width: 200px !important;
+        }
+        
+        .leaflet-tooltip-top:before {
+            border-top-color: rgba(0, 0, 0, 0.9) !important;
+        }
     </style>
 </head>
 <body>
@@ -658,7 +674,19 @@
             useEffect(() => {
                 if (!clusterGroupRef.current) return;
                 clusterGroupRef.current.clearLayers();
+                
+                // Aynı lokasyondaki ilanları grupla
+                const locationGroups = {};
                 data.forEach(item => {
+                    const locationKey = `${item.location.lat.toFixed(4)},${item.location.lng.toFixed(4)}`;
+                    if (!locationGroups[locationKey]) {
+                        locationGroups[locationKey] = [];
+                    }
+                    locationGroups[locationKey].push(item);
+                });
+                
+                Object.values(locationGroups).forEach(items => {
+                    const item = items[0]; // İlk ilan için marker oluştur
                     const distance = getDistance(userLocation.lat, userLocation.lng, item.location.lat, item.location.lng);
                     const isPremiumContent = distance > 50;
                     const canView = isSubscribed || !isPremiumContent;
@@ -668,6 +696,27 @@
                     const iconHtml = `<div class="marker-container ${item.isSponsored ? 'sponsored-marker' : ''}"><div class="icon-wrapper" style="border-color: ${item.isSponsored ? '#FBBF24' : iconColor};">${item.isSponsored ? '<i class="fa-solid fa-star absolute -top-2 -right-2 text-yellow-400 text-xl"></i>' : ''}<i class="fa-solid ${iconClass}" style="color: ${iconColor};"></i></div><div class="marker-label">${item.title}</div></div>`;
                     const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [120, 90], iconAnchor: [60, 26] });
                     const marker = L.marker([item.location.lat, item.location.lng], { icon: customIcon });
+                    
+                    // Hover tooltip - multiple ilanlar için
+                    const tooltipContent = items.length > 1 ? 
+                        `<div style="font-size: 12px; font-weight: bold; color: white; max-width: 250px;">
+                            <div style="margin-bottom: 4px; color: #fbbf24;">${items.length} İlan Bu Konumda:</div>
+                            ${items.slice(0, 3).map(job => 
+                                `<div style="margin-bottom: 2px;">• ${job.title}</div>`
+                            ).join('')}
+                            ${items.length > 3 ? `<div style="color: #9ca3af;">+${items.length - 3} ilan daha...</div>` : ''}
+                        </div>` :
+                        `<div style="font-size: 12px; font-weight: bold; color: white; max-width: 200px;">
+                            ${item.title}
+                            <br><small style="color: #d1d5db;">${item.company || 'Şirket belirtilmemiş'}</small>
+                        </div>`;
+                    
+                    marker.bindTooltip(tooltipContent, {
+                        permanent: false,
+                        direction: 'top',
+                        offset: [0, -10],
+                        className: 'custom-tooltip'
+                    });
                     
                     let popupContent;
                     if (canView) {
