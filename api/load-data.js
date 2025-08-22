@@ -12,16 +12,7 @@ function getAdzunaKeys() {
     }
   }
   
-  // Eğer environment'da yoksa, sabit kodlu anahtarları kullan
-  if (keys.length === 0) {
-    keys.push(
-      { app_id: 'a19dd595', app_key: '0ca6f72f3a5cafae1643cfae18100181' },
-      { app_id: 'a19dd595', app_key: '0f8160edaa39c3dcac3962d77b32236b' },
-      { app_id: 'a19dd595', app_key: '1a2a55f9ad16c54c2b2e8efa67151f39' },
-      { app_id: 'a19dd595', app_key: '739d1471fef22292b75f15b401556bdb' },
-      { app_id: 'a19dd595', app_key: 'b7e0a6d929446aa1b9610dc3f8d22dd8' }
-    );
-  }
+  
   
   return keys;
 }
