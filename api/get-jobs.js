@@ -71,15 +71,14 @@ module.exports = async (req, res) => {
     const whereClause = conditions.length > 0 ? 
       `WHERE ${conditions.join(' AND ')}` : '';
 
-    // Minimal ana sorgu - Sadece gerekli alanlar
+    // Frontend için minimal alan seçimi
     const mainQuery = `
       SELECT 
-        id, provider_id, title, company, city, country, 
-        lat, lon, url, salary_min, salary_max, currency, 
-        employment_type, remote, posted_at, created_at
+        id, adzuna_id, title, company, city, country, 
+        lat, lon, url, salary_min, salary_max, currency, remote, created_at
       FROM jobs
       ${whereClause}
-      ORDER BY posted_at DESC NULLS LAST, created_at DESC
+      ORDER BY created_at DESC
       LIMIT $${params.length + 1} OFFSET $${params.length + 2}
     `;
 

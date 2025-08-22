@@ -26,14 +26,18 @@ function getAdzunaKeys() {
   return keys;
 }
 
-// Desteklenen ülkeler
-const COUNTRIES = ['gb', 'us', 'de', 'fr', 'ca', 'au', 'nl', 'it', 'es', 'sg'];
+// 20 ülke - Adzuna destekli ülkeler
+const COUNTRIES = [
+  'gb', 'us', 'de', 'fr', 'ca', 'au', 'nl', 'it', 'es', 'sg', 
+  'at', 'be', 'br', 'ch', 'in', 'mx', 'nz', 'pl', 'ru', 'za'
+];
 
-// Adzuna'dan veri çek
+// Adzuna'dan veri çek - Optimize edilmiş
 async function fetchFromAdzuna(country, page, apiKey, maxDays = 7) {
   const url = `https://api.adzuna.com/v1/api/jobs/${country}/search/${page}?` +
     `app_id=${apiKey.app_id}&app_key=${apiKey.app_key}` +
     `&results_per_page=50&sort_by=date&max_days_old=${maxDays}` +
+    `&what_exclude=internship%20volunteer%20unpaid` + // gereksiz ilanları filtrele
     `&content-type=application/json`;
   
   const response = await fetch(url);
@@ -44,66 +48,75 @@ async function fetchFromAdzuna(country, page, apiKey, maxDays = 7) {
   return response.json();
 }
 
-// Minimal PostgreSQL kaydetme - Sadece gerekli alanlar
+// MINIMAL database insertion - Sadece frontend'in ihtiyacı olan alanlar
 async function saveToDatabase(client, job, country) {
-  // Gerekli alanlar yoksa kaydetme
+  // Frontend için kritik alanları kontrol et
   if (!job.id || !job.title || !job.redirect_url) {
     return false;
   }
   
-  // Lokasyon yoksa kaydetme (harita için gerekli)
+  // Harita için lokasyon mutlaka gerekli
   if (!job.latitude || !job.longitude) {
+    return false;
+  }
+  
+  // Spam ve kötü kalite kontrolü
+  if (job.title.length < 5 || 
+      job.title.toLowerCase().includes('earn money') ||
+      job.title.toLowerCase().includes('work from home $')) {
     return false;
   }
   
   const query = `
     INSERT INTO jobs (
-      provider_id, title, company, country, city, 
-      lat, lon, url, salary_min, salary_max, currency,
-      employment_type, remote, posted_at
+      adzuna_id, title, company, country, city, 
+      lat, lon, url, salary_min, salary_max, currency, remote
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
-    ) ON CONFLICT (provider_id) DO UPDATE SET
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+    ) ON CONFLICT (adzuna_id) DO UPDATE SET
       title = EXCLUDED.title,
       company = EXCLUDED.company,
-      posted_at = EXCLUDED.posted_at
+      salary_min = EXCLUDED.salary_min,
+      salary_max = EXCLUDED.salary_max
     RETURNING id;
   `;
   
-  // Şehir bilgisini akıllıca çıkar
-  const city = Array.isArray(job.location?.area) ? 
-    job.location.area[job.location.area.length - 1] : 
-    (job.location?.display_name?.split(',')[0] || null);
+  // Şehir bilgisini çıkar (display_name'den veya area'dan)
+  let city = null;
+  if (job.location?.display_name) {
+    city = job.location.display_name.split(',')[0].trim();
+  } else if (Array.isArray(job.location?.area) && job.location.area.length > 0) {
+    city = job.location.area[job.location.area.length - 1];
+  }
   
-  // Remote işi tespit et
-  const isRemote = job.title?.toLowerCase().includes('remote') || 
-                   job.description?.toLowerCase().includes('remote') ||
-                   job.contract_time?.toLowerCase().includes('remote') || false;
+  // Remote iş tespiti (title'da kontrol yeter)
+  const isRemote = job.title.toLowerCase().includes('remote') || 
+                   job.title.toLowerCase().includes('work from home');
   
+  // Minimal values array
   const values = [
-    `adzuna-${job.id}`, // Unique ID
-    job.title.substring(0, 500), // Başlık limit
-    job.company?.display_name?.substring(0, 300) || null,
-    country.toUpperCase(),
-    city?.substring(0, 100) || null,
-    parseFloat(job.latitude),
-    parseFloat(job.longitude),
-    job.redirect_url,
-    job.salary_min ? Math.round(job.salary_min) : null,
-    job.salary_max ? Math.round(job.salary_max) : null,
-    job.salary_currency?.substring(0, 5) || 'USD',
-    job.contract_type?.substring(0, 50) || 'full-time',
-    isRemote,
-    job.created ? new Date(job.created) : new Date()
+    job.id.toString(),                                    // Adzuna ID
+    job.title.substring(0, 500).trim(),                  // Title
+    job.company?.display_name?.substring(0, 200) || null, // Company
+    country.toUpperCase(),                               // Country code
+    city?.substring(0, 100) || null,                    // City
+    parseFloat(job.latitude),                           // Lat
+    parseFloat(job.longitude),                          // Lon  
+    job.redirect_url,                                   // Apply URL
+    job.salary_min ? Math.round(job.salary_min) : null, // Min salary
+    job.salary_max ? Math.round(job.salary_max) : null, // Max salary
+    job.salary_currency?.substring(0, 3) || 'USD',      // Currency
+    isRemote                                            // Remote flag
   ];
   
   try {
     const result = await client.query(query, values);
     return result.rowCount > 0;
   } catch (error) {
-    // Duplicate veya validation hatalarını yoksay
     if (error.code === '23505') return false; // Duplicate
-    throw error;
+    if (error.code === '22003') return false; // Value out of range
+    console.error(`DB error for job ${job.id}:`, error.message);
+    return false;
   }
 }
 
@@ -117,9 +130,9 @@ module.exports = async (req, res) => {
   }
 
   const {
-    countries = 'gb',  // Yüklenecek ülkeler (virgülle ayrılmış)
-    days = '7',        // Kaç gün geriye gidilecek
-    pages = '5'        // Ülke başına kaç sayfa
+    countries = 'gb,us,de,fr,ca,au,nl,it,es,sg,at,be,br,ch,in,mx,nz,pl,ru,za',  // Tüm 20 ülke
+    days = '7',        // Son 7 gün
+    pages = '10'       // Ülke başına 10 sayfa (500 ilan)
   } = req.query;
 
   if (!process.env.DATABASE_URL) {

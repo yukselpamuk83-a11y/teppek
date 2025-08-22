@@ -14,12 +14,12 @@ module.exports = async (req, res) => {
     // load-data API'sini dahili olarak çağır
     const loadData = require('./load-data.js');
     
-    // Son 1 günün verilerini çek, 3 ülkeden, sayfa başına 3 sayfa
+    // Tüm 20 ülkeden son 3 günün verilerini çek
     const mockReq = {
       query: {
-        countries: 'gb,us,de', // Ana ülkeler
-        days: '1',             // Son 24 saat
-        pages: '3'             // Ülke başına 3 sayfa (150 ilan max)
+        countries: 'gb,us,de,fr,ca,au,nl,it,es,sg,at,be,br,ch,in,mx,nz,pl,ru,za', // Tüm 20 ülke
+        days: '3',             // Son 3 gün (yeni ilanları yakalamak için)
+        pages: '5'             // Ülke başına 5 sayfa (250 ilan max)
       },
       method: 'GET'
     };

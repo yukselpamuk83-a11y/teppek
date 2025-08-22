@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Flow Test - Teppek</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h1 class="text-2xl font-bold mb-4">🧪 Database Flow Test</h1>
+            <p class="text-gray-600 mb-4">20 ülkeden son 7 günün iş ilanlarını database'e yükleyip test edin</p>
+            
+            <!-- Test Adımları -->
+            <div class="space-y-4">
+                
+                <!-- Adım 1: Database Tablosu Kontrol -->
+                <div class="border border-gray-300 rounded-lg p-4">
+                    <h2 class="text-lg font-semibold mb-2">1️⃣ Database Tablosu Kontrol</h2>
+                    <p class="text-sm text-gray-600 mb-2">Önce Supabase'de jobs tablosunun oluşturulup oluşturulmadığını kontrol edin</p>
+                    <button onclick="testDatabase()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                        <i class="fa-solid fa-database"></i> Database Test Et
+                    </button>
+                    <div id="db-result" class="mt-2"></div>
+                </div>
+
+                <!-- Adım 2: Bulk Veri Yükleme -->
+                <div class="border border-gray-300 rounded-lg p-4">
+                    <h2 class="text-lg font-semibold mb-2">2️⃣ Bulk Veri Yükleme (20 Ülke)</h2>
+                    <p class="text-sm text-gray-600 mb-2">Adzuna'dan son 7 günün ilanlarını çekip database'e kaydet</p>
+                    <button onclick="loadBulkData()" id="bulk-btn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                        <i class="fa-solid fa-download"></i> Bulk Veri Yükle (~10,000 ilan)
+                    </button>
+                    <div id="bulk-result" class="mt-2"></div>
+                </div>
+
+                <!-- Adım 3: Veri Okuma Testi -->
+                <div class="border border-gray-300 rounded-lg p-4">
+                    <h2 class="text-lg font-semibold mb-2">3️⃣ Database'den Veri Okuma</h2>
+                    <p class="text-sm text-gray-600 mb-2">Yüklenen verileri database'den okuyup listele</p>
+                    <button onclick="testDataRead()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+                        <i class="fa-solid fa-list"></i> Verileri Oku
+                    </button>
+                    <div id="read-result" class="mt-2"></div>
+                </div>
+
+                <!-- Adım 4: İstatistikler -->
+                <div class="border border-gray-300 rounded-lg p-4">
+                    <h2 class="text-lg font-semibold mb-2">4️⃣ İstatistikler</h2>
+                    <div id="stats-result" class="mt-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Area -->
+        <div class="bg-gray-900 text-green-400 rounded-lg p-4">
+            <h3 class="text-lg font-mono mb-2">📋 Test Logları</h3>
+            <div id="logs" class="font-mono text-sm whitespace-pre-wrap max-h-96 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://teppek.com/api';
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logDiv = document.getElementById('logs');
+            logDiv.textContent += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        // Database bağlantı testi
+        async function testDatabase() {
+            log('🧪 Database bağlantısı test ediliyor...');
+            document.getElementById('db-result').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Test ediliyor...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/db-test`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    log('✅ Database bağlantısı başarılı');
+                    document.getElementById('db-result').innerHTML = '<span class="text-green-600">✅ Bağlantı başarılı</span>';
+                } else {
+                    log('❌ Database hatası: ' + result.error);
+                    document.getElementById('db-result').innerHTML = '<span class="text-red-600">❌ ' + result.error + '</span>';
+                }
+            } catch (error) {
+                log('❌ Network hatası: ' + error.message);
+                document.getElementById('db-result').innerHTML = '<span class="text-red-600">❌ ' + error.message + '</span>';
+            }
+        }
+
+        // Bulk veri yükleme
+        async function loadBulkData() {
+            log('🌍 Bulk veri yükleme başlatılıyor...');
+            const btn = document.getElementById('bulk-btn');
+            const resultDiv = document.getElementById('bulk-result');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Yükleniyor...';
+            resultDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 20 ülkeden veri çekiliyor...';
+            
+            try {
+                // Tüm 20 ülke, son 7 gün, 10 sayfa
+                const url = `${API_BASE}/load-data?countries=gb,us,de,fr,ca,au,nl,it,es,sg,at,be,br,ch,in,mx,nz,pl,ru,za&days=7&pages=10`;
+                log('📞 API çağrısı: ' + url);
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    log(`✅ Bulk yükleme tamamlandı: ${result.summary.total_inserted} ilan`);
+                    log(`📊 API çağrı sayısı: ${result.summary.api_calls}`);
+                    log(`🌍 İşlenen ülkeler: ${Object.keys(result.summary.by_country).length}`);
+                    
+                    let breakdown = '📈 Ülke dağılımı:\n';
+                    Object.entries(result.summary.by_country)
+                        .sort((a, b) => b[1] - a[1])
+                        .forEach(([country, count]) => {
+                            breakdown += `  ${country.toUpperCase()}: ${count} ilan\n`;
+                        });
+                    log(breakdown);
+                    
+                    resultDiv.innerHTML = `<span class="text-green-600">✅ ${result.summary.total_inserted} ilan yüklendi</span>`;
+                } else {
+                    log('❌ Bulk yükleme hatası: ' + result.error);
+                    resultDiv.innerHTML = '<span class="text-red-600">❌ ' + result.error + '</span>';
+                }
+            } catch (error) {
+                log('❌ Network hatası: ' + error.message);
+                resultDiv.innerHTML = '<span class="text-red-600">❌ ' + error.message + '</span>';
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-download"></i> Bulk Veri Yükle (~10,000 ilan)';
+        }
+
+        // Veri okuma testi
+        async function testDataRead() {
+            log('📖 Database\'den veri okuma testi...');
+            document.getElementById('read-result').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Okunuyor...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/get-jobs?limit=100&page=1`);
+                const result = await response.json();
+                
+                if (result.success && result.jobs) {
+                    log(`✅ ${result.jobs.length} ilan başarıyla okundu`);
+                    log(`📊 Toplam: ${result.stats.total_jobs} ilan`);
+                    log(`📄 ${result.stats.current_page}/${result.stats.total_pages} sayfa`);
+                    
+                    // İstatistikleri hesapla
+                    const jobs = result.jobs;
+                    const remoteCount = jobs.filter(job => job.remote).length;
+                    const withSalaryCount = jobs.filter(job => job.salary_min || job.salary_max).length;
+                    
+                    const countryStats = {};
+                    jobs.forEach(job => {
+                        countryStats[job.country] = (countryStats[job.country] || 0) + 1;
+                    });
+                    
+                    let statsHtml = `
+                        <span class="text-green-600">✅ ${result.jobs.length} ilan okundu</span><br>
+                        <span class="text-sm text-gray-600">
+                            🏠 Remote: ${remoteCount} | 💰 Maaşlı: ${withSalaryCount} | 🌍 Ülkeler: ${Object.keys(countryStats).length}
+                        </span>
+                    `;
+                    document.getElementById('read-result').innerHTML = statsHtml;
+                    
+                    // Ana istatistikler panelini güncelle
+                    let detailedStats = `
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div class="bg-blue-50 p-3 rounded">
+                                <div class="text-blue-800 font-semibold">Toplam İlan</div>
+                                <div class="text-2xl font-bold text-blue-600">${result.stats.total_jobs}</div>
+                            </div>
+                            <div class="bg-green-50 p-3 rounded">
+                                <div class="text-green-800 font-semibold">Remote İşler</div>
+                                <div class="text-2xl font-bold text-green-600">${remoteCount}</div>
+                            </div>
+                            <div class="bg-purple-50 p-3 rounded">
+                                <div class="text-purple-800 font-semibold">Maaşlı İlanlar</div>
+                                <div class="text-2xl font-bold text-purple-600">${withSalaryCount}</div>
+                            </div>
+                            <div class="bg-orange-50 p-3 rounded">
+                                <div class="text-orange-800 font-semibold">Aktif Ülkeler</div>
+                                <div class="text-2xl font-bold text-orange-600">${Object.keys(countryStats).length}</div>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-sm">
+                            <strong>En Çok İlan Olan Ülkeler:</strong><br>
+                            ${Object.entries(countryStats)
+                                .sort((a, b) => b[1] - a[1])
+                                .slice(0, 5)
+                                .map(([country, count]) => `${country}: ${count}`)
+                                .join(' | ')}
+                        </div>
+                    `;
+                    document.getElementById('stats-result').innerHTML = detailedStats;
+                } else {
+                    log('⚠️ Database\'de veri bulunamadı');
+                    document.getElementById('read-result').innerHTML = '<span class="text-yellow-600">⚠️ Veri bulunamadı</span>';
+                }
+            } catch (error) {
+                log('❌ Veri okuma hatası: ' + error.message);
+                document.getElementById('read-result').innerHTML = '<span class="text-red-600">❌ ' + error.message + '</span>';
+            }
+        }
+
+        // Sayfa yüklendiğinde database testi yap
+        window.onload = () => {
+            log('🚀 Test sayfası yüklendi');
+            testDatabase();
+        };
+    </script>
+</body>
+</html>

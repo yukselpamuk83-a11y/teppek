@@ -1,67 +1,49 @@
--- Supabase'de çalıştırın
--- Önce eski tabloyu silelim (varsa)
-DROP TABLE IF EXISTS listings CASCADE;
-DROP TABLE IF EXISTS manual_listings CASCADE;
-DROP TABLE IF EXISTS fetch_stats CASCADE;
+-- MINIMAL jobs tablosu - Sadece frontend'in ihtiyacı olan alanlar
+DROP TABLE IF EXISTS jobs CASCADE;
 
--- Ana listings tablosu
-CREATE TABLE listings (
+CREATE TABLE jobs (
   id BIGSERIAL PRIMARY KEY,
-  adzuna_id VARCHAR(255) UNIQUE NOT NULL,
-  title TEXT NOT NULL,
-  company VARCHAR(500),
-  description TEXT,
+  adzuna_id VARCHAR(50) UNIQUE NOT NULL,     -- Adzuna job ID
   
-  -- Lokasyon bilgileri
-  location_city VARCHAR(255),
-  location_country VARCHAR(10),
-  location_lat DECIMAL(10, 8),
-  location_lng DECIMAL(11, 8),
-  location_address TEXT,
+  -- Harita ve popup için kritik
+  title VARCHAR(500) NOT NULL,               -- İlan başlığı
+  company VARCHAR(200),                      -- Şirket adı
+  lat DECIMAL(10, 8) NOT NULL,              -- Enlem (harita)
+  lon DECIMAL(11, 8) NOT NULL,              -- Boylam (harita)
+  url TEXT NOT NULL,                        -- Başvuru linki
   
-  -- Maaş bilgileri
+  -- Filtreleme ve arama için
+  country VARCHAR(2) NOT NULL,              -- Ülke kodu (GB, US, etc)
+  city VARCHAR(100),                        -- Şehir
+  remote BOOLEAN DEFAULT false,             -- Remote iş mi
+  
+  -- Maaş bilgileri (opsiyonel)
   salary_min INTEGER,
   salary_max INTEGER,
-  salary_currency VARCHAR(10) DEFAULT 'USD',
-  salary_is_predicted BOOLEAN DEFAULT false,
-  
-  -- İş detayları
-  employment_type VARCHAR(100),
-  contract_time VARCHAR(100),
-  category VARCHAR(255),
-  
-  -- Başvuru
-  apply_url TEXT,
+  currency VARCHAR(3) DEFAULT 'USD',
   
   -- Meta
-  source VARCHAR(50) DEFAULT 'adzuna',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- İndeksler
-CREATE INDEX idx_listings_country ON listings(location_country);
-CREATE INDEX idx_listings_city ON listings(location_city);
-CREATE INDEX idx_listings_created ON listings(created_at DESC);
+-- Minimal indeksler
+CREATE INDEX idx_jobs_location ON jobs(lat, lon);  -- Harita sorguları
+CREATE INDEX idx_jobs_country ON jobs(country);    -- Ülke filtresi
+CREATE INDEX idx_jobs_remote ON jobs(remote) WHERE remote = true;
 
--- Test verisi ekleyelim
-INSERT INTO listings (
-  adzuna_id, title, company, description, 
-  location_city, location_country, location_lat, location_lng, location_address,
-  salary_min, salary_max, employment_type, category, apply_url
+-- Minimal test data
+INSERT INTO jobs (
+  adzuna_id, title, company, country, city, lat, lon, url,
+  salary_min, salary_max, currency, remote
 ) VALUES 
-  ('test-1', 'Software Developer', 'Tech Corp', 'Great opportunity', 
-   'London', 'gb', 51.5074, -0.1278, 'London, UK',
-   50000, 70000, 'Full-time', 'IT Jobs', 'https://www.adzuna.co.uk/jobs/details/1'),
-  ('test-2', 'Data Scientist', 'Data Inc', 'Work with big data', 
-   'New York', 'us', 40.7128, -74.0060, 'New York, USA',
-   80000, 120000, 'Full-time', 'IT Jobs', 'https://www.adzuna.com/jobs/details/2'),
-  ('test-3', 'Product Manager', 'Startup GmbH', 'Lead our product', 
-   'Berlin', 'de', 52.5200, 13.4050, 'Berlin, Germany',
-   60000, 90000, 'Full-time', 'IT Jobs', 'https://www.adzuna.de/jobs/details/3');
+  ('test-1', 'Software Developer', 'Tech Corp', 'GB', 'London', 51.5074, -0.1278, 
+   'https://www.adzuna.co.uk/jobs/details/1', 50000, 70000, 'GBP', false),
+  ('test-2', 'Data Scientist', 'Data Inc', 'US', 'New York', 40.7128, -74.0060, 
+   'https://www.adzuna.com/jobs/details/2', 80000, 120000, 'USD', false),
+  ('test-3', 'Remote Developer', 'Startup GmbH', 'DE', 'Berlin', 52.5200, 13.4050, 
+   'https://www.adzuna.de/jobs/details/3', 60000, 90000, 'EUR', true);
 
--- Kontrol edelim
-SELECT COUNT(*) as total_count FROM listings;
-SELECT location_country, COUNT(*) as count 
-FROM listings 
-GROUP BY location_country;
+-- Verification
+SELECT COUNT(*) as total FROM jobs;
+SELECT country, COUNT(*) FROM jobs GROUP BY country;
+SELECT COUNT(*) as remote FROM jobs WHERE remote = true;
