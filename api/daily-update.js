@@ -1,8 +1,7 @@
-// GÜNLÜK GÜNCELLEME API'si
-// Her gece saat 3'te çalışır
-// Son 24 saatin yeni ilanlarını ekler
+// DAILY UPDATE API - Günlük veri güncelleme
+// Cron job tarafından her gece çağrılır
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -11,40 +10,52 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // Güvenlik kontrolü - sadece Vercel cron job'ı çalıştırabilir
-  const authHeader = req.headers.authorization;
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
-  console.log('🌙 Günlük güncelleme başladı:', new Date().toLocaleString('tr-TR'));
-  
   try {
-    // Son 24 saatin ilanlarını çek
-    const response = await fetch('https://teppek.com/api/adzuna-massive?mode=fetch&initial=false');
-    const result = await response.json();
+    // load-data API'sini dahili olarak çağır
+    const loadData = require('./load-data.js');
     
-    if (result.success) {
-      console.log('✅ Güncelleme tamamlandı!');
-      console.log(`📊 İstatistikler:`, result.stats);
-      
-      return res.status(200).json({
-        success: true,
-        message: `Günlük güncelleme başarılı`,
-        stats: result.stats,
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      throw new Error(result.error || 'Güncelleme başarısız');
-    }
+    // Son 1 günün verilerini çek, 3 ülkeden, sayfa başına 3 sayfa
+    const mockReq = {
+      query: {
+        countries: 'gb,us,de', // Ana ülkeler
+        days: '1',             // Son 24 saat
+        pages: '3'             // Ülke başına 3 sayfa (150 ilan max)
+      },
+      method: 'GET'
+    };
+    
+    // Response mock'ı
+    let responseData = null;
+    let statusCode = 200;
+    
+    const mockRes = {
+      setHeader: () => {},
+      status: (code) => {
+        statusCode = code;
+        return mockRes;
+      },
+      json: (data) => {
+        responseData = data;
+        return mockRes;
+      }
+    };
+    
+    // Load data çalıştır
+    await loadData(mockReq, mockRes);
+    
+    return res.status(statusCode).json({
+      success: true,
+      message: 'Daily update completed',
+      timestamp: new Date().toISOString(),
+      result: responseData
+    });
     
   } catch (error) {
-    console.error('❌ Günlük güncelleme hatası:', error);
-    
+    console.error('Daily update error:', error);
     return res.status(500).json({
       success: false,
       error: error.message,
       timestamp: new Date().toISOString()
     });
   }
-}
+};
