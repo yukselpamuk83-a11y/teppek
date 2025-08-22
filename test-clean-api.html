@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teppek - Temiz API Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        h1 { color: #333; }
+        .test-section { margin: 30px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .button { padding: 12px 24px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .button:hover { background: #0056b3; }
+        .button.success { background: #28a745; }
+        .button.error { background: #dc3545; }
+        .result { margin: 15px 0; padding: 15px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .error { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+        .info { background: #d1ecf1; color: #0c5460; border-left: 4px solid #17a2b8; }
+        pre { white-space: pre-wrap; word-wrap: break-word; font-size: 12px; max-height: 400px; overflow-y: auto; }
+        .status-bar { background: #343a40; color: white; padding: 10px; border-radius: 5px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Teppek - Temiz API Test Sistemi</h1>
+        
+        <div class="status-bar">
+            <strong>Status:</strong> <span id="status">Hazır</span> | 
+            <strong>Toplam Test:</strong> <span id="testCount">0</span> | 
+            <strong>Başarılı:</strong> <span id="successCount">0</span> | 
+            <strong>Hatalı:</strong> <span id="errorCount">0</span>
+        </div>
+
+        <!-- Test 1: Sistem Durumu -->
+        <div class="test-section">
+            <h3>📊 Test 1: Sistem Durumu</h3>
+            <p>API'nin çalışıp çalışmadığını ve konfigürasyonları kontrol eder.</p>
+            <button class="button" onclick="testSystem()">🚀 Sistem Testi Çalıştır</button>
+            <div id="system-result"></div>
+        </div>
+
+        <!-- Test 2: Veri Yükleme -->
+        <div class="test-section">
+            <h3>📥 Test 2: Veri Yükleme</h3>
+            <p>Adzuna API'sinden veri çekip PostgreSQL'e kaydeder.</p>
+            <button class="button" onclick="testLoadData('gb', 1, 2)">🇬🇧 İngiltere (Hızlı)</button>
+            <button class="button" onclick="testLoadData('us,de,fr', 3, 3)">🌍 Çoklu Ülke (Normal)</button>
+            <button class="button" onclick="testLoadData('gb,us,de,fr,ca', 7, 5)">🚀 Tam Test (Yavaş)</button>
+            <div id="load-result"></div>
+        </div>
+
+        <!-- Test 3: Veri Okuma -->
+        <div class="test-section">
+            <h3>📋 Test 3: İş İlanları Okuma</h3>
+            <p>PostgreSQL'den iş ilanlarını getirir ve filtreler.</p>
+            <button class="button" onclick="testGetJobs()">📋 Tüm İlanlar</button>
+            <button class="button" onclick="testGetJobs('q=developer')">🔍 Developer Araması</button>
+            <button class="button" onclick="testGetJobs('country=GB')">🇬🇧 İngiltere İlanları</button>
+            <button class="button" onclick="testGetJobs('remote=true')">🏠 Remote İşler</button>
+            <div id="jobs-result"></div>
+        </div>
+
+        <!-- Genel Sonuçlar -->
+        <div class="test-section">
+            <h3>📈 Genel Sonuçlar</h3>
+            <button class="button" onclick="clearAll()">🗑️ Tümünü Temizle</button>
+            <button class="button" onclick="runAllTests()">🎯 Tüm Testleri Çalıştır</button>
+            <div id="summary-result"></div>
+        </div>
+    </div>
+
+    <script>
+        let testCount = 0;
+        let successCount = 0;
+        let errorCount = 0;
+
+        function updateStats() {
+            document.getElementById('testCount').textContent = testCount;
+            document.getElementById('successCount').textContent = successCount;
+            document.getElementById('errorCount').textContent = errorCount;
+        }
+
+        function setStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        function addResult(containerId, title, success, data, duration = null) {
+            const container = document.getElementById(containerId);
+            const resultDiv = document.createElement('div');
+            const durationText = duration ? ` (${duration}ms)` : '';
+            
+            resultDiv.className = `result ${success ? 'success' : 'error'}`;
+            resultDiv.innerHTML = `
+                <h4>${success ? '✅' : '❌'} ${title}${durationText}</h4>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            
+            container.appendChild(resultDiv);
+            container.scrollTop = container.scrollHeight;
+            
+            testCount++;
+            if (success) successCount++;
+            else errorCount++;
+            updateStats();
+        }
+
+        async function testSystem() {
+            setStatus('🔍 Sistem testi çalışıyor...');
+            const startTime = Date.now();
+            
+            try {
+                const response = await fetch('https://teppek.com/api/test');
+                const data = await response.json();
+                const duration = Date.now() - startTime;
+                
+                addResult('system-result', 'Sistem Durumu', data.success, data, duration);
+                setStatus(data.success ? '✅ Sistem testi başarılı' : '❌ Sistem testi başarısız');
+            } catch (error) {
+                const duration = Date.now() - startTime;
+                addResult('system-result', 'Sistem Durumu', false, { error: error.message }, duration);
+                setStatus('❌ Sistem testi hatalı');
+            }
+        }
+
+        async function testLoadData(countries, days, pages) {
+            setStatus(`🔄 Veri yükleme başlatılıyor... (${countries})`);
+            const startTime = Date.now();
+            
+            try {
+                const url = `https://teppek.com/api/load-data?countries=${countries}&days=${days}&pages=${pages}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                const duration = Date.now() - startTime;
+                
+                addResult('load-result', `Veri Yükleme (${countries})`, data.success, data, duration);
+                setStatus(data.success ? `✅ Veri yükleme tamamlandı (${data.summary?.total_inserted || 0} ilan)` : '❌ Veri yükleme başarısız');
+            } catch (error) {
+                const duration = Date.now() - startTime;
+                addResult('load-result', `Veri Yükleme (${countries})`, false, { error: error.message }, duration);
+                setStatus('❌ Veri yükleme hatalı');
+            }
+        }
+
+        async function testGetJobs(params = '') {
+            setStatus('📋 İş ilanları getiriliyor...');
+            const startTime = Date.now();
+            
+            try {
+                const url = `https://teppek.com/api/get-jobs${params ? '?' + params : ''}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                const duration = Date.now() - startTime;
+                
+                const title = `İş İlanları${params ? ' (' + params + ')' : ''}`;
+                addResult('jobs-result', title, data.success, {
+                    stats: data.stats,
+                    filters: data.filters,
+                    sample_jobs: data.jobs?.slice(0, 3) // İlk 3 ilanı göster
+                }, duration);
+                
+                setStatus(data.success ? `✅ ${data.stats?.total_jobs || 0} ilan bulundu` : '❌ İlan getirme başarısız');
+            } catch (error) {
+                const duration = Date.now() - startTime;
+                addResult('jobs-result', 'İş İlanları', false, { error: error.message }, duration);
+                setStatus('❌ İş ilanları getirilemedi');
+            }
+        }
+
+        async function runAllTests() {
+            setStatus('🎯 Tüm testler çalıştırılıyor...');
+            
+            // 1. Sistem testi
+            await testSystem();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // 2. Küçük veri yükleme testi
+            await testLoadData('gb', 1, 2);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // 3. Veri okuma testleri
+            await testGetJobs();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testGetJobs('q=developer');
+            
+            setStatus('🎉 Tüm testler tamamlandı!');
+            
+            // Özet
+            const summaryData = {
+                total_tests: testCount,
+                successful: successCount,
+                failed: errorCount,
+                success_rate: `${((successCount / testCount) * 100).toFixed(1)}%`,
+                completed_at: new Date().toLocaleTimeString()
+            };
+            
+            addResult('summary-result', 'Test Özeti', successCount > errorCount, summaryData);
+        }
+
+        function clearAll() {
+            ['system-result', 'load-result', 'jobs-result', 'summary-result'].forEach(id => {
+                document.getElementById(id).innerHTML = '';
+            });
+            testCount = 0;
+            successCount = 0;
+            errorCount = 0;
+            updateStats();
+            setStatus('Hazır');
+        }
+
+        // Sayfa yüklendiğinde
+        setStatus('Hazır - Testleri başlatmak için butonlara tıklayın');
+    </script>
+</body>
+</html>

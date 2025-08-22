@@ -1,0 +1,195 @@
+// LOAD DATA API - Adzuna'dan veri çekip PostgreSQL'e kaydet
+const { Pool } = require('pg');
+
+// Adzuna API anahtarları
+function getAdzunaKeys() {
+  const keys = [];
+  for (let i = 1; i <= 5; i++) {
+    const app_id = process.env[`ADZUNA_APP_ID_${i}`];
+    const app_key = process.env[`ADZUNA_APP_KEY_${i}`];
+    if (app_id && app_key) {
+      keys.push({ app_id, app_key });
+    }
+  }
+  
+  // Eğer environment'da yoksa, sabit kodlu anahtarları kullan
+  if (keys.length === 0) {
+    keys.push(
+      { app_id: 'a19dd595', app_key: '0ca6f72f3a5cafae1643cfae18100181' },
+      { app_id: 'a19dd595', app_key: '0f8160edaa39c3dcac3962d77b32236b' },
+      { app_id: 'a19dd595', app_key: '1a2a55f9ad16c54c2b2e8efa67151f39' },
+      { app_id: 'a19dd595', app_key: '739d1471fef22292b75f15b401556bdb' },
+      { app_id: 'a19dd595', app_key: 'b7e0a6d929446aa1b9610dc3f8d22dd8' }
+    );
+  }
+  
+  return keys;
+}
+
+// Desteklenen ülkeler
+const COUNTRIES = ['gb', 'us', 'de', 'fr', 'ca', 'au', 'nl', 'it', 'es', 'sg'];
+
+// Adzuna'dan veri çek
+async function fetchFromAdzuna(country, page, apiKey, maxDays = 7) {
+  const url = `https://api.adzuna.com/v1/api/jobs/${country}/search/${page}?` +
+    `app_id=${apiKey.app_id}&app_key=${apiKey.app_key}` +
+    `&results_per_page=50&sort_by=date&max_days_old=${maxDays}` +
+    `&content-type=application/json`;
+  
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+  
+  return response.json();
+}
+
+// PostgreSQL'e kaydet
+async function saveToDatabase(client, job, country) {
+  const query = `
+    INSERT INTO jobs (
+      provider, provider_id, title, company, city, region, country,
+      lat, lon, url, posted_at, salary_min, salary_max, currency,
+      contract_time, remote, raw
+    ) VALUES (
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+    ) ON CONFLICT (provider, provider_id) DO NOTHING
+    RETURNING id;
+  `;
+  
+  const city = Array.isArray(job.location?.area) ? 
+    job.location.area[job.location.area.length - 1] : null;
+  const region = Array.isArray(job.location?.area) ? 
+    job.location.area[job.location.area.length - 2] : null;
+  
+  const values = [
+    'adzuna',
+    String(job.id),
+    job.title || null,
+    job.company?.display_name || null,
+    city || null,
+    region || null,
+    country.toUpperCase(),
+    job.latitude || null,
+    job.longitude || null,
+    job.redirect_url || null,
+    job.created ? new Date(job.created) : null,
+    job.salary_min || null,
+    job.salary_max || null,
+    job.salary_currency || null,
+    job.contract_time || null,
+    false, // remote
+    job // raw JSON data
+  ];
+  
+  const result = await client.query(query, values);
+  return result.rowCount > 0;
+}
+
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  const {
+    countries = 'gb',  // Yüklenecek ülkeler (virgülle ayrılmış)
+    days = '7',        // Kaç gün geriye gidilecek
+    pages = '5'        // Ülke başına kaç sayfa
+  } = req.query;
+
+  if (!process.env.DATABASE_URL) {
+    return res.status(500).json({
+      success: false,
+      error: 'DATABASE_URL environment variable not configured'
+    });
+  }
+
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
+
+  const maxDays = parseInt(days);
+  const maxPages = parseInt(pages);
+  const countryList = countries.split(',').map(c => c.trim().toLowerCase());
+  const apiKeys = getAdzunaKeys();
+  
+  const summary = {
+    started_at: new Date().toISOString(),
+    countries: countryList,
+    total_inserted: 0,
+    by_country: {},
+    api_calls: 0,
+    errors: []
+  };
+
+  let client;
+  try {
+    client = await pool.connect();
+    let keyIndex = 0;
+
+    for (const country of countryList) {
+      if (!COUNTRIES.includes(country)) {
+        summary.errors.push(`Unsupported country: ${country}`);
+        continue;
+      }
+
+      let countryInserted = 0;
+      
+      for (let page = 1; page <= maxPages; page++) {
+        try {
+          const apiKey = apiKeys[keyIndex % apiKeys.length];
+          keyIndex++;
+          
+          const data = await fetchFromAdzuna(country, page, apiKey, maxDays);
+          summary.api_calls++;
+          
+          if (!data.results || data.results.length === 0) {
+            break; // No more results
+          }
+          
+          for (const job of data.results) {
+            try {
+              const inserted = await saveToDatabase(client, job, country);
+              if (inserted) countryInserted++;
+            } catch (dbError) {
+              summary.errors.push(`DB error for job ${job.id}: ${dbError.message}`);
+            }
+          }
+          
+          // Rate limiting
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+        } catch (apiError) {
+          summary.errors.push(`API error ${country} page ${page}: ${apiError.message}`);
+          break;
+        }
+      }
+      
+      summary.by_country[country] = countryInserted;
+      summary.total_inserted += countryInserted;
+    }
+
+    summary.completed_at = new Date().toISOString();
+    
+    return res.status(200).json({
+      success: true,
+      message: `Loaded ${summary.total_inserted} jobs from ${countryList.length} countries`,
+      summary
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+      summary
+    });
+  } finally {
+    if (client) client.release();
+    await pool.end();
+  }
+};
