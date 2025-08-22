@@ -206,11 +206,11 @@ module.exports = async (req, res) => {
       }
     }
 
-    // Eski ilanları temizle (3 günden eski olanlar - basit tarih kontrolü)
+    // 30 günlük rolling window - bizim çektiğimiz tarihten 30 gün öncesini sil
     const deleteResult = await client.query(`
       DELETE FROM jobs 
       WHERE source = 'adzuna' 
-      AND created_at < NOW() - INTERVAL '3 days'
+      AND created_at < NOW() - INTERVAL '30 days'
     `);
     summary.deleted_jobs = deleteResult.rowCount;
 
@@ -218,7 +218,7 @@ module.exports = async (req, res) => {
     
     return res.status(200).json({
       success: true,
-      message: `Daily refresh completed: ${summary.new_jobs} new jobs, ${summary.deleted_jobs} old jobs deleted`,
+      message: `Daily refresh completed: ${summary.new_jobs} new jobs added, ${summary.deleted_jobs} jobs older than 30 days deleted`,
       summary
     });
 
