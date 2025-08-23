@@ -58,62 +58,8 @@ function App() {
             try {
                 console.log('🌍 Database\'den iş ilanları yükleniyor...')
                 
-                // Database'den iş ilanlarını çek - önce kendi API'yi dene, sonra teppek.com'u proxy yap
-                let response = await fetch('/api/get-jobs?limit=100000&page=1')
-                
-                // Eğer kendi API çalışmıyorsa, CORS proxy ile teppek.com'dan çek
-                if (!response.ok) {
-                    console.log('🔄 Local API çalışmıyor, teppek.com proxy deneniyor...')
-                    response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://teppek.com/api/get-jobs?limit=100000&page=1')}`)
-                }
-                
-                // API response kontrolü
-                if (!response.ok) {
-                    console.warn('⚠️ API yanıt vermedi, demo verileri yükleniyor...')
-                    // Demo/mock data yükle
-                    const demoJobs = [
-                        {
-                            id: 1, title: 'React Developer', company: 'TechCorp', 
-                            lat: 41.0082, lon: 28.9784, city: 'Istanbul', country: 'Turkey',
-                            salary_min: 15000, salary_max: 25000, currency: 'TRY',
-                            source: 'demo', url: '#', created_at: new Date().toISOString()
-                        },
-                        {
-                            id: 2, title: 'Python Developer', company: 'DataCorp',
-                            lat: 39.9334, lon: 32.8597, city: 'Ankara', country: 'Turkey', 
-                            salary_min: 12000, salary_max: 20000, currency: 'TRY',
-                            source: 'demo', url: '#', created_at: new Date().toISOString()
-                        },
-                        {
-                            id: 3, title: 'Frontend Developer', company: 'WebStudio',
-                            lat: 38.4192, lon: 27.1287, city: 'Izmir', country: 'Turkey',
-                            salary_min: 10000, salary_max: 18000, currency: 'TRY', 
-                            source: 'demo', url: '#', created_at: new Date().toISOString()
-                        }
-                    ]
-                    
-                    const result = { success: true, jobs: demoJobs, stats: { total_jobs: demoJobs.length } }
-                    
-                    const formattedJobs = result.jobs.map(job => ({
-                        id: `demo-${job.id}`,
-                        type: 'job',
-                        title: job.title,
-                        company: job.company || 'Şirket Belirtilmemiş',
-                        location: { lat: parseFloat(job.lat), lng: parseFloat(job.lon) },
-                        address: `${job.city || ''}, ${job.country || ''}`.replace(/^,\s*|,\s*$/g, ''),
-                        salary_min: job.salary_min,
-                        salary_max: job.salary_max,
-                        currency: job.currency,
-                        applyUrl: job.url,
-                        source: job.source || 'demo',
-                        postedDate: job.created_at
-                    }))
-                    
-                    setData(prevData => [...prevData, ...formattedJobs])
-                    console.log(`✅ ${formattedJobs.length} adet demo ilanı yüklendi!`)
-                    return
-                }
-                
+                // Database'den iş ilanlarını çek - Environment variables eklendi
+                const response = await fetch('/api/get-jobs?limit=100000&page=1')
                 const result = await response.json()
                 
                 if (result.success && result.jobs && result.jobs.length > 0) {
