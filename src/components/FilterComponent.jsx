@@ -19,7 +19,10 @@ function FilterComponent({ onFilterChange, setCurrentPage, isSubscribed, onSubsc
         try {
             console.log('🧹 Filtreleri temizleniyor - optimize edilmiş veri çekiliyor...')
             
-            const response = await fetch(`https://teppek.com/api/get-jobs?clear=true&limit=100000&page=1`)
+            const apiUrl = import.meta.env.DEV 
+                ? '/api/get-jobs?clear=true&limit=100000&page=1'
+                : 'https://teppek.com/api/get-jobs?clear=true&limit=100000&page=1'
+            const response = await fetch(apiUrl)
             const result = await response.json()
             
             if (result.success && result.jobs) {

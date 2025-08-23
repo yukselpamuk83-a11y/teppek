@@ -12,7 +12,9 @@
       "Bash(npm run dev:*)",
       "Bash(git restore:*)",
       "Bash(npm run deploy:*)",
-      "Bash(vercel:*)"
+      "Bash(vercel:*)",
+      "WebFetch(domain:vercel.com)",
+      "Bash(npm run vercel-dev:*)"
     ],
     "deny": [],
     "ask": []
