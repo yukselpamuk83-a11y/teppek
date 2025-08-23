@@ -58,8 +58,14 @@ function App() {
             try {
                 console.log('🌍 Database\'den iş ilanları yükleniyor...')
                 
-                // Database'den iş ilanlarını çek - API endpoints Vercel'de mevcut
-                const response = await fetch('/api/get-jobs?limit=100000&page=1')
+                // Database'den iş ilanlarını çek - önce kendi API'yi dene, sonra teppek.com'u proxy yap
+                let response = await fetch('/api/get-jobs?limit=100000&page=1')
+                
+                // Eğer kendi API çalışmıyorsa, CORS proxy ile teppek.com'dan çek
+                if (!response.ok) {
+                    console.log('🔄 Local API çalışmıyor, teppek.com proxy deneniyor...')
+                    response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://teppek.com/api/get-jobs?limit=100000&page=1')}`)
+                }
                 
                 // API response kontrolü
                 if (!response.ok) {

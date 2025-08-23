@@ -19,7 +19,13 @@ function FilterComponent({ onFilterChange, setCurrentPage, isSubscribed, onSubsc
         try {
             console.log('🧹 Filtreleri temizleniyor - optimize edilmiş veri çekiliyor...')
             
-            const response = await fetch('/api/get-jobs?clear=true&limit=100000&page=1')
+            let response = await fetch('/api/get-jobs?clear=true&limit=100000&page=1')
+            
+            // Eğer local API çalışmıyorsa, CORS proxy ile teppek.com'dan çek
+            if (!response.ok) {
+                console.log('🔄 Local API çalışmıyor, teppek.com proxy deneniyor...')
+                response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://teppek.com/api/get-jobs?clear=true&limit=100000&page=1')}`)
+            }
             const result = await response.json()
             
             if (result.success && result.jobs) {
