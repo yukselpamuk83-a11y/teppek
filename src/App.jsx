@@ -58,11 +58,8 @@ function App() {
             try {
                 console.log('🌍 Database\'den iş ilanları yükleniyor...')
                 
-                // Database'den iş ilanlarını çek
-                const apiUrl = import.meta.env.DEV 
-                    ? '/api/get-jobs?limit=100000&page=1'
-                    : 'https://teppek.com/api/get-jobs?limit=100000&page=1'
-                const response = await fetch(apiUrl)
+                // Database'den iş ilanlarını çek - API endpoints Vercel'de mevcut
+                const response = await fetch('/api/get-jobs?limit=100000&page=1')
                 const result = await response.json()
                 
                 if (result.success && result.jobs && result.jobs.length > 0) {

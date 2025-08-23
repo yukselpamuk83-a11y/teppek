@@ -1,23 +1,57 @@
 import { useEffect, useRef, useState } from 'react'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
-import 'leaflet.markercluster/dist/MarkerCluster.css'
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
-import 'leaflet.markercluster'
-
-// Leaflet icon fix for Webpack/Vite
-import icon from 'leaflet/dist/images/marker-icon.png'
-import iconShadow from 'leaflet/dist/images/marker-shadow.png'
-import iconRetina from 'leaflet/dist/images/marker-icon-2x.png'
-
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: iconRetina,
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-})
-
 import { getDistance } from '../utils/distance'
+
+// Leaflet global import - bu şekilde çalışacak
+let L
+let MarkerClusterGroup
+
+const loadLeaflet = async () => {
+    if (typeof window !== 'undefined') {
+        // Leaflet CSS
+        if (!document.querySelector('link[href*="leaflet"]')) {
+            const leafletCSS = document.createElement('link')
+            leafletCSS.rel = 'stylesheet'
+            leafletCSS.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+            document.head.appendChild(leafletCSS)
+        }
+        
+        // MarkerCluster CSS
+        if (!document.querySelector('link[href*="MarkerCluster"]')) {
+            const clusterCSS1 = document.createElement('link')
+            clusterCSS1.rel = 'stylesheet' 
+            clusterCSS1.href = 'https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css'
+            document.head.appendChild(clusterCSS1)
+            
+            const clusterCSS2 = document.createElement('link')
+            clusterCSS2.rel = 'stylesheet'
+            clusterCSS2.href = 'https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css'
+            document.head.appendChild(clusterCSS2)
+        }
+        
+        // Leaflet JS
+        if (!window.L) {
+            await new Promise((resolve) => {
+                const script = document.createElement('script')
+                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+                script.onload = resolve
+                document.head.appendChild(script)
+            })
+        }
+        
+        // MarkerCluster JS
+        if (!window.L.markerClusterGroup) {
+            await new Promise((resolve) => {
+                const script = document.createElement('script')
+                script.src = 'https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js'
+                script.onload = resolve
+                document.head.appendChild(script)
+            })
+        }
+        
+        L = window.L
+        MarkerClusterGroup = L.markerClusterGroup
+    }
+}
 
 function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPremiumClick }) {
     const mapRef = useRef(null)
@@ -44,7 +78,10 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
     }
 
     useEffect(() => {
-        if (mapRef.current && !mapInstance.current) {
+        const initMap = async () => {
+            await loadLeaflet()
+            
+            if (mapRef.current && !mapInstance.current && L) {
             mapInstance.current = L.map(mapRef.current, {
                 maxBounds: [[-90, -180], [90, 180]], // Dünya sınırları
                 maxBoundsViscosity: 1.0,              // Sert sınır
@@ -80,7 +117,10 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
                     mapInstance.current.invalidateSize()
                 }
             }, 100)
+            }
         }
+        
+        initMap()
     }, [userLocation])
 
     useEffect(() => {
