@@ -14,8 +14,7 @@ const initialData = []
 
 function App() {
     const [data, setData] = useState(initialData)
-    const [apiData, setApiData] = useState([]) // Sadece API'den gelen veri (kullanıcı verisi YOK)
-    const [processedApiData, setProcessedApiData] = useState([]) // İşlenmiş API verisi cache
+    const [apiData, setApiData] = useState([]) // Sadece API'den gelen veri (kullanıcı verisi YOK) - cache için
     const [activeFilters, setActiveFilters] = useState({ type: 'all', keyword: '' })
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
     const [selectedLocation, setSelectedLocation] = useState(null)
@@ -122,11 +121,7 @@ function App() {
     const processedData = useMemo(() => {
         if (!userLocation || data.length === 0) return []
 
-        // FAST PATH: Temizle butonu - sadece API verilerini göster (kullanıcı verileri YOK)
-        if (activeFilters.type === 'all' && activeFilters.keyword === '' && processedApiData.length > 0) {
-            console.log('🚀 HIZLI TEMIZLE - Sadece DB verileri cache\'den yüklendi!')
-            return processedApiData
-        }
+        // Cache logic artık handleFilterChange'de - burayı basitleştir
 
         const startTime = performance.now()
         console.log('🔄 Veri işleme başlıyor:', { 
@@ -190,17 +185,12 @@ function App() {
             return a.distance - b.distance
         })
 
-        // İlk API verisi yüklemesi ise cache'le (sadece API verisi varsa)
-        if (activeFilters.type === 'all' && activeFilters.keyword === '' && 
-            processedApiData.length === 0 && data.length === apiData.length) {
-            console.log('💾 API verileri cache\'leniyor (kullanıcı verisi hariç)')
-            setProcessedApiData(itemsWithDistance)
-        }
+        // Basit cache logic kaldırıldı - handleFilterChange yapıyor artık
 
         const endTime = performance.now()
         console.log(`⚡ İşlem tamamlandı: ${itemsWithDistance.length} sonuç (${(endTime - startTime).toFixed(2)}ms)`)
         return itemsWithDistance
-    }, [data, activeFilters, isSubscribed, userLocation, processedApiData, apiData])
+    }, [data, activeFilters, isSubscribed, userLocation])
     
     const paginatedData = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage
@@ -232,6 +222,10 @@ function App() {
         } else if (filters.useCachedData) {
             // HIZLI TEMIZLE: Cache'den veri kullan - hiç hesaplama yapma
             console.log('🚀 CACHE HIT - İlk yükleme verisi gösteriliyor')
+            if (apiData.length > 0) {
+                setData(apiData) // Orjinal API verisini restore et
+                console.log(`✅ ${apiData.length} kayıt cache'den yüklendi`)
+            }
             setActiveFilters({ type: 'all', keyword: '' })
         } else if (filters.apiData) {
             // BACKEND FİLTRE: API'den gelen hazır veri
