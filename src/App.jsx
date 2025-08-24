@@ -76,7 +76,7 @@ function App() {
             try {
                 console.log('🌍 Database\'den iş ilanları yükleniyor...')
                 
-                const response = await fetch('/api/get-jobs?limit=100000&page=1')
+                const response = await fetch('/api/get-jobs?limit=1000&page=1') // İlk 1000 kayıt yeterli
                 const result = await response.json()
                 
                 if (result.success && result.jobs?.length > 0) {
@@ -225,16 +225,25 @@ function App() {
 
     const handleFilterChange = useCallback((filters) => {
         if (filters.clearData) {
-            // Ortak mapping fonksiyonunu kullan
+            // Legacy: Ortak mapping fonksiyonunu kullan
             const formattedJobs = mapJobData(filters.clearData)
             setData(formattedJobs)
             setActiveFilters({ type: 'all', keyword: '' })
+        } else if (filters.useCachedData) {
+            // HIZLI TEMIZLE: Cache'den veri kullan - hiç hesaplama yapma
+            console.log('🚀 CACHE HIT - İlk yükleme verisi gösteriliyor')
+            setActiveFilters({ type: 'all', keyword: '' })
+        } else if (filters.apiData) {
+            // BACKEND FİLTRE: API'den gelen hazır veri
+            console.log('📡 Backend\'ten filtrelenmiş veri alındı')
+            const formattedJobs = mapJobData(filters.apiData)
+            setData(formattedJobs)
+            setActiveFilters({ type: filters.type, keyword: filters.keyword })
         } else {
-            // Non-blocking filter change for better INP
+            // Legacy frontend filtering
             startTransition(() => {
                 setActiveFilters(filters)
             })
-            console.log('⚡ Filter change queued as low-priority transition')
         }
     }, [mapJobData])
     
