@@ -17,7 +17,7 @@ function FilterComponent({ onFilterChange, setCurrentPage, isSubscribed, onSubsc
         
         // Sadece filtreleri temizle - cache'lenmiş veri kullanılır  
         onFilterChange({ type: 'all', keyword: '' })
-        console.log('🚀 TEMIZLE BUTONU - Filtreler sıfırlandı, cache devreye girecek!')
+        console.log('🧹 TEMIZLE BUTONU basıldı - filtreler sıfırlanıyor!')
     }
 
     return (

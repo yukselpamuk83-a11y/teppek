@@ -14,7 +14,6 @@ const initialData = []
 
 function App() {
     const [data, setData] = useState(initialData)
-    const [initialLoadedData, setInitialLoadedData] = useState([]) // Cache initial data
     const [activeFilters, setActiveFilters] = useState({ type: 'all', keyword: '' })
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
     const [selectedLocation, setSelectedLocation] = useState(null)
@@ -96,8 +95,6 @@ function App() {
                     
                     // TEK SEFERLİK SET - concat değil replace
                     setData(formattedJobs)
-                    setInitialLoadedData(formattedJobs) // Cache initial data for fast clear
-                    setProcessedDataCache(new Map()) // Clear cache when new data loads
                 } else {
                     console.log('⚠️ Database\'de henüz veri yok.')
                     setData([])
@@ -119,22 +116,15 @@ function App() {
         return () => window.removeEventListener('resize', handleResize)
     }, [])
     
-    // Cache processed data for better performance
-    const [processedDataCache, setProcessedDataCache] = useState(new Map())
-    
     const processedData = useMemo(() => {
         if (!userLocation || data.length === 0) return []
 
-        // Create cache key
-        const cacheKey = `${activeFilters.type}-${activeFilters.keyword}-${isSubscribed}`
-        
-        // Return cached result if available (for fast clear)
-        if (processedDataCache.has(cacheKey)) {
-            console.log('🎯 CACHE HIT! Temizle butonu hızlı çalıştı:', cacheKey)
-            return processedDataCache.get(cacheKey)
-        }
-
-        console.log('⚙️ CACHE MISS - Yeni hesaplama yapılıyor:', cacheKey)
+        const startTime = performance.now()
+        console.log('🔄 Veri işleme başlıyor:', { 
+            totalData: data.length, 
+            filters: activeFilters, 
+            isSubscribed 
+        })
         
         // Keyword filtrelemesi için sadece gerekli olduğunda toLowerCase yap
         const lowerKeyword = activeFilters.keyword ? activeFilters.keyword.toLowerCase() : ''
@@ -179,16 +169,8 @@ function App() {
             return a.distance - b.distance
         })
 
-        // Cache the result
-        const newCache = new Map(processedDataCache)
-        newCache.set(cacheKey, itemsWithDistance)
-        // Keep only last 10 cached results to prevent memory leak
-        if (newCache.size > 10) {
-            const firstKey = newCache.keys().next().value
-            newCache.delete(firstKey)
-        }
-        setProcessedDataCache(newCache)
-
+        const endTime = performance.now()
+        console.log(`⚡ İşlem tamamlandı: ${itemsWithDistance.length} sonuç (${(endTime - startTime).toFixed(2)}ms)`)
         return itemsWithDistance
     }, [data, activeFilters, isSubscribed, userLocation])
     
@@ -203,7 +185,6 @@ function App() {
     const handleAddEntry = useCallback((entry) => {
         const newEntry = { ...entry, id: Date.now(), isOwner: true, isSponsored: false }
         setData(prevData => [newEntry, ...prevData])
-        setProcessedDataCache(new Map()) // Clear cache when new entry added
         if(isMobile) setIsMobileFormOpen(false)
     }, [isMobile])
 
