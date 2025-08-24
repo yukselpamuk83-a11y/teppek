@@ -214,32 +214,22 @@ function App() {
     }, [isMobile])
 
     const handleFilterChange = useCallback((filters) => {
-        if (filters.clearData) {
-            // Legacy: Ortak mapping fonksiyonunu kullan
-            const formattedJobs = mapJobData(filters.clearData)
-            setData(formattedJobs)
-            setActiveFilters({ type: 'all', keyword: '' })
-        } else if (filters.useCachedData) {
-            // HIZLI TEMIZLE: Cache'den veri kullan - hiç hesaplama yapma
-            console.log('🚀 CACHE HIT - İlk yükleme verisi gösteriliyor')
+        if (filters.restoreInitialData) {
+            // HIZLI TEMIZLE: İlk açılışta gelen DB verisini restore et
+            console.log('🚀 CACHE HIT - İlk DB verisi restore ediliyor')
             if (apiData.length > 0) {
-                setData(apiData) // Orjinal API verisini restore et
-                console.log(`✅ ${apiData.length} kayıt cache'den yüklendi`)
+                setData(apiData) // İlk yüklenen DB verisini geri yükle
+                console.log(`✅ ${apiData.length} kayıt cache'den restore edildi`)
             }
             setActiveFilters({ type: 'all', keyword: '' })
-        } else if (filters.apiData) {
-            // BACKEND FİLTRE: API'den gelen hazır veri
-            console.log('📡 Backend\'ten filtrelenmiş veri alındı')
-            const formattedJobs = mapJobData(filters.apiData)
-            setData(formattedJobs)
-            setActiveFilters({ type: filters.type, keyword: filters.keyword })
         } else {
-            // Legacy frontend filtering
+            // Normal frontend filtering
+            console.log('🔄 Frontend filtre uygulanıyor')
             startTransition(() => {
                 setActiveFilters(filters)
             })
         }
-    }, [mapJobData])
+    }, [apiData])
     
     const handlePremiumClick = useCallback(() => setShowSubscriptionModal(true), [])
 

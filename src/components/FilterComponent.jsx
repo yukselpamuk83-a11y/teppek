@@ -4,31 +4,20 @@ function FilterComponent({ onFilterChange, setCurrentPage, isSubscribed, onSubsc
     const [localKeyword, setLocalKeyword] = useState('')
     const [localFilterType, setLocalFilterType] = useState('all')
 
-    const handleFilter = async () => {
-        console.log('🔍 Backend filtre uygulanıyor...')
-        // Backend'e API çağrısı yap
-        const response = await fetch(`/api/get-jobs?q=${localKeyword}&limit=100000&page=1`)
-        const result = await response.json()
-        
-        if (result.success) {
-            onFilterChange({ 
-                type: localFilterType, 
-                keyword: localKeyword, 
-                apiData: result.jobs // Backend'ten gelen filtrelenmiş veri
-            })
-            setCurrentPage(1)
-            console.log(`✅ ${result.jobs.length} adet filtrelenmiş sonuç geldi`)
-        }
+    const handleFilter = () => {
+        console.log('🔍 Frontend filtre uygulanıyor...')
+        onFilterChange({ type: localFilterType, keyword: localKeyword })
+        setCurrentPage(1)
     }
 
     const handleClear = () => {
-        console.log('🧹 TEMIZLE - Cache\'den hızlı yükleme')
+        console.log('🧹 TEMIZLE - Cache\'den ilk veri yükleniyor')
         setLocalKeyword('')
         setLocalFilterType('all')
         setCurrentPage(1)
         
-        // Cache'den temizle - API çağrısı YOK
-        onFilterChange({ type: 'all', keyword: '', useCachedData: true })
+        // İlk açılışta gelen DB verisini restore et
+        onFilterChange({ type: 'all', keyword: '', restoreInitialData: true })
     }
 
     return (
