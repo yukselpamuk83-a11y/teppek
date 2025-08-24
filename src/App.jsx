@@ -190,7 +190,7 @@ function App() {
         setProcessedDataCache(newCache)
 
         return itemsWithDistance
-    }, [data, activeFilters, isSubscribed, userLocation, processedDataCache])
+    }, [data, activeFilters, isSubscribed, userLocation])
     
     const paginatedData = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage
