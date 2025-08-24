@@ -27,7 +27,7 @@ function App() {
     const [showFirmaLogin, setShowFirmaLogin] = useState(false)
     const [showAdayLogin, setShowAdayLogin] = useState(false)
     
-    const itemsPerPage = 10 // INP optimizasyonu için daha da azaltıldı
+    const itemsPerPage = 75 // Kullanıcı talebi üzerine artırıldı
     const [userLocation, setUserLocation] = useState(null)
 
     useEffect(() => {
