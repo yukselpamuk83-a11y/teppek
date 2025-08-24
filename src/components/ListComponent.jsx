@@ -1,7 +1,8 @@
+import { memo } from 'react'
 import { getDistance } from '../utils/distance'
 
-// Virtual row component - her satır için optimize edilmiş component
-const VirtualJobRow = ({ index, style, data }) => {
+// Virtual row component - her satır için optimize edilmiş component (memoized)
+const VirtualJobRow = memo(({ index, style, data }) => {
     const { items, userLocation, onRowClick, isSubscribed, onPremiumClick } = data
     const item = items[index]
     
@@ -79,7 +80,7 @@ const VirtualJobRow = ({ index, style, data }) => {
             </div>
         </div>
     )
-}
+})
 
 // Ana List componenti - Sayfalama ile optimize edildi
 function ListComponent({ data, onRowClick, isSubscribed, userLocation, onPremiumClick }) {
@@ -130,4 +131,4 @@ function ListComponent({ data, onRowClick, isSubscribed, userLocation, onPremium
     )
 }
 
-export default ListComponent
+export default memo(ListComponent)

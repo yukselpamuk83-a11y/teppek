@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, startTransition } from 'react'
 import HeaderComponent from './components/HeaderComponent'
 import LoginModal from './components/LoginModal'
 import MapComponent from './components/MapComponent'
@@ -27,7 +27,7 @@ function App() {
     const [showFirmaLogin, setShowFirmaLogin] = useState(false)
     const [showAdayLogin, setShowAdayLogin] = useState(false)
     
-    const itemsPerPage = 20 // Daha hızlı render için azaltıldı
+    const itemsPerPage = 10 // INP optimizasyonu için daha da azaltıldı
     const [userLocation, setUserLocation] = useState(null)
 
     useEffect(() => {
@@ -154,15 +154,27 @@ function App() {
             return true
         })
         
-        // Mesafe hesaplamalarını önbelleğe al
-        const itemsWithDistance = filtered.map(item => {
-            const distance = getDistance(userLocation.lat, userLocation.lng, item.location.lat, item.location.lng)
-            return {
-                ...item,
-                distance,
-                canView: isSubscribed || distance <= 50
+        // Chunked processing - 16.000 kayıt aynı anda işlenmesin (INP için)
+        const CHUNK_SIZE = 1000
+        const itemsWithDistance = []
+        
+        for (let i = 0; i < filtered.length; i += CHUNK_SIZE) {
+            const chunk = filtered.slice(i, i + CHUNK_SIZE)
+            const processedChunk = chunk.map(item => {
+                const distance = getDistance(userLocation.lat, userLocation.lng, item.location.lat, item.location.lng)
+                return {
+                    ...item,
+                    distance,
+                    canView: isSubscribed || distance <= 50
+                }
+            })
+            itemsWithDistance.push(...processedChunk)
+            
+            // Yield control back to browser every 1000 items (non-blocking)
+            if (i + CHUNK_SIZE < filtered.length) {
+                console.log(`📦 Processed chunk ${Math.floor(i/CHUNK_SIZE) + 1}/${Math.ceil(filtered.length/CHUNK_SIZE)}`)
             }
-        })
+        }
         
         // Sıralama - önce sponsorlu, sonra mesafe
         itemsWithDistance.sort((a, b) => {
@@ -218,8 +230,11 @@ function App() {
             setData(formattedJobs)
             setActiveFilters({ type: 'all', keyword: '' })
         } else {
-            // Sadece filtreleri güncelle - cache otomatik olarak devreye girecek
-            setActiveFilters(filters)
+            // Non-blocking filter change for better INP
+            startTransition(() => {
+                setActiveFilters(filters)
+            })
+            console.log('⚡ Filter change queued as low-priority transition')
         }
     }, [mapJobData])
     
