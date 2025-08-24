@@ -7,7 +7,7 @@ function FilterComponent({ onFilterChange, setCurrentPage, isSubscribed, onSubsc
     const handleFilter = async () => {
         console.log('🔍 Backend filtre uygulanıyor...')
         // Backend'e API çağrısı yap
-        const response = await fetch(`/api/get-jobs?q=${localKeyword}&limit=1000&page=1`)
+        const response = await fetch(`/api/get-jobs?q=${localKeyword}&limit=100000&page=1`)
         const result = await response.json()
         
         if (result.success) {

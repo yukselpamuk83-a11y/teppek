@@ -76,7 +76,7 @@ function App() {
             try {
                 console.log('🌍 Database\'den iş ilanları yükleniyor...')
                 
-                const response = await fetch('/api/get-jobs?limit=1000&page=1') // İlk 1000 kayıt yeterli
+                const response = await fetch('/api/get-jobs?limit=100000&page=1') // Tüm ilanları al
                 const result = await response.json()
                 
                 if (result.success && result.jobs?.length > 0) {
