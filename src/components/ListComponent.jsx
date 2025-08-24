@@ -81,7 +81,7 @@ const VirtualJobRow = ({ index, style, data }) => {
     )
 }
 
-// Ana List componenti - Virtual Scrolling ile optimize edildi
+// Ana List componenti - Sayfalama ile optimize edildi
 function ListComponent({ data, onRowClick, isSubscribed, userLocation, onPremiumClick }) {
     if (data.length === 0) {
         return (
@@ -90,6 +90,8 @@ function ListComponent({ data, onRowClick, isSubscribed, userLocation, onPremium
             </div>
         )
     }
+
+    console.log(`📋 ListComponent render: ${data.length} kayıt gösterilecek`)
 
     return (
         <div className="flex-grow flex flex-col bg-white">

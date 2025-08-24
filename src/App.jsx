@@ -25,7 +25,7 @@ function App() {
     const [showFirmaLogin, setShowFirmaLogin] = useState(false)
     const [showAdayLogin, setShowAdayLogin] = useState(false)
     
-    const itemsPerPage = 50
+    const itemsPerPage = 20 // Daha hızlı render için azaltıldı
     const [userLocation, setUserLocation] = useState(null)
 
     useEffect(() => {
@@ -171,6 +171,7 @@ function App() {
 
         const endTime = performance.now()
         console.log(`⚡ İşlem tamamlandı: ${itemsWithDistance.length} sonuç (${(endTime - startTime).toFixed(2)}ms)`)
+        console.log(`🎯 React render için hazırlanan ilk ${Math.min(itemsPerPage, itemsWithDistance.length)} kayıt`)
         return itemsWithDistance
     }, [data, activeFilters, isSubscribed, userLocation])
     
