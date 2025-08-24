@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import HeaderComponent from './components/HeaderComponent'
 import LoginModal from './components/LoginModal'
 import MapComponent from './components/MapComponent'
@@ -14,6 +14,7 @@ const initialData = []
 
 function App() {
     const [data, setData] = useState(initialData)
+    const [initialLoadedData, setInitialLoadedData] = useState([]) // Cache initial data
     const [activeFilters, setActiveFilters] = useState({ type: 'all', keyword: '' })
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
     const [selectedLocation, setSelectedLocation] = useState(null)
@@ -24,11 +25,6 @@ function App() {
     const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
     const [showFirmaLogin, setShowFirmaLogin] = useState(false)
     const [showAdayLogin, setShowAdayLogin] = useState(false)
-    
-    // Auth states
-    const [user, setUser] = useState(null)
-    const [userProfile, setUserProfile] = useState(null)
-    const [loading, setLoading] = useState(true)
     
     const itemsPerPage = 50
     const [userLocation, setUserLocation] = useState(null)
@@ -48,46 +44,45 @@ function App() {
         )
     }, [])
 
-    // API'den veri çek
+    // Ortak job mapping fonksiyonu
+    const mapJobData = useCallback((jobs) => {
+        return jobs.map(job => ({
+            id: `db-${job.id}`,
+            type: 'job',
+            title: job.title,
+            company: job.company || 'Şirket Belirtilmemiş',
+            name: job.company,
+            location: {
+                lat: parseFloat(job.lat),
+                lng: parseFloat(job.lon)
+            },
+            address: `${job.city || ''}, ${job.country || ''}`.replace(/^,\s*|,\s*$/g, ''),
+            salary_min: job.salary_min,
+            salary_max: job.salary_max,
+            currency: job.currency,
+            applyUrl: job.source === 'manual' ? null : job.url,
+            contact: job.source === 'manual' ? job.contact : null,
+            source: job.source || 'unknown',
+            postedDate: job.created_at
+        })).filter(job => job.location.lat && job.location.lng)
+    }, [])
+
+    // API'den veri çek (tek seferlik)
     useEffect(() => {
-        if (!userLocation || !userLocation.lat || !userLocation.lng) {
-            return // Konum bilgisi yoksa bekleme
-        }
+        if (!userLocation?.lat || !userLocation?.lng) return
         
         const fetchListings = async () => {
             try {
                 console.log('🌍 Database\'den iş ilanları yükleniyor...')
                 
-                // Database'den iş ilanlarını çek - Environment variables eklendi
                 const response = await fetch('/api/get-jobs?limit=100000&page=1')
                 const result = await response.json()
                 
-                if (result.success && result.jobs && result.jobs.length > 0) {
+                if (result.success && result.jobs?.length > 0) {
                     console.log(`✅ ${result.jobs.length} adet iş ilanı yüklendi!`)
                     console.log(`📊 Database İstatistikleri:`, result.stats)
-                    console.log(`🌍 Toplam: ${result.stats.total_jobs} ilan`)
-                    console.log(`📄 Sayfa: ${result.stats.current_page}/${result.stats.total_pages}`)
                     
-                    // Database mapping - API ve Manuel ilanları ayır
-                    const formattedJobs = result.jobs.map(job => ({
-                        id: `db-${job.id}`,
-                        type: 'job',
-                        title: job.title,
-                        company: job.company || 'Şirket Belirtilmemiş',
-                        location: {
-                            lat: parseFloat(job.lat),
-                            lng: parseFloat(job.lon)
-                        },
-                        address: `${job.city || ''}, ${job.country || ''}`.replace(/^,\s*|,\s*$/g, ''),
-                        salary_min: job.salary_min,
-                        salary_max: job.salary_max,
-                        currency: job.currency,
-                        // İlan türüne göre iletişim/başvuru
-                        applyUrl: job.source === 'manual' ? null : job.url,  // API ilanlarında başvuru linki
-                        contact: job.source === 'manual' ? job.contact : null, // Manuel ilanlarda iletişim
-                        source: job.source || 'unknown',
-                        postedDate: job.created_at
-                    })).filter(job => job.location.lat && job.location.lng)
+                    const formattedJobs = mapJobData(result.jobs)
                     
                     console.log(`🗺️ Haritada gösterilecek: ${formattedJobs.length} ilan`)
                     
@@ -99,19 +94,22 @@ function App() {
                     })
                     console.log(`🌍 Ülke dağılımı:`, countryStats)
                     
-                    // Verileri set et
-                    setData(prevData => [...prevData, ...formattedJobs])
+                    // TEK SEFERLİK SET - concat değil replace
+                    setData(formattedJobs)
+                    setInitialLoadedData(formattedJobs) // Cache initial data for fast clear
+                    setProcessedDataCache(new Map()) // Clear cache when new data loads
                 } else {
-                    console.log('⚠️ Database\'de henüz veri yok. Önce /api/load-data çağırın.')
+                    console.log('⚠️ Database\'de henüz veri yok.')
+                    setData([])
                 }
             } catch (error) {
                 console.error('Database API hatası:', error)
-                console.log('💡 Database bağlantısı kurulamadı. Supabase ayarlarını kontrol edin.')
+                setData([])
             }
         }
         
         fetchListings()
-    }, [userLocation])
+    }, [userLocation, mapJobData])
 
     useEffect(() => {
         const handleResize = () => {
@@ -121,35 +119,78 @@ function App() {
         return () => window.removeEventListener('resize', handleResize)
     }, [])
     
+    // Cache processed data for better performance
+    const [processedDataCache, setProcessedDataCache] = useState(new Map())
+    
     const processedData = useMemo(() => {
-        if (!userLocation) return []
+        if (!userLocation || data.length === 0) return []
 
+        // Create cache key
+        const cacheKey = `${activeFilters.type}-${activeFilters.keyword}-${isSubscribed}`
+        
+        // Return cached result if available (for fast clear)
+        if (processedDataCache.has(cacheKey)) {
+            console.log('📦 Cache\'den veri kullanılıyor:', cacheKey)
+            return processedDataCache.get(cacheKey)
+        }
+
+        console.log('⚙️ Veri işleniyor:', cacheKey)
+        
+        // Keyword filtrelemesi için sadece gerekli olduğunda toLowerCase yap
+        const lowerKeyword = activeFilters.keyword ? activeFilters.keyword.toLowerCase() : ''
+        
         const filtered = data.filter(item => {
-            const typeMatch = activeFilters.type === 'all' || item.type === activeFilters.type
-            const keywordMatch = activeFilters.keyword === '' || 
-                                 item.title.toLowerCase().includes(activeFilters.keyword.toLowerCase()) ||
-                                 (item.company && item.company.toLowerCase().includes(activeFilters.keyword.toLowerCase())) ||
-                                 (item.name && item.name.toLowerCase().includes(activeFilters.keyword.toLowerCase()))
-            return typeMatch && keywordMatch
+            // Type filter - daha hızlı karşılaştırma
+            if (activeFilters.type !== 'all' && item.type !== activeFilters.type) return false
+            
+            // Keyword filter - sadece keyword varsa kontrol et
+            if (lowerKeyword) {
+                const titleMatch = item.title?.toLowerCase().includes(lowerKeyword)
+                const companyMatch = item.company?.toLowerCase().includes(lowerKeyword)
+                const nameMatch = item.name?.toLowerCase().includes(lowerKeyword)
+                
+                if (!titleMatch && !companyMatch && !nameMatch) return false
+            }
+            
+            return true
         })
         
-        const sorted = filtered.sort((a, b) => {
+        // Mesafe hesaplamalarını önbelleğe al
+        const itemsWithDistance = filtered.map(item => {
+            const distance = getDistance(userLocation.lat, userLocation.lng, item.location.lat, item.location.lng)
+            return {
+                ...item,
+                distance,
+                canView: isSubscribed || distance <= 50
+            }
+        })
+        
+        // Sıralama - önce sponsorlu, sonra mesafe
+        itemsWithDistance.sort((a, b) => {
+            // Sponsorlu önceliği
             if (a.isSponsored && !b.isSponsored) return -1
             if (!a.isSponsored && b.isSponsored) return 1
             
-            const distA = getDistance(userLocation.lat, userLocation.lng, a.location.lat, a.location.lng)
-            const distB = getDistance(userLocation.lat, userLocation.lng, b.location.lat, b.location.lng)
-            const canViewA = isSubscribed || distA <= 50
-            const canViewB = isSubscribed || distB <= 50
+            // Görünebilirlik önceliği
+            if (a.canView && !b.canView) return -1
+            if (!a.canView && b.canView) return 1
             
-            if (canViewA && !canViewB) return -1
-            if (!canViewA && canViewB) return 1
-            
-            return distA - distB
+            // Mesafe sıralaması
+            return a.distance - b.distance
         })
 
-        return sorted
-    }, [data, activeFilters, isSubscribed, userLocation])
+        // Cache the result
+        const newCache = new Map(processedDataCache)
+        newCache.set(cacheKey, itemsWithDistance)
+        // Keep only last 10 cached results to prevent memory leak
+        if (newCache.size > 10) {
+            const firstKey = newCache.keys().next().value
+            newCache.delete(firstKey)
+        }
+        setProcessedDataCache(newCache)
+
+        return itemsWithDistance
+    }, [data, activeFilters, isSubscribed, userLocation, processedDataCache])
     
     const paginatedData = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage
@@ -159,45 +200,34 @@ function App() {
     
     const totalPages = Math.ceil(processedData.length / itemsPerPage)
 
-    const handleAddEntry = (entry) => {
-        setData(prevData => [{ ...entry, id: Date.now(), isOwner: true, isSponsored: false }, ...prevData])
+    const handleAddEntry = useCallback((entry) => {
+        const newEntry = { ...entry, id: Date.now(), isOwner: true, isSponsored: false }
+        setData(prevData => [newEntry, ...prevData])
+        setProcessedDataCache(new Map()) // Clear cache when new entry added
         if(isMobile) setIsMobileFormOpen(false)
-    }
+    }, [isMobile])
 
-    const handleRowClick = (location) => {
+    const handleRowClick = useCallback((location) => {
         setSelectedLocation(location)
         if(isMobile) setIsMobilePanelOpen(false)
-    }
+    }, [isMobile])
 
-    const handleFilterChange = (filters) => {
+    const handleFilterChange = useCallback((filters) => {
         if (filters.clearData) {
-            // Temiz veri ile data'yı güncelle
-            const formattedJobs = filters.clearData.map(job => ({
-                id: `db-${job.id}`,
-                type: 'job',
-                title: job.title,
-                company: job.company || 'Şirket Belirtilmemiş',
-                name: job.company,
-                location: {
-                    lat: parseFloat(job.lat),
-                    lng: parseFloat(job.lon)
-                },
-                address: `${job.city || ''}, ${job.country || ''}`.replace(/^,\s*|,\s*$/g, ''),
-                salary_min: job.salary_min,
-                salary_max: job.salary_max,
-                currency: job.currency,
-                applyUrl: job.source === 'manual' ? null : job.url,
-                contact: job.source === 'manual' ? job.contact : null,
-                source: job.source || 'unknown',
-                postedDate: job.created_at
-            })).filter(job => job.location.lat && job.location.lng)
-            
+            // Ortak mapping fonksiyonunu kullan
+            const formattedJobs = mapJobData(filters.clearData)
             setData(formattedJobs)
             setActiveFilters({ type: 'all', keyword: '' })
+        } else if (filters.type === 'all' && filters.keyword === '' && initialLoadedData.length > 0) {
+            // Fast clear - use cached initial data instead of re-processing
+            console.log('🚀 Hızlı temizle - cache\'lenmiş veri kullanılıyor')
+            setActiveFilters(filters)
         } else {
             setActiveFilters(filters)
         }
-    }
+    }, [mapJobData, initialLoadedData])
+    
+    const handlePremiumClick = useCallback(() => setShowSubscriptionModal(true), [])
 
     if (!userLocation) {
         return (
@@ -244,7 +274,7 @@ function App() {
                         selectedLocation={selectedLocation} 
                         isSubscribed={isSubscribed} 
                         userLocation={userLocation} 
-                        onPremiumClick={() => setShowSubscriptionModal(true)} 
+                        onPremiumClick={handlePremiumClick} 
                     />
                     
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] flex gap-4">
@@ -274,7 +304,7 @@ function App() {
                             onRowClick={handleRowClick} 
                             isSubscribed={isSubscribed} 
                             userLocation={userLocation} 
-                            onPremiumClick={() => setShowSubscriptionModal(true)} 
+                            onPremiumClick={handlePremiumClick} 
                         />
                         <PaginationComponent 
                             currentPage={currentPage} 
@@ -294,9 +324,10 @@ function App() {
                 </div>
             ) : (
                 // --- WEB/MASAÜSTÜ GÖRÜNÜM ---
-                <div className="h-[calc(100vh-60px)] w-full flex flex-col">
-                    <div className="flex h-2/3">
-                        <div className="w-[35%] h-full p-4 bg-gray-50 overflow-y-auto">
+                <div className="w-full">
+                    {/* Harita ve Form - Normal scroll */}
+                    <div className="flex h-[70vh] bg-white">
+                        <div className="w-[35%] h-full p-4 bg-gray-50 flex flex-col">
                             <EntryFormComponent onAddEntry={handleAddEntry} userLocation={userLocation} />
                         </div>
                         <div className="w-[65%] h-full">
@@ -305,29 +336,38 @@ function App() {
                                 selectedLocation={selectedLocation} 
                                 isSubscribed={isSubscribed} 
                                 userLocation={userLocation} 
-                                onPremiumClick={() => setShowSubscriptionModal(true)} 
+                                onPremiumClick={handlePremiumClick} 
                             />
                         </div>
                     </div>
-                    <div className="h-1/3 flex flex-col p-4 border-t bg-white">
-                        <FilterComponent 
-                            onFilterChange={handleFilterChange}
-                            setCurrentPage={setCurrentPage} 
-                            isSubscribed={isSubscribed} 
-                            onSubscribeToggle={() => setIsSubscribed(!isSubscribed)} 
-                        />
-                        <ListComponent 
-                            data={paginatedData} 
-                            onRowClick={handleRowClick} 
-                            isSubscribed={isSubscribed} 
-                            userLocation={userLocation} 
-                            onPremiumClick={() => setShowSubscriptionModal(true)} 
-                        />
-                        <PaginationComponent 
-                            currentPage={currentPage} 
-                            totalPages={totalPages} 
-                            onPageChange={setCurrentPage} 
-                        />
+                    
+                    {/* Filter ve İlan Listesi */}
+                    <div className="bg-white border-t">
+                        <div className="p-4 bg-gray-50 border-b">
+                            <FilterComponent 
+                                onFilterChange={handleFilterChange}
+                                setCurrentPage={setCurrentPage} 
+                                isSubscribed={isSubscribed} 
+                                onSubscribeToggle={() => setIsSubscribed(!isSubscribed)} 
+                            />
+                        </div>
+                        
+                        <div className="p-4">
+                            <ListComponent 
+                                data={paginatedData} 
+                                onRowClick={handleRowClick} 
+                                isSubscribed={isSubscribed} 
+                                userLocation={userLocation} 
+                                onPremiumClick={handlePremiumClick} 
+                            />
+                            <div className="mt-6 mb-8">
+                                <PaginationComponent 
+                                    currentPage={currentPage} 
+                                    totalPages={totalPages} 
+                                    onPageChange={setCurrentPage} 
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

@@ -9,29 +9,15 @@ function FilterComponent({ onFilterChange, setCurrentPage, isSubscribed, onSubsc
         setCurrentPage(1)
     }
 
-    const handleClear = async () => {
-        // UI'yi hemen temizle
+    const handleClear = () => {
+        // UI'yi hemen temizle - cache'den hızlıca yükle
         setLocalKeyword('')
         setLocalFilterType('all')
         setCurrentPage(1)
         
-        // Database'den optimize edilmiş temiz veri çek
-        try {
-            console.log('🧹 Filtreleri temizleniyor - optimize edilmiş veri çekiliyor...')
-            
-            const response = await fetch('/api/get-jobs?clear=true&limit=100000&page=1')
-            const result = await response.json()
-            
-            if (result.success && result.jobs) {
-                // Parent component'e temiz veriyi aktar
-                onFilterChange({ type: 'all', keyword: '', clearData: result.jobs })
-                console.log(`✅ ${result.jobs.length} ilan temiz olarak yüklendi!`)
-            }
-        } catch (error) {
-            console.error('Temizleme hatası:', error)
-            // Fallback - normal filtreleme
-            onFilterChange({ type: 'all', keyword: '' })
-        }
+        // Sadece filtreleri temizle - cache'lenmiş veri kullanılır  
+        onFilterChange({ type: 'all', keyword: '' })
+        console.log('🚀 Hızlı temizle - cache kullanılarak anında yüklendi')
     }
 
     return (

@@ -9,28 +9,21 @@
     "deploy": "vercel --prod"
   },
   "dependencies": {
-    "@supabase/auth-js": "^2.71.1",
-    "@supabase/gotrue-js": "^2.71.1",
-    "@supabase/postgrest-js": "^1.21.3",
-    "@supabase/realtime-js": "^2.15.2",
-    "@supabase/storage-js": "^2.11.0",
-    "@supabase/supabase-js": "^2.56.0",
     "@vercel/analytics": "^1.5.0",
-    "@vercel/blob": "^1.1.1",
-    "@vercel/edge-config": "^1.4.0",
-    "@vercel/kv": "^3.0.0",
     "@vercel/speed-insights": "^1.2.0",
-    "@vercel/toolbar": "^0.1.38",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
     "pg": "^8.16.3",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-window": "^1.8.11"
   },
   "devDependencies": {
-    "@types/react": "^18.2.66",
-    "@types/react-dom": "^18.2.22",
     "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "terser": "^5.43.1",
     "vite": "^5.2.0"
   }
 }

@@ -1,101 +1,104 @@
-/* Font Awesome - CSS'den kaldırıldı, HTML'de yükleniyor */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Sayfanın tamamını kaplaması için temel stiller */
-html, body, #root {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden; /* Ana sayfada kaydırmayı engelle */
-    font-family: 'Inter', sans-serif;
-}
-
-/* Harita konteynerinin boyutunu belirle */
-.leaflet-container {
+/* Component styles */
+@layer components {
+  .leaflet-container {
     height: 100%;
     width: 100%;
-}
+  }
 
-/* Özel renklerimizi Tailwind'e ekleyelim */
-.bg-ilan { background-color: #0097A7; } /* Turkuaz */
-.text-ilan { color: #0097A7; }
-.border-ilan { border-color: #0097A7; }
-.bg-cv { background-color: #FB8C00; } /* Turuncu */
-.text-cv { color: #FB8C00; }
-.border-cv { border-color: #FB8C00; }
-
-/* Mobil panel animasyonu için */
-.bottom-sheet {
+  /* Smooth slide animation for mobile */
+  .bottom-sheet {
     transition: transform 0.3s ease-in-out;
-}
+  }
 
-.leaflet-popup-content-wrapper {
+  /* Custom popup styles */
+  .leaflet-popup-content-wrapper {
     border-radius: 12px;
     padding: 1px;
-}
-.leaflet-popup-content {
+  }
+
+  .leaflet-popup-content {
     margin: 0 !important;
     width: 280px !important;
     font-size: 14px;
     line-height: 1.5;
-}
-.custom-popup-container {
-    padding: 16px;
-}
+  }
 
-.marker-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    width: 120px; /* Etiket için genişlik */
-}
-.marker-container .icon-wrapper {
-    position: relative; /* Yıldız ikonu için */
-    font-size: 20px;
-    background-color: white;
-    border-radius: 50%;
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    border: 3px solid; /* Renk inline olarak atanacak */
-    transition: transform 0.2s;
-}
-.marker-label {
-    font-size: 12px;
-    font-weight: bold;
-    color: #374151; /* gray-700 */
-    background-color: rgba(255, 255, 255, 0.9);
-    padding: 2px 8px;
-    border-radius: 6px;
-    margin-top: 6px;
+  .custom-popup-container {
+    padding: 16px;
+  }
+
+  /* Custom marker styles */
+  .marker-container {
+    @apply flex flex-col items-center text-center w-[120px];
+  }
+
+  .marker-container .icon-wrapper {
+    @apply relative text-xl bg-white rounded-full w-11 h-11 flex items-center justify-center border-[3px] transition-transform duration-200;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  }
+
+  .marker-label {
+    @apply text-xs font-bold text-gray-700 bg-white/90 px-2 py-0.5 rounded-md mt-1.5;
     white-space: normal;
     word-wrap: break-word;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
 
-.sponsored-marker .icon-wrapper {
-    width: 60px; /* Daha büyük ikon */
-    height: 60px;
-    font-size: 26px; /* Daha büyük ikon içeriği */
-    border-width: 4px;
-}
-.sponsored-marker .icon-wrapper::before {
+  .sponsored-marker .icon-wrapper {
+    @apply w-[60px] h-[60px] text-2xl border-4;
+  }
+
+  .sponsored-marker .icon-wrapper::before {
     content: '';
-    position: absolute;
-    left: -15px;
-    top: -15px;
-    width: 90px;
-    height: 90px;
-    background-color: #FBBF24; /* Opak Sarı */
-    border-radius: 50%;
-    z-index: -1;
-}
+    @apply absolute -left-4 -top-4 w-[90px] h-[90px] bg-yellow-400 rounded-full -z-10;
+  }
 
-.user-location-icon {
-    font-size: 32px; /* İkon boyutu */
-    color: #2563EB; /* blue-600 */
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  /* User location icon */
+  .user-location-icon {
+    @apply text-3xl text-blue-600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Main page scrollbar styling - bigger and more user-friendly */
+  body {
+    scrollbar-width: auto;
+    scrollbar-color: #6b7280 #f3f4f6;
+  }
+
+  body::-webkit-scrollbar {
+    width: 16px;
+  }
+
+  body::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 8px;
+  }
+
+  body::-webkit-scrollbar-thumb {
+    background: #6b7280;
+    border-radius: 8px;
+    border: 2px solid #f3f4f6;
+  }
+
+  body::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
+  }
+
+  body::-webkit-scrollbar-thumb:active {
+    background: #374151;
+  }
+
+  /* Virtual row hover optimizations */
+  .virtual-job-row {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+
+  .virtual-job-row:hover {
+    transform: translateZ(0) scale(1.001);
+  }
 }

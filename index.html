@@ -5,11 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teppek - Global İş Platformu</title>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Preconnect to external domains for faster loading -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://unpkg.com">
     
-    <!-- Font Awesome (İkonlar için) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <!-- DNS prefetch for API domains -->
+    <link rel="dns-prefetch" href="//teppek.com">
+    
+    <!-- Critical CSS inline for fastest render -->
+    <style>
+        .fa-spinner.fa-spin{animation:fa-spin 1s infinite linear}
+        @keyframes fa-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        .loading{display:flex;align-items:center;justify-content:center;height:100vh}
+    </style>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
 </head>
 <body>
     <div id="root"></div>

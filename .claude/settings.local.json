@@ -14,7 +14,11 @@
       "Bash(npm run deploy:*)",
       "Bash(vercel:*)",
       "WebFetch(domain:vercel.com)",
-      "Bash(npm run vercel-dev:*)"
+      "Bash(npm run vercel-dev:*)",
+      "Bash(npm audit:*)",
+      "Bash(npm uninstall:*)",
+      "WebSearch",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
