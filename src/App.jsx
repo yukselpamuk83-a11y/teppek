@@ -14,6 +14,8 @@ const initialData = []
 
 function App() {
     const [data, setData] = useState(initialData)
+    const [originalData, setOriginalData] = useState([]) // İlk yüklenen ham veri - cache için
+    const [processedOriginalData, setProcessedOriginalData] = useState([]) // İlk işlenmiş veri - cache için
     const [activeFilters, setActiveFilters] = useState({ type: 'all', keyword: '' })
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
     const [selectedLocation, setSelectedLocation] = useState(null)
@@ -95,6 +97,7 @@ function App() {
                     
                     // TEK SEFERLİK SET - concat değil replace
                     setData(formattedJobs)
+                    setOriginalData(formattedJobs) // Ham veriyi sakla - cache için
                 } else {
                     console.log('⚠️ Database\'de henüz veri yok.')
                     setData([])
@@ -118,6 +121,12 @@ function App() {
     
     const processedData = useMemo(() => {
         if (!userLocation || data.length === 0) return []
+
+        // FAST PATH: Temizle butonu için cache kullan
+        if (activeFilters.type === 'all' && activeFilters.keyword === '' && processedOriginalData.length > 0) {
+            console.log('🚀 HIZLI TEMIZLE - Cache\'den anında yüklendi!')
+            return processedOriginalData
+        }
 
         const startTime = performance.now()
         console.log('🔄 Veri işleme başlıyor:', { 
@@ -169,11 +178,16 @@ function App() {
             return a.distance - b.distance
         })
 
+        // İlk yükleme ise cache'le
+        if (activeFilters.type === 'all' && activeFilters.keyword === '' && processedOriginalData.length === 0) {
+            console.log('💾 İlk yükleme cache\'leniyor')
+            setProcessedOriginalData(itemsWithDistance)
+        }
+
         const endTime = performance.now()
         console.log(`⚡ İşlem tamamlandı: ${itemsWithDistance.length} sonuç (${(endTime - startTime).toFixed(2)}ms)`)
-        console.log(`🎯 React render için hazırlanan ilk ${Math.min(itemsPerPage, itemsWithDistance.length)} kayıt`)
         return itemsWithDistance
-    }, [data, activeFilters, isSubscribed, userLocation])
+    }, [data, activeFilters, isSubscribed, userLocation, processedOriginalData])
     
     const paginatedData = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage
