@@ -130,11 +130,11 @@ function App() {
         
         // Return cached result if available (for fast clear)
         if (processedDataCache.has(cacheKey)) {
-            console.log('📦 Cache\'den veri kullanılıyor:', cacheKey)
+            console.log('🎯 CACHE HIT! Temizle butonu hızlı çalıştı:', cacheKey)
             return processedDataCache.get(cacheKey)
         }
 
-        console.log('⚙️ Veri işleniyor:', cacheKey)
+        console.log('⚙️ CACHE MISS - Yeni hesaplama yapılıyor:', cacheKey)
         
         // Keyword filtrelemesi için sadece gerekli olduğunda toLowerCase yap
         const lowerKeyword = activeFilters.keyword ? activeFilters.keyword.toLowerCase() : ''
@@ -218,14 +218,11 @@ function App() {
             const formattedJobs = mapJobData(filters.clearData)
             setData(formattedJobs)
             setActiveFilters({ type: 'all', keyword: '' })
-        } else if (filters.type === 'all' && filters.keyword === '' && initialLoadedData.length > 0) {
-            // Fast clear - use cached initial data instead of re-processing
-            console.log('🚀 Hızlı temizle - cache\'lenmiş veri kullanılıyor')
-            setActiveFilters(filters)
         } else {
+            // Sadece filtreleri güncelle - cache otomatik olarak devreye girecek
             setActiveFilters(filters)
         }
-    }, [mapJobData, initialLoadedData])
+    }, [mapJobData])
     
     const handlePremiumClick = useCallback(() => setShowSubscriptionModal(true), [])
 
