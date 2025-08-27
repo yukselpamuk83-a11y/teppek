@@ -23,7 +23,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'signin' }) {
     password: '',
     firstName: '',
     lastName: '',
-    userType: 'user' // 'user', 'company'
+    userType: 'candidate' // 'candidate', 'company'
   })
   const [errors, setErrors] = useState({})
   
@@ -83,7 +83,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'signin' }) {
       if (result.success) {
         toast.success(mode === 'signin' ? 'Giriş başarılı!' : 'Kayıt başarılı!')
         onClose()
-        setFormData({ email: '', password: '', firstName: '', lastName: '', userType: 'user' })
+        setFormData({ email: '', password: '', firstName: '', lastName: '', userType: 'candidate' })
       } else {
         toast.error(result.error?.message || 'İşlem başarısız')
       }
@@ -240,10 +240,10 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'signin' }) {
               <div className="flex gap-2">
                 <Button
                   type="button"
-                  variant={formData.userType === 'user' ? 'teppek' : 'outline'}
+                  variant={formData.userType === 'candidate' ? 'teppek' : 'outline'}
                   size="sm"
-                  className={`flex-1 ${formData.userType !== 'user' ? 'text-gray-900' : ''}`}
-                  onClick={() => setFormData(prev => ({ ...prev, userType: 'user' }))}
+                  className={`flex-1 ${formData.userType !== 'candidate' ? 'text-gray-900' : ''}`}
+                  onClick={() => setFormData(prev => ({ ...prev, userType: 'candidate' }))}
                 >
                   <User className="h-4 w-4 mr-2" />
                   <span>İş Arayan</span>
