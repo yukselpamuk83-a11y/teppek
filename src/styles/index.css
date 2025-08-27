@@ -101,4 +101,36 @@
   .virtual-job-row:hover {
     transform: translateZ(0) scale(1.001);
   }
+
+  /* Fix z-index issues with modals over maps */
+  .leaflet-pane,
+  .leaflet-map-pane,
+  .leaflet-tile-pane,
+  .leaflet-overlay-pane,
+  .leaflet-shadow-pane,
+  .leaflet-marker-pane,
+  .leaflet-tooltip-pane,
+  .leaflet-popup-pane,
+  .leaflet-control-container {
+    z-index: 1 !important;
+  }
+
+  /* Ensure Leaflet controls stay below modals */
+  .leaflet-control {
+    z-index: 1000 !important;
+  }
+
+  /* Ensure popups stay below modals */
+  .leaflet-popup {
+    z-index: 1050 !important;
+  }
+
+  /* Modal z-index hierarchy - highest priority */
+  .modal-overlay {
+    z-index: 9999 !important;
+  }
+
+  .modal-content {
+    z-index: 10000 !important;
+  }
 }

@@ -102,13 +102,18 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
         const initMap = async () => {
             await loadLeaflet()
             
-            if (mapRef.current && !mapInstance.current && L) {
-            mapInstance.current = L.map(mapRef.current, {
+            if (mapRef.current && !mapInstance.current && L && userLocation) {
+            // Default location fallback
+            const lat = userLocation?.lat || 41.01
+            const lng = userLocation?.lng || 28.97
+            
+            try {
+                mapInstance.current = L.map(mapRef.current, {
                 maxBounds: [[-90, -180], [90, 180]], // Dünya sınırları
                 maxBoundsViscosity: 1.0,              // Sert sınır
                 minZoom: 2,                           // Minimum zoom
                 maxZoom: 18                           // Maximum zoom
-            }).setView([userLocation.lat, userLocation.lng], 10)
+            }).setView([lat, lng], 10)
             
             const initialLayer = L.tileLayer(tileProviders.street.url, {
                 attribution: tileProviders.street.attribution,
@@ -117,7 +122,7 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
             }).addTo(mapInstance.current)
             setTileLayer(initialLayer)
 
-            circleRef.current = L.circle([userLocation.lat, userLocation.lng], {
+            circleRef.current = L.circle([lat, lng], {
                 radius: 50000, 
                 color: '#3b82f6',
                 fillColor: '#60a5fa',
@@ -176,6 +181,13 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
             return () => {
                 window.removeEventListener('resize', handleResize)
             }
+            } catch (error) {
+                console.warn('Map initialization error:', error)
+                // If map already exists, clear it
+                if (mapRef.current) {
+                    mapRef.current.innerHTML = ''
+                }
+            }
             }
         }
         
@@ -192,12 +204,12 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
             })
 
             if (circleRef.current) {
-                circleRef.current.setLatLng([userLocation.lat, userLocation.lng])
+                circleRef.current.setLatLng([userLocation?.lat || 41.01, userLocation?.lng || 28.97])
             }
             if (userMarkerRef.current) {
-                userMarkerRef.current.setLatLng([userLocation.lat, userLocation.lng])
+                userMarkerRef.current.setLatLng([userLocation?.lat || 41.01, userLocation?.lng || 28.97])
             } else {
-                userMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], { icon: userIcon, zIndexOffset: 1000 }).addTo(mapInstance.current)
+                userMarkerRef.current = L.marker([userLocation?.lat || 41.01, userLocation?.lng || 28.97], { icon: userIcon, zIndexOffset: 1000 }).addTo(mapInstance.current)
             }
         }
     }, [userLocation])
@@ -213,7 +225,17 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
     
     // Filtrelenmiş data kullan (App.jsx'ten gelen processedData)
     useEffect(() => {
-        if (!clusterGroupRef.current || !data.length || !userLocation) return
+        console.log('🗺️ MapComponent: Data effect triggered')
+        console.log('📍 Data length:', data?.length)
+        console.log('📍 User location:', userLocation)
+        console.log('📍 Cluster group exists:', !!clusterGroupRef.current)
+        
+        if (!clusterGroupRef.current || !data.length || !userLocation) {
+            console.log('❌ MapComponent: Missing requirements for markers')
+            return
+        }
+        
+        console.log('🔄 MapComponent: Creating markers for', data.length, 'items')
         
         // Cluster group'u tamamen temizle ve yeniden oluştur
         if (mapInstance.current) {
@@ -228,8 +250,11 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
         }
         
         // processedData'dan marker oluştur
-        data.forEach(item => {
-            const canView = item.canView || (isSubscribed || item.distance <= 50)
+        data.forEach((item, index) => {
+            console.log(`📍 Creating marker ${index + 1}:`, item.title, 'at', item.location)
+            // Development modunda tüm ilanları göster
+            const isDevelopment = import.meta.env.DEV
+            const canView = isDevelopment || item.canView || (isSubscribed || item.distance <= 50)
             
             // Basit marker HTML oluştur
             const iconClass = item.type === 'job' ? 'fa-briefcase' : 'fa-user'
@@ -308,11 +333,11 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
 
     return (
         <div className="relative h-full w-full">
-            <div ref={mapRef} className="h-full w-full" />
+            <div ref={mapRef} className="h-full w-full" style={{ zIndex: 1 }} />
             {/* Kontrol paneli */}
             <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
                 <button 
-                    onClick={() => mapInstance.current && userLocation && mapInstance.current.setView([userLocation.lat, userLocation.lng], 14)} 
+                    onClick={() => mapInstance.current && userLocation && mapInstance.current.setView([userLocation?.lat || 41.01, userLocation?.lng || 28.97], 14)} 
                     className="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg shadow-lg hover:bg-green-700"
                 >
                     Konum
