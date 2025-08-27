@@ -89,11 +89,10 @@ function ModernApp() {
       try {
         console.log('🔄 Modern App: İş ilanları yükleniyor...')
         
-        // Mock data kullan (production'da da API sorunları için)
+        // Development modunda mock data kullan
         const isDevelopment = import.meta.env.DEV
-        const useMockData = true // Production'da da mock data kullan
         
-        if (isDevelopment || useMockData) {
+        if (isDevelopment) {
           console.log('🧪 Development mode: Mock data kullanılıyor')
           
           // Mock job data
