@@ -22,7 +22,8 @@
       "Bash(git pull:*)",
       "Read(/C:\\Users\\seher\\Desktop/**)",
       "Bash(robocopy:*)",
-      "Bash(git clone:*)"
+      "Bash(git clone:*)",
+      "Bash(lsof:*)"
     ],
     "deny": [],
     "ask": [],
