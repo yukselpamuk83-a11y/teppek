@@ -16,14 +16,14 @@ import {
   Chrome
 } from 'lucide-react'
 
-export function AuthModal({ isOpen, onClose, defaultMode = 'signin' }) {
+export function AuthModal({ isOpen, onClose, defaultMode = 'signin', initialUserType = 'candidate' }) {
   const [mode, setMode] = useState(defaultMode) // 'signin', 'signup'
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     firstName: '',
     lastName: '',
-    userType: 'candidate' // 'candidate', 'company'
+    userType: initialUserType // 'candidate', 'company'
   })
   const [errors, setErrors] = useState({})
   
@@ -73,17 +73,25 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'signin' }) {
       if (mode === 'signin') {
         result = await signIn(formData.email, formData.password)
       } else {
-        result = await signUp(formData.email, formData.password, {
+        // Include company_name for company users
+        const metadata = {
           first_name: formData.firstName,
           last_name: formData.lastName,
           user_type: formData.userType
-        })
+        }
+        
+        // For company users, use company name if provided
+        if (formData.userType === 'company' && formData.firstName) {
+          metadata.company_name = `${formData.firstName} ${formData.lastName}`
+        }
+        
+        result = await signUp(formData.email, formData.password, metadata)
       }
       
       if (result.success) {
         toast.success(mode === 'signin' ? 'Giriş başarılı!' : 'Kayıt başarılı!')
         onClose()
-        setFormData({ email: '', password: '', firstName: '', lastName: '', userType: 'candidate' })
+        setFormData({ email: '', password: '', firstName: '', lastName: '', userType: initialUserType })
       } else {
         toast.error(result.error?.message || 'İşlem başarısız')
       }
@@ -236,35 +244,28 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'signin' }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'signup' && (
             <>
-              {/* User Type Selection */}
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant={formData.userType === 'candidate' ? 'teppek' : 'outline'}
-                  size="sm"
-                  className={`flex-1 ${formData.userType !== 'candidate' ? 'text-gray-900' : ''}`}
-                  onClick={() => setFormData(prev => ({ ...prev, userType: 'candidate' }))}
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  <span>İş Arayan</span>
-                </Button>
-                <Button
-                  type="button"
-                  variant={formData.userType === 'company' ? 'teppek' : 'outline'}
-                  size="sm"
-                  className={`flex-1 ${formData.userType !== 'company' ? 'text-gray-900' : ''}`}
-                  onClick={() => setFormData(prev => ({ ...prev, userType: 'company' }))}
-                >
-                  <Building className="h-4 w-4 mr-2" />
-                  <span>İşveren</span>
-                </Button>
+              {/* User Type Display (Read-only) */}
+              <div className="bg-gray-50 rounded-lg p-3 border-2 border-dashed border-gray-200">
+                <div className="flex items-center justify-center space-x-2">
+                  {formData.userType === 'candidate' ? (
+                    <>
+                      <User className="h-5 w-5 text-blue-600" />
+                      <span className="font-medium text-gray-900">İş Arayan Kaydı</span>
+                    </>
+                  ) : (
+                    <>
+                      <Building className="h-5 w-5 text-green-600" />
+                      <span className="font-medium text-gray-900">İşveren Kaydı</span>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Name Fields */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Input
-                    placeholder="Ad"
+                    placeholder={formData.userType === 'company' ? 'İletişim Kişisi Adı' : 'Ad'}
                     value={formData.firstName}
                     onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
                     className={errors.firstName ? 'border-red-500' : ''}
@@ -273,7 +274,7 @@ export function AuthModal({ isOpen, onClose, defaultMode = 'signin' }) {
                 </div>
                 <div>
                   <Input
-                    placeholder="Soyad"
+                    placeholder={formData.userType === 'company' ? 'İletişim Kişisi Soyadı' : 'Soyad'}
                     value={formData.lastName}
                     onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
                     className={errors.lastName ? 'border-red-500' : ''}

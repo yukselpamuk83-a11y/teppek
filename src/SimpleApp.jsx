@@ -1,6 +1,6 @@
 // BASIT TEPPEK APP - Çalışan Versiyon
 import { useState, useEffect } from 'react'
-import { SimpleAuthProvider, useSimpleAuth } from './hooks/useSimpleAuth'
+import { SimpleAuthProvider, useSimpleAuth } from './hooks/useSimpleAuth.jsx'
 import { SimpleAuthModal } from './components/auth/SimpleAuthModal'
 import { SimpleAuthCallback } from './components/auth/SimpleAuthCallback'
 

@@ -334,17 +334,17 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
     return (
         <div className="relative h-full w-full">
             <div ref={mapRef} className="h-full w-full" style={{ zIndex: 1 }} />
-            {/* Kontrol paneli */}
-            <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
+            {/* Kontrol paneli - Sol alt köşe */}
+            <div className="absolute bottom-4 left-4 z-[1000] flex flex-col gap-2">
                 <button 
                     onClick={() => mapInstance.current && userLocation && mapInstance.current.setView([userLocation?.lat || 41.01, userLocation?.lng || 28.97], 14)} 
-                    className="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg shadow-lg hover:bg-green-700"
+                    className="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg shadow-lg hover:bg-green-700 transition-colors"
                 >
                     Konum
                 </button>
                 <div className="bg-white rounded-lg shadow-lg flex">
-                     <button onClick={() => changeMapLayer('street')} className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-l-lg">Sokak</button>
-                     <button onClick={() => changeMapLayer('satellite')} className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-r-lg border-l">Uydu</button>
+                     <button onClick={() => changeMapLayer('street')} className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-l-lg transition-colors">Sokak</button>
+                     <button onClick={() => changeMapLayer('satellite')} className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-r-lg border-l transition-colors">Uydu</button>
                 </div>
             </div>
         </div>

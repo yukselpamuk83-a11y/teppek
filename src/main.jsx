@@ -1,13 +1,13 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import SimpleApp from './SimpleApp.jsx'
+import ModernApp from './ModernApp.jsx'
 import './styles/index.css'
 
 // Environment indicator
-console.log(`🚀 Teppek Simple ${import.meta.env.PROD ? 'Production' : 'Development'} Mode`)
+console.log(`🚀 Teppek Modern ${import.meta.env.PROD ? 'Production' : 'Development'} Mode`)
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <SimpleApp />
+    <ModernApp />
   </React.StrictMode>,
 )

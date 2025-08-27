@@ -1,9 +1,10 @@
 // MODERN TEPPEK APP - Basit ve Çalışan Versiyon
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ModernHeader } from './components/modern/ModernHeader'
 import { UserDashboard } from './components/modern/UserDashboard'
 import { SimpleAuthCallback } from './components/auth/SimpleAuthCallback'
-import { SimpleAuthProvider, useSimpleAuth } from './hooks/useSimpleAuth'
+import { SimpleAuthProvider, useSimpleAuth } from './hooks/useSimpleAuth.jsx'
+import { useToastStore } from './stores/toastStore'
 
 // Original components (gradual migration yapacağız)
 import MapComponent from './components/MapComponent'
@@ -184,8 +185,11 @@ function ModernAppContent() {
     )
   }
 
+  // Show main auth section if not authenticated - REMOVED
+  // Ana sayfa her zaman gösterilecek, sadece header'da auth butonları olacak
+
   // Show dashboard if authenticated and dashboard view selected
-  if (isAuthenticated() && currentView === 'dashboard') {
+  if (isAuthenticated && currentView === 'dashboard') {
     return (
       <div className="min-h-screen bg-gray-50">
         <ModernHeader />
@@ -217,8 +221,10 @@ function ModernAppContent() {
     <div className="min-h-screen bg-gray-50">
       <ModernHeader />
       
+      {/* Auth Form removed - not needed */}
+      
       {/* View Toggle */}
-      {isAuthenticated() && (
+      {isAuthenticated && (
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex space-x-4">
             <button
@@ -313,10 +319,15 @@ function ModernAppContent() {
         </div>
       )}
       
-      {/* Toast Container */}
-      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   )
 }
 
-export default ModernApp
+// Main App wrapper with auth provider
+export default function ModernApp() {
+  return (
+    <SimpleAuthProvider>
+      <ModernAppContent />
+    </SimpleAuthProvider>
+  )
+}

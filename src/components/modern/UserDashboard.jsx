@@ -1,5 +1,5 @@
 // DENEYSEL PROJE - Modern User Dashboard
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuthStore } from '../../stores/authStore'
 import { Button } from '../ui/Button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/Dialog'

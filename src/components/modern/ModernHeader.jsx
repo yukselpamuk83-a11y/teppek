@@ -1,7 +1,9 @@
 // DENEYSEL PROJE - Modern Header Component
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Button } from '../ui/Button'
 import { AuthModal } from '../auth/AuthModal'
+import { RegistrationModal } from '../auth/RegistrationModal'
+import { PostRegistrationUserTypeModal } from '../auth/PostRegistrationUserTypeModal'
 import { useAuthStore } from '../../stores/authStore'
 import { analytics } from '../../lib/analytics'
 import { 
@@ -15,12 +17,22 @@ import {
 } from 'lucide-react'
 
 export function ModernHeader() {
-  const [authModal, setAuthModal] = useState({ isOpen: false, mode: 'signin' })
+  const [authModal, setAuthModal] = useState({ isOpen: false, mode: 'signin', userType: 'candidate' })
+  const [registrationModal, setRegistrationModal] = useState(false)
+  const [postRegistrationModal, setPostRegistrationModal] = useState(false)
   const { user, signOut, isAuthenticated } = useAuthStore()
 
-  const handleAuthClick = (mode) => {
-    setAuthModal({ isOpen: true, mode })
-    analytics.events.authAction('modal_open', mode)
+  const handleRegisterClick = () => {
+    setRegistrationModal(true)
+  }
+
+  const handleLoginTypeSelect = (userType) => {
+    setAuthModal({ isOpen: true, mode: 'signin', userType })
+  }
+
+  const handleRegistrationSuccess = () => {
+    setRegistrationModal(false)
+    setPostRegistrationModal(true)
   }
 
   const handleSignOut = async () => {
@@ -77,23 +89,33 @@ export function ModernHeader() {
               </Button>
             </div>
           ) : (
-            // Guest User Menu
+            // Guest User Menu - Yeni Renkli Tasarım
             <>
               <Button 
-                variant="outline"
+                variant="candidate"
                 size="sm"
-                onClick={() => handleAuthClick('signin')}
-                className="hidden sm:flex"
+                onClick={() => handleLoginTypeSelect('candidate')}
+                className="hidden sm:flex font-semibold"
               >
-                <LogIn className="h-4 w-4 mr-2" />
-                Giriş Yap
+                <User className="h-4 w-4 mr-2" />
+                İş Arayan
               </Button>
               
               <Button 
-                variant="teppek"
+                variant="employer"
                 size="sm"
-                onClick={() => handleAuthClick('signup')}
-                className="shadow-lg hover:shadow-xl transition-shadow"
+                onClick={() => handleLoginTypeSelect('company')}
+                className="hidden sm:flex font-semibold"
+              >
+                <Building className="h-4 w-4 mr-2" />
+                İşveren
+              </Button>
+              
+              <Button 
+                variant="register"
+                size="sm"
+                onClick={handleRegisterClick}
+                className="shadow-lg hover:shadow-xl font-semibold"
               >
                 <UserPlus className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Kayıt Ol</span>
@@ -104,11 +126,23 @@ export function ModernHeader() {
         </div>
       </header>
 
-      {/* Auth Modal */}
+      {/* Auth Modals */}
+      <RegistrationModal
+        isOpen={registrationModal}
+        onClose={() => setRegistrationModal(false)}
+        onRegistrationSuccess={handleRegistrationSuccess}
+      />
+
+      <PostRegistrationUserTypeModal
+        isOpen={postRegistrationModal}
+        onClose={() => setPostRegistrationModal(false)}
+      />
+
       <AuthModal
         isOpen={authModal.isOpen}
-        onClose={() => setAuthModal({ isOpen: false, mode: 'signin' })}
+        onClose={() => setAuthModal({ isOpen: false, mode: 'signin', userType: 'candidate' })}
         defaultMode={authModal.mode}
+        initialUserType={authModal.userType}
       />
     </>
   )

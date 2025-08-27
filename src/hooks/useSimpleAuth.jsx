@@ -1,5 +1,5 @@
-// BASIT AUTH HOOK - State management
-import { useState, useEffect, createContext, useContext } from 'react'
+// BASIT AUTH HOOK - State management  
+import React, { useState, useEffect, createContext, useContext } from 'react'
 import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext()

@@ -19,8 +19,7 @@ export const supabase = createClient(devSupabaseUrl, devSupabaseKey, {
     detectSessionInUrl: true
   },
   db: {
-    // Test schema kullan (prod'u etkilemesin)
-    schema: 'geoo_dev_test'
+    schema: 'public'
   }
 })
 

@@ -17,7 +17,10 @@ const buttonVariants = cva(
         link: 'text-primary underline-offset-4 hover:underline',
         teppek: 'bg-blue-600 text-white shadow hover:bg-blue-700',
         success: 'bg-green-600 text-white shadow hover:bg-green-700',
-        warning: 'bg-yellow-600 text-white shadow hover:bg-yellow-700'
+        warning: 'bg-yellow-600 text-white shadow hover:bg-yellow-700',
+        candidate: 'bg-orange-500 text-white shadow hover:bg-orange-600 transition-all',
+        employer: 'bg-teal-500 text-white shadow hover:bg-teal-600 transition-all',
+        register: 'bg-blue-600 text-white shadow hover:bg-blue-700 transition-all'
       },
       size: {
         default: 'h-9 px-4 py-2',
