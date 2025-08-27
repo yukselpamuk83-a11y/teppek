@@ -24,7 +24,8 @@
       "Bash(robocopy:*)",
       "Bash(git clone:*)",
       "Bash(lsof:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": [],

@@ -16,7 +16,11 @@ import {
   Phone,
   Edit,
   Save,
-  X
+  X,
+  Building,
+  Plus,
+  Eye,
+  Settings
 } from 'lucide-react'
 
 export function UserDashboard() {
@@ -101,53 +105,109 @@ export function UserDashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="bg-red-100 p-3 rounded-full">
-                <Heart className="h-6 w-6 text-red-600" />
+          {isCompany ? (
+            // Firma Dashboard İstatistikleri
+            <>
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex items-center">
+                  <div className="bg-blue-100 p-3 rounded-full">
+                    <Briefcase className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-2xl font-semibold text-gray-900">5</p>
+                    <p className="text-gray-600">Aktif İlan</p>
+                  </div>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-2xl font-semibold text-gray-900">{stats.savedJobs}</p>
-                <p className="text-gray-600">Kayıtlı İlan</p>
-              </div>
-            </div>
-          </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="bg-green-100 p-3 rounded-full">
-                <Briefcase className="h-6 w-6 text-green-600" />
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex items-center">
+                  <div className="bg-green-100 p-3 rounded-full">
+                    <User className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-2xl font-semibold text-gray-900">23</p>
+                    <p className="text-gray-600">Başvuru</p>
+                  </div>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-2xl font-semibold text-gray-900">{stats.applications}</p>
-                <p className="text-gray-600">Başvuru</p>
-              </div>
-            </div>
-          </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="bg-blue-100 p-3 rounded-full">
-                <TrendingUp className="h-6 w-6 text-blue-600" />
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex items-center">
+                  <div className="bg-purple-100 p-3 rounded-full">
+                    <TrendingUp className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-2xl font-semibold text-gray-900">156</p>
+                    <p className="text-gray-600">İlan Görüntüleme</p>
+                  </div>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-2xl font-semibold text-gray-900">{stats.profileViews}</p>
-                <p className="text-gray-600">Profil Görüntüleme</p>
-              </div>
-            </div>
-          </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="bg-purple-100 p-3 rounded-full">
-                <Calendar className="h-6 w-6 text-purple-600" />
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex items-center">
+                  <div className="bg-red-100 p-3 rounded-full">
+                    <Calendar className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-2xl font-semibold text-gray-900">3</p>
+                    <p className="text-gray-600">Mülakatlar</p>
+                  </div>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-2xl font-semibold text-gray-900">24</p>
-                <p className="text-gray-600">Günlük Aktivite</p>
+            </>
+          ) : (
+            // Aday Dashboard İstatistikleri
+            <>
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex items-center">
+                  <div className="bg-red-100 p-3 rounded-full">
+                    <Heart className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-2xl font-semibold text-gray-900">{stats.savedJobs}</p>
+                    <p className="text-gray-600">Kayıtlı İlan</p>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex items-center">
+                  <div className="bg-green-100 p-3 rounded-full">
+                    <Briefcase className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-2xl font-semibold text-gray-900">{stats.applications}</p>
+                    <p className="text-gray-600">Başvuru</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex items-center">
+                  <div className="bg-blue-100 p-3 rounded-full">
+                    <TrendingUp className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-2xl font-semibold text-gray-900">{stats.profileViews}</p>
+                    <p className="text-gray-600">Profil Görüntüleme</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex items-center">
+                  <div className="bg-purple-100 p-3 rounded-full">
+                    <Calendar className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-2xl font-semibold text-gray-900">2</p>
+                    <p className="text-gray-600">Mülakatlar</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Quick Actions */}
@@ -184,29 +244,155 @@ export function UserDashboard() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold mb-4">Son Aktiviteler</h2>
           <div className="space-y-3">
-            <div className="flex items-center p-3 bg-blue-50 rounded-lg">
-              <Briefcase className="h-5 w-5 text-blue-600 mr-3" />
-              <div>
-                <p className="font-medium">Frontend Developer pozisyonuna başvurdun</p>
-                <p className="text-sm text-gray-500">2 saat önce</p>
-              </div>
+            {isCompany ? (
+              // Firma Aktiviteleri
+              <>
+                <div className="flex items-center p-3 bg-blue-50 rounded-lg">
+                  <Briefcase className="h-5 w-5 text-blue-600 mr-3" />
+                  <div>
+                    <p className="font-medium">Yeni iş ilanı yayınladın</p>
+                    <p className="text-sm text-gray-500">3 saat önce</p>
+                  </div>
+                </div>
+                <div className="flex items-center p-3 bg-green-50 rounded-lg">
+                  <User className="h-5 w-5 text-green-600 mr-3" />
+                  <div>
+                    <p className="font-medium">5 yeni başvuru aldın</p>
+                    <p className="text-sm text-gray-500">6 saat önce</p>
+                  </div>
+                </div>
+                <div className="flex items-center p-3 bg-purple-50 rounded-lg">
+                  <Calendar className="h-5 w-5 text-purple-600 mr-3" />
+                  <div>
+                    <p className="font-medium">Mülakat programın güncellendi</p>
+                    <p className="text-sm text-gray-500">1 gün önce</p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              // Aday Aktiviteleri
+              <>
+                <div className="flex items-center p-3 bg-blue-50 rounded-lg">
+                  <Briefcase className="h-5 w-5 text-blue-600 mr-3" />
+                  <div>
+                    <p className="font-medium">Frontend Developer pozisyonuna başvurdun</p>
+                    <p className="text-sm text-gray-500">2 saat önce</p>
+                  </div>
+                </div>
+                <div className="flex items-center p-3 bg-green-50 rounded-lg">
+                  <Heart className="h-5 w-5 text-green-600 mr-3" />
+                  <div>
+                    <p className="font-medium">3 yeni iş ilanını kaydettin</p>
+                    <p className="text-sm text-gray-500">1 gün önce</p>
+                  </div>
+                </div>
+                <div className="flex items-center p-3 bg-purple-50 rounded-lg">
+                  <User className="h-5 w-5 text-purple-600 mr-3" />
+                  <div>
+                    <p className="font-medium">CV'ni güncelledin</p>
+                    <p className="text-sm text-gray-500">3 gün önce</p>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Firma için İlan Yönetimi */}
+        {isCompany && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center">
+                <Building className="h-5 w-5 mr-2 text-blue-600" />
+                İlan Yönetimi
+              </h2>
+              <Button variant="teppek" size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Yeni İlan
+              </Button>
             </div>
-            <div className="flex items-center p-3 bg-green-50 rounded-lg">
-              <Heart className="h-5 w-5 text-green-600 mr-3" />
-              <div>
-                <p className="font-medium">3 yeni iş ilanını kaydettin</p>
-                <p className="text-sm text-gray-500">1 gün önce</p>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="flex-1">
+                  <h3 className="font-medium">Senior React Developer</h3>
+                  <p className="text-sm text-gray-500">Yayınlandı: 2 gün önce • 12 başvuru</p>
+                </div>
+                <div className="flex space-x-2">
+                  <Button variant="outline" size="sm">
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center p-3 bg-purple-50 rounded-lg">
-              <User className="h-5 w-5 text-purple-600 mr-3" />
-              <div>
-                <p className="font-medium">Profil fotoğrafını güncelledin</p>
-                <p className="text-sm text-gray-500">3 gün önce</p>
+              
+              <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="flex-1">
+                  <h3 className="font-medium">UX/UI Designer</h3>
+                  <p className="text-sm text-gray-500">Yayınlandı: 1 hafta önce • 8 başvuru</p>
+                </div>
+                <div className="flex space-x-2">
+                  <Button variant="outline" size="sm">
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Aday için Başvurularım */}
+        {!isCompany && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold mb-4 flex items-center">
+              <Briefcase className="h-5 w-5 mr-2 text-green-600" />
+              Başvurularım
+            </h2>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex-1">
+                  <h3 className="font-medium">Frontend Developer</h3>
+                  <p className="text-sm text-gray-500">ABC Teknoloji • Başvuru: 2 gün önce</p>
+                </div>
+                <div className="flex items-center">
+                  <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">
+                    İnceleniyor
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex-1">
+                  <h3 className="font-medium">React Native Developer</h3>
+                  <p className="text-sm text-gray-500">XYZ Yazılım • Başvuru: 1 hafta önce</p>
+                </div>
+                <div className="flex items-center">
+                  <span className="px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
+                    Mülakat
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex-1">
+                  <h3 className="font-medium">Full Stack Developer</h3>
+                  <p className="text-sm text-gray-500">Tech Startup • Başvuru: 2 hafta önce</p>
+                </div>
+                <div className="flex items-center">
+                  <span className="px-3 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium">
+                    Reddedildi
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Profile Edit Modal */}

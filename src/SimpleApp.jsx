@@ -1,11 +1,10 @@
-// MODERN TEPPEK APP - Basit ve Çalışan Versiyon
+// BASIT TEPPEK APP - Çalışan Versiyon
 import { useState, useEffect } from 'react'
-import { ModernHeader } from './components/modern/ModernHeader'
-import { UserDashboard } from './components/modern/UserDashboard'
-import { SimpleAuthCallback } from './components/auth/SimpleAuthCallback'
 import { SimpleAuthProvider, useSimpleAuth } from './hooks/useSimpleAuth'
+import { SimpleAuthModal } from './components/auth/SimpleAuthModal'
+import { SimpleAuthCallback } from './components/auth/SimpleAuthCallback'
 
-// Original components (gradual migration yapacağız)
+// Original components
 import MapComponent from './components/MapComponent'
 import FilterComponent from './components/FilterComponent'
 import ListComponent from './components/ListComponent'
@@ -13,23 +12,27 @@ import PaginationComponent from './components/PaginationComponent'
 import EntryFormComponent from './components/EntryFormComponent'
 import { getDistance } from './utils/distance'
 
-function ModernAppContent() {
-  // Auth state (basit)
-  const { user, loading, isAuthenticated } = useSimpleAuth()
+function SimpleAppContent() {
+  const { user, loading, signOut, isAuthenticated } = useSimpleAuth()
   
-  // App state  
-  const [currentView, setCurrentView] = useState('map') // 'map', 'dashboard'
+  // App state
   const [data, setData] = useState([])
   const [activeFilters, setActiveFilters] = useState({ type: 'all', keyword: '' })
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [selectedLocation, setSelectedLocation] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [userLocation, setUserLocation] = useState(null)
+  const [showAuthModal, setShowAuthModal] = useState(false)
   
-  const itemsPerPage = 75
+  const itemsPerPage = 25
 
   // Check for auth callback
   const isAuthCallback = window.location.pathname === '/auth/callback'
+  
+  // Auth callback route
+  if (isAuthCallback) {
+    return <SimpleAuthCallback />
+  }
 
   // Get user location
   useEffect(() => {
@@ -59,32 +62,20 @@ function ModernAppContent() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Fetch jobs data - Real API call
+  // Fetch jobs data
   useEffect(() => {
     if (!userLocation?.lat || !userLocation?.lng) return
     
     const fetchJobs = async () => {
-      const measureDataLoad = speedInsights.measureDataLoad('jobs')
-      
       try {
-        console.log('🔄 Modern App: İş ilanları yükleniyor...')
+        console.log('🔄 İş ilanları yükleniyor...')
         
-        // Real API call
-        const response = await fetch('/api/get-jobs?limit=100000&page=1')
-        
-        // Check if response is JSON
-        const contentType = response.headers.get('content-type')
-        if (!contentType || !contentType.includes('application/json')) {
-          const text = await response.text()
-          console.warn('Non-JSON response:', text.substring(0, 100))
-          throw new Error('API returned non-JSON response')
-        }
-        
+        const response = await fetch('/api/get-jobs?limit=1000&page=1')
         const result = await response.json()
         
         if (result.success && result.jobs?.length > 0) {
           const formattedJobs = result.jobs.map(job => ({
-            id: `modern-${job.id}`,
+            id: `job-${job.id}`,
             type: 'job',
             title: job.title,
             company: job.company || 'Şirket Belirtilmemiş',
@@ -110,18 +101,10 @@ function ModernAppContent() {
           })).filter(job => job.location.lat && job.location.lng)
           
           setData(formattedJobs)
-          
-          measureDataLoad(formattedJobs.length)
-          analytics.track('jobs_loaded', { 
-            count: formattedJobs.length,
-            source: 'api_real_data' 
-          })
-          
-          console.log(`✅ Modern App: ${formattedJobs.length} ilan yüklendi`)
+          console.log(`✅ ${formattedJobs.length} ilan yüklendi`)
         }
       } catch (error) {
-        console.error('Modern App: Veri yükleme hatası:', error)
-        analytics.track('data_load_error', { error: error.message })
+        console.error('Veri yükleme hatası:', error)
       }
     }
     
@@ -154,22 +137,14 @@ function ModernAppContent() {
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters)
     setCurrentPage(1)
-    analytics.events.filterUsage('combined', newFilters)
   }
 
   const handleRowClick = (item) => {
     setSelectedLocation(item.location)
-    analytics.events.jobClick(item.id, 'list')
   }
 
   const handleAddEntry = (newEntry) => {
     setData(prev => [{ ...newEntry, id: `user-${Date.now()}` }, ...prev])
-    analytics.track('job_added', { source: 'user', type: newEntry.type })
-  }
-
-  // Auth Callback Route
-  if (isAuthCallback) {
-    return <AuthCallback />
   }
 
   // Loading state
@@ -178,68 +153,50 @@ function ModernAppContent() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Modern Teppek yükleniyor...</p>
+          <p className="text-gray-600">Teppek yükleniyor...</p>
         </div>
       </div>
     )
   }
 
-  // Show dashboard if authenticated and dashboard view selected
-  if (isAuthenticated() && currentView === 'dashboard') {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <ModernHeader />
-        <div className="pt-4">
-          <div className="max-w-7xl mx-auto px-4 mb-6">
-            <div className="flex space-x-4">
-              <button
-                onClick={() => setCurrentView('map')}
-                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
-              >
-                🗺️ Harita
-              </button>
-              <button
-                onClick={() => setCurrentView('dashboard')}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white"
-              >
-                📊 Dashboard
-              </button>
-            </div>
-          </div>
-          <UserDashboard />
-        </div>
-      </div>
-    )
-  }
-
-  // Main map view (default)
   return (
     <div className="min-h-screen bg-gray-50">
-      <ModernHeader />
-      
-      {/* View Toggle */}
-      {isAuthenticated() && (
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex space-x-4">
-            <button
-              onClick={() => setCurrentView('map')}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white"
-            >
-              🗺️ Harita
-            </button>
-            <button
-              onClick={() => setCurrentView('dashboard')}
-              className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
-            >
-              📊 Dashboard
-            </button>
+      {/* Basit Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center">
+            <h1 className="text-2xl font-bold text-blue-600">Teppek</h1>
+            <span className="ml-2 text-sm text-gray-500">İş Arama Platformu</span>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-3">
+                <span className="text-gray-700">
+                  Hoş geldin, {user?.user_metadata?.first_name || user?.email}
+                </span>
+                <button
+                  onClick={signOut}
+                  className="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded text-sm"
+                >
+                  Çıkış
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+              >
+                Giriş Yap
+              </button>
+            )}
           </div>
         </div>
-      )}
+      </header>
 
       {isMobile ? (
         // Mobile View
-        <div className="h-[calc(100vh-120px)] w-full relative">
+        <div className="h-[calc(100vh-80px)] w-full relative">
           <MapComponent 
             data={processedData} 
             selectedLocation={selectedLocation} 
@@ -247,14 +204,14 @@ function ModernAppContent() {
           />
           
           {/* Mobile Controls */}
-          <div className="absolute bottom-4 left-4 right-4 z-[1001] bg-white rounded-2xl shadow-lg p-4">
+          <div className="absolute bottom-4 left-4 right-4 z-[1001] bg-white rounded-lg shadow-lg p-4">
             <FilterComponent 
               onFilterChange={handleFilterChange}
               setCurrentPage={setCurrentPage}
             />
             <div className="mt-4 max-h-48 overflow-y-auto">
               <ListComponent 
-                data={paginatedData.slice(0, 5)} // Mobile'da sadece 5 göster
+                data={paginatedData.slice(0, 3)} // Mobile'da 3 göster
                 onRowClick={handleRowClick} 
                 userLocation={userLocation} 
               />
@@ -263,13 +220,15 @@ function ModernAppContent() {
         </div>
       ) : (
         // Desktop View  
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto p-4">
           {/* Map & Form Row */}
-          <div className="flex h-[70vh] bg-white mx-4 rounded-lg shadow-sm overflow-hidden">
-            <div className="w-[35%] h-full p-4 bg-gray-50 flex flex-col">
-              <EntryFormComponent onAddEntry={handleAddEntry} userLocation={userLocation} />
-            </div>
-            <div className="w-[65%] h-full">
+          <div className="flex h-[60vh] bg-white rounded-lg shadow-sm overflow-hidden mb-4">
+            {isAuthenticated && (
+              <div className="w-[30%] h-full p-4 bg-gray-50 border-r">
+                <EntryFormComponent onAddEntry={handleAddEntry} userLocation={userLocation} />
+              </div>
+            )}
+            <div className={`${isAuthenticated ? 'w-[70%]' : 'w-full'} h-full`}>
               <MapComponent 
                 data={processedData} 
                 selectedLocation={selectedLocation} 
@@ -279,8 +238,8 @@ function ModernAppContent() {
           </div>
           
           {/* Filter & List Section */}
-          <div className="bg-white mx-4 mt-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="p-4 bg-gray-50 border-b border-gray-200">
+          <div className="bg-white rounded-lg shadow-sm border">
+            <div className="p-4 bg-gray-50 border-b">
               <FilterComponent 
                 onFilterChange={handleFilterChange}
                 setCurrentPage={setCurrentPage}
@@ -313,10 +272,22 @@ function ModernAppContent() {
         </div>
       )}
       
-      {/* Toast Container */}
-      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      {/* Auth Modal */}
+      <SimpleAuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+      />
     </div>
   )
 }
 
-export default ModernApp
+// Main App with Provider
+function SimpleApp() {
+  return (
+    <SimpleAuthProvider>
+      <SimpleAppContent />
+    </SimpleAuthProvider>
+  )
+}
+
+export default SimpleApp
