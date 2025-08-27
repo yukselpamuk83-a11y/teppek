@@ -79,4 +79,9 @@ export const speedInsights = {
   }
 }
 
+// Global speedInsights fallback to prevent errors
+if (typeof window !== 'undefined' && !window.speedInsights) {
+  window.speedInsights = speedInsights
+}
+
 console.log('🧪 Deneysel Analytics kuruldu - Mevcut canlı site etkilenmez')
