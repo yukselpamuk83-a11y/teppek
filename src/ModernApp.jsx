@@ -79,7 +79,7 @@ function ModernApp() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Fetch jobs data - Development modunda mock data kullan
+  // Fetch jobs data - Real API call
   useEffect(() => {
     if (!userLocation?.lat || !userLocation?.lng) return
     
@@ -89,79 +89,7 @@ function ModernApp() {
       try {
         console.log('🔄 Modern App: İş ilanları yükleniyor...')
         
-        // Development modunda mock data kullan
-        const isDevelopment = import.meta.env.DEV
-        
-        if (isDevelopment) {
-          console.log('🧪 Development mode: Mock data kullanılıyor')
-          
-          // Mock job data
-          const mockJobs = [
-            {
-              id: 'mock-1',
-              type: 'job',
-              title: 'Frontend Developer',
-              company: 'Tech Company A',
-              name: 'Tech Company A',
-              location: { lat: 41.0082, lng: 28.9784 }, // Istanbul
-              address: 'İstanbul, Türkiye',
-              salary_min: 15000,
-              salary_max: 25000,
-              currency: 'TRY',
-              applyUrl: null,
-              contact: 'hr@techcompanya.com',
-              source: 'manual',
-              postedDate: new Date().toISOString(),
-              distance: getDistance(userLocation.lat, userLocation.lng, 41.0082, 28.9784)
-            },
-            {
-              id: 'mock-2', 
-              type: 'job',
-              title: 'Backend Developer',
-              company: 'Startup B',
-              name: 'Startup B',
-              location: { lat: 41.0255, lng: 28.9742 }, // Istanbul Levent
-              address: 'İstanbul, Türkiye',
-              salary_min: 18000,
-              salary_max: 30000,
-              currency: 'TRY',
-              applyUrl: 'https://startupb.com/jobs',
-              contact: null,
-              source: 'external',
-              postedDate: new Date().toISOString(),
-              distance: getDistance(userLocation.lat, userLocation.lng, 41.0255, 28.9742)
-            },
-            {
-              id: 'mock-3',
-              type: 'job', 
-              title: 'Full Stack Developer',
-              company: 'Remote Company C',
-              name: 'Remote Company C',
-              location: { lat: 39.9334, lng: 32.8597 }, // Ankara
-              address: 'Ankara, Türkiye',
-              salary_min: 20000,
-              salary_max: 35000,
-              currency: 'TRY',
-              applyUrl: 'https://remotecompanyc.com/careers',
-              contact: null,
-              source: 'external',
-              postedDate: new Date().toISOString(),
-              distance: getDistance(userLocation.lat, userLocation.lng, 39.9334, 32.8597)
-            }
-          ]
-          
-          setData(mockJobs)
-          measureDataLoad(mockJobs.length)
-          analytics.track('jobs_loaded', { 
-            count: mockJobs.length,
-            source: 'mock_data' 
-          })
-          
-          console.log(`✅ Modern App: ${mockJobs.length} mock ilan yüklendi`)
-          return
-        }
-        
-        // Production mode - real API call
+        // Real API call
         const response = await fetch('/api/get-jobs?limit=100000&page=1')
         
         // Check if response is JSON
@@ -206,7 +134,7 @@ function ModernApp() {
           measureDataLoad(formattedJobs.length)
           analytics.track('jobs_loaded', { 
             count: formattedJobs.length,
-            source: 'modern_app' 
+            source: 'api_real_data' 
           })
           
           console.log(`✅ Modern App: ${formattedJobs.length} ilan yüklendi`)
