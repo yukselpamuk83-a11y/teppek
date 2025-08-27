@@ -1,14 +1,17 @@
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import { getDistance } from '../utils/distance'
+import { JobApplicationModal } from './jobs/JobApplicationModal'
 
 // Virtual row component - her satır için optimize edilmiş component (memoized)
 const VirtualJobRow = memo(({ index, style, data }) => {
-    const { items, userLocation, onRowClick, isSubscribed, onPremiumClick } = data
+    const { items, userLocation, onRowClick, isSubscribed, onPremiumClick, onJobApply } = data
     const item = items[index]
     
     const distance = getDistance(userLocation.lat, userLocation.lng, item.location.lat, item.location.lng)
     const isPremiumContent = distance > 50
-    const canView = isSubscribed || !isPremiumContent
+    // Development modunda tüm ilanları göster
+    const isDevelopment = import.meta.env.DEV
+    const canView = isDevelopment || isSubscribed || !isPremiumContent
     
     return (
         <div 
@@ -61,8 +64,19 @@ const VirtualJobRow = memo(({ index, style, data }) => {
             </div>
             
             {/* Aksiyonlar kolonu */}
-            <div className="w-24 px-3 py-3 flex-shrink-0">
+            <div className="w-32 px-3 py-3 flex-shrink-0">
                 <div className="flex gap-1 text-xs">
+                    {item.type === 'job' && !item.isOwner && canView && (
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onJobApply(item)
+                            }}
+                            className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs font-medium"
+                        >
+                            Başvur
+                        </button>
+                    )}
                     {item.isOwner && (
                         <>
                             <button className="px-2 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 text-xs">
@@ -84,6 +98,18 @@ const VirtualJobRow = memo(({ index, style, data }) => {
 
 // Ana List componenti - Sayfalama ile optimize edildi
 function ListComponent({ data, onRowClick, isSubscribed, userLocation, onPremiumClick }) {
+    const [selectedJob, setSelectedJob] = useState(null)
+    const [showApplicationModal, setShowApplicationModal] = useState(false)
+
+    const handleJobApply = (job) => {
+        setSelectedJob(job)
+        setShowApplicationModal(true)
+    }
+
+    const closeApplicationModal = () => {
+        setShowApplicationModal(false)
+        setSelectedJob(null)
+    }
     if (data.length === 0) {
         return (
             <div className="flex-grow flex items-center justify-center">
@@ -102,7 +128,7 @@ function ListComponent({ data, onRowClick, isSubscribed, userLocation, onPremium
                 <div className="flex-grow px-3 py-3 min-w-0">Başlık / Ünvan</div>
                 <div className="w-20 px-3 py-3 text-right flex-shrink-0">Uzaklık</div>
                 <div className="w-32 px-3 py-3 flex-shrink-0">Konum</div>
-                <div className="w-24 px-3 py-3 flex-shrink-0">Aksiyonlar</div>
+                <div className="w-32 px-3 py-3 flex-shrink-0">Aksiyonlar</div>
             </div>
             
             {/* Normal list - Ana sayfa scroll kullan */}
@@ -117,7 +143,8 @@ function ListComponent({ data, onRowClick, isSubscribed, userLocation, onPremium
                             userLocation,
                             onRowClick,
                             isSubscribed,
-                            onPremiumClick
+                            onPremiumClick,
+                            onJobApply: handleJobApply
                         }}
                     />
                 ))}
@@ -127,6 +154,13 @@ function ListComponent({ data, onRowClick, isSubscribed, userLocation, onPremium
             <div className="border-t bg-gray-50 px-4 py-2 text-xs text-gray-600">
                 Toplam {data.length.toLocaleString()} ilan gösteriliyor
             </div>
+            
+            {/* Job Application Modal */}
+            <JobApplicationModal 
+                job={selectedJob}
+                isOpen={showApplicationModal}
+                onClose={closeApplicationModal}
+            />
         </div>
     )
 }
