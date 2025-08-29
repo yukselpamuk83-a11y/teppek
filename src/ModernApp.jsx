@@ -1,5 +1,5 @@
 // MODERN TEPPEK APP - Basit ve Çalışan Versiyon
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { ModernHeader } from './components/modern/ModernHeader'
 import { UserDashboard } from './components/modern/UserDashboard'
 import { SimpleAuthCallback } from './components/auth/SimpleAuthCallback'
@@ -203,33 +203,27 @@ function ModernAppContent() {
     
     fetchJobs()
     
-    // Auth state değişikliklerini dinle
-    const handleAuthStateChange = () => {
-      console.log('🔄 Auth state değişti, veri yeniden yükleniyıor...')
-      setTimeout(fetchJobs, 500) // Kısa delay ile auth state'in tam olarak güncellenmesini bekle
-    }
-    
-    window.addEventListener('auth-state-changed', handleAuthStateChange)
-    
-    return () => {
-      window.removeEventListener('auth-state-changed', handleAuthStateChange)
-    }
-  }, [userLocation, isAuthenticated]) // Auth state değiştiğinde de veri yükle
+    // Auth state değişiklikleri için veri yeniden yükleme GEREKSİZ
+    // Static data zaten mevcut, sadece UI state güncellemesi yeterli
+    console.log('✅ Static data kullanıldığı için auth state değişikliği veri yeniden yüklemiyor')
+  }, [userLocation]) // Sadece konum değiştikçe veri yükle, auth state değişikliği etkilemesin
 
-  // Filter data
-  const processedData = data.filter(item => {
-    if (activeFilters.type !== 'all' && item.type !== activeFilters.type) return false
-    
-    if (activeFilters.keyword) {
-      const keyword = activeFilters.keyword.toLowerCase()
-      const titleMatch = item.title?.toLowerCase().includes(keyword)
-      const companyMatch = item.company?.toLowerCase().includes(keyword)
+  // Memoized filter data - performans için
+  const processedData = useMemo(() => {
+    return data.filter(item => {
+      if (activeFilters.type !== 'all' && item.type !== activeFilters.type) return false
       
-      if (!titleMatch && !companyMatch) return false
-    }
-    
-    return true
-  }).sort((a, b) => a.distance - b.distance)
+      if (activeFilters.keyword) {
+        const keyword = activeFilters.keyword.toLowerCase()
+        const titleMatch = item.title?.toLowerCase().includes(keyword)
+        const companyMatch = item.company?.toLowerCase().includes(keyword)
+        
+        if (!titleMatch && !companyMatch) return false
+      }
+      
+      return true
+    }).sort((a, b) => a.distance - b.distance)
+  }, [data, activeFilters])
 
   // Pagination
   const paginatedData = processedData.slice(
