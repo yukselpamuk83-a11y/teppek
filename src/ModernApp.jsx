@@ -29,7 +29,7 @@ function ModernAppContent() {
   const [currentPage, setCurrentPage] = useState(1)
   const [userLocation, setUserLocation] = useState(null)
   
-  const itemsPerPage = 10000 // Unlimited görünüm için yüksek sayı
+  const itemsPerPage = 100 // İlk 100 ilan performans için
 
   // Check for auth callback
   const isAuthCallback = window.location.pathname === '/auth/callback'
@@ -208,8 +208,8 @@ function ModernAppContent() {
     console.log('✅ Static data kullanıldığı için auth state değişikliği veri yeniden yüklemiyor')
   }, [userLocation]) // Sadece konum değiştikçe veri yükle, auth state değişikliği etkilemesin
 
-  // Memoized filter data - performans için
-  const processedData = useMemo(() => {
+  // Tüm veri üzerinde filtreleme (harita için)
+  const allFilteredData = useMemo(() => {
     return data.filter(item => {
       if (activeFilters.type !== 'all' && item.type !== activeFilters.type) return false
       
@@ -222,15 +222,23 @@ function ModernAppContent() {
       }
       
       return true
-    }).sort((a, b) => a.distance - b.distance)
+    })
   }, [data, activeFilters])
 
-  // Pagination
-  const paginatedData = processedData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  )
-  const totalPages = Math.ceil(processedData.length / itemsPerPage)
+  // Mesafeye göre sıralı veri (liste için)
+  const sortedData = useMemo(() => {
+    return [...allFilteredData].sort((a, b) => a.distance - b.distance)
+  }, [allFilteredData])
+
+  // Pagination (sadece liste için)
+  const paginatedData = useMemo(() => {
+    return sortedData.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    )
+  }, [sortedData, currentPage, itemsPerPage])
+
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage)
 
   // Event handlers
   const handleFilterChange = (newFilters) => {
@@ -334,7 +342,7 @@ function ModernAppContent() {
         // Mobile View
         <div className="h-[calc(100vh-120px)] w-full relative">
           <MapComponent 
-            data={processedData} 
+            data={allFilteredData} 
             selectedLocation={selectedLocation} 
             userLocation={userLocation} 
           />
@@ -364,7 +372,7 @@ function ModernAppContent() {
             </div>
             <div className="w-[65%] h-full">
               <MapComponent 
-                data={processedData} 
+                data={allFilteredData} 
                 selectedLocation={selectedLocation} 
                 userLocation={userLocation} 
               />
@@ -382,7 +390,7 @@ function ModernAppContent() {
             
             <div className="p-4">
               <div className="mb-4 text-sm text-gray-600">
-                <span className="font-medium">{processedData.length}</span> sonuç bulundu
+                <span className="font-medium">{allFilteredData.length}</span> sonuç bulundu
                 {userLocation && <span className="ml-2">• Konumunuza göre sıralandı</span>}
               </div>
               
