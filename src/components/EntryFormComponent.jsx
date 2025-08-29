@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useSimpleAuth } from '../hooks/useSimpleAuth.jsx'
+import { toast } from '../stores/toastStore'
 
 function EntryFormComponent({ onAddEntry, userLocation }) {
     const { user, isAuthenticated } = useSimpleAuth()
@@ -89,11 +90,11 @@ function EntryFormComponent({ onAddEntry, userLocation }) {
                 
                 const result = await response.json()
                 console.log('✅ İş ilanı oluşturuldu:', result)
-                alert('İş ilanı başarıyla eklendi!')
+                toast.success('İş ilanı başarıyla eklendi!')
                 
             } catch (error) {
                 console.error('İş ilanı hatası:', error)
-                alert('Hata: ' + error.message)
+                toast.error('İş ilanı eklenirken hata oluştu: ' + error.message)
                 return
             }
             
@@ -130,11 +131,11 @@ function EntryFormComponent({ onAddEntry, userLocation }) {
                 
                 const result = await response.json()
                 console.log('✅ CV oluşturuldu:', result)
-                alert('CV başarıyla eklendi!')
+                toast.success('CV başarıyla eklendi!')
                 
             } catch (error) {
                 console.error('CV hatası:', error)
-                alert('Hata: ' + error.message)
+                toast.error('CV eklenirken hata oluştu: ' + error.message)
                 return
             }
         }

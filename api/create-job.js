@@ -1,5 +1,5 @@
 // Simple API endpoint for creating job listings
-const { Pool } = require('pg')
+import { Pool } from 'pg'
 
 async function createJobHandler(req, res) {
   console.log('🚀 create-job API started')
@@ -173,4 +173,4 @@ async function createJobHandler(req, res) {
   }
 }
 
-module.exports = createJobHandler
+export default createJobHandler

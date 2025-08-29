@@ -1,10 +1,9 @@
 import { memo, useState } from 'react'
 import { getDistance } from '../utils/distance'
-import { JobApplicationModal } from './jobs/JobApplicationModal'
 
 // Virtual row component - her satır için optimize edilmiş component (memoized)
 const VirtualJobRow = memo(({ index, style, data }) => {
-    const { items, userLocation, onRowClick, isSubscribed, onPremiumClick, onJobApply } = data
+    const { items, userLocation, onRowClick, isSubscribed, onPremiumClick } = data
     const item = items[index]
     
     const distance = getDistance(userLocation.lat, userLocation.lng, item.location.lat, item.location.lng)
@@ -66,16 +65,14 @@ const VirtualJobRow = memo(({ index, style, data }) => {
             {/* Aksiyonlar kolonu */}
             <div className="w-32 px-3 py-3 flex-shrink-0">
                 <div className="flex gap-1 text-xs">
-                    {item.type === 'job' && !item.isOwner && canView && (
-                        <button 
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                onJobApply(item)
-                            }}
+                    {item.type === 'job' && !item.isOwner && canView && item.contact && (
+                        <a 
+                            href={`mailto:${item.contact}`}
+                            onClick={(e) => e.stopPropagation()}
                             className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs font-medium"
                         >
-                            Başvur
-                        </button>
+                            İletişim
+                        </a>
                     )}
                     {item.isOwner && (
                         <>
@@ -98,18 +95,6 @@ const VirtualJobRow = memo(({ index, style, data }) => {
 
 // Ana List componenti - Sayfalama ile optimize edildi
 function ListComponent({ data, onRowClick, isSubscribed, userLocation, onPremiumClick }) {
-    const [selectedJob, setSelectedJob] = useState(null)
-    const [showApplicationModal, setShowApplicationModal] = useState(false)
-
-    const handleJobApply = (job) => {
-        setSelectedJob(job)
-        setShowApplicationModal(true)
-    }
-
-    const closeApplicationModal = () => {
-        setShowApplicationModal(false)
-        setSelectedJob(null)
-    }
     if (data.length === 0) {
         return (
             <div className="flex-grow flex items-center justify-center">
@@ -143,8 +128,7 @@ function ListComponent({ data, onRowClick, isSubscribed, userLocation, onPremium
                             userLocation,
                             onRowClick,
                             isSubscribed,
-                            onPremiumClick,
-                            onJobApply: handleJobApply
+                            onPremiumClick
                         }}
                     />
                 ))}
@@ -155,12 +139,6 @@ function ListComponent({ data, onRowClick, isSubscribed, userLocation, onPremium
                 Toplam {data.length.toLocaleString()} ilan gösteriliyor
             </div>
             
-            {/* Job Application Modal */}
-            <JobApplicationModal 
-                job={selectedJob}
-                isOpen={showApplicationModal}
-                onClose={closeApplicationModal}
-            />
         </div>
     )
 }

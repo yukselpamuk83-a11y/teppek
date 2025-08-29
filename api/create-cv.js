@@ -1,5 +1,5 @@
 // Simple API endpoint for creating CV entries
-const { Pool } = require('pg')
+import { Pool } from 'pg'
 
 async function createCVHandler(req, res) {
   // CORS headers
@@ -158,4 +158,4 @@ async function createCVHandler(req, res) {
   }
 }
 
-module.exports = createCVHandler
+export default createCVHandler

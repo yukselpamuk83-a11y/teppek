@@ -5,6 +5,8 @@ import { UserDashboard } from './components/modern/UserDashboard'
 import { SimpleAuthCallback } from './components/auth/SimpleAuthCallback'
 import { SimpleAuthProvider, useSimpleAuth } from './hooks/useSimpleAuth.jsx'
 import { useToastStore } from './stores/toastStore'
+import { ToastContainer } from './components/ui/Toast'
+import { ComponentErrorBoundary } from './components/ui/ComponentErrorBoundary'
 import { analytics, speedInsights } from './lib/analytics'
 
 // Original components (gradual migration yapacağız)
@@ -13,12 +15,16 @@ import FilterComponent from './components/FilterComponent'
 import ListComponent from './components/ListComponent'
 import PaginationComponent from './components/PaginationComponent'
 import EntryFormComponent from './components/EntryFormComponent'
+import { useRealtimeData } from './hooks/useRealtimeData'
 import { getDistance } from './utils/distance'
 
 function ModernAppContent() {
   // Auth state (basit)
   const { user, loading, isAuthenticated } = useSimpleAuth()
   const [startTime] = useState(Date.now())
+  
+  // Toast state
+  const { toasts, removeToast } = useToastStore()
   
   // App state  
   const [currentView, setCurrentView] = useState('map') // 'map', 'dashboard'
@@ -28,6 +34,9 @@ function ModernAppContent() {
   const [selectedLocation, setSelectedLocation] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [userLocation, setUserLocation] = useState(null)
+  
+  // Realtime data from manual entries
+  const realtimeData = useRealtimeData(userLocation)
   
   const itemsPerPage = 100 // İlk 100 ilan performans için
 
@@ -208,9 +217,11 @@ function ModernAppContent() {
     console.log('✅ Static data kullanıldığı için auth state değişikliği veri yeniden yüklemiyor')
   }, [userLocation]) // Sadece konum değiştikçe veri yükle, auth state değişikliği etkilemesin
 
-  // Tüm veri üzerinde filtreleme (harita için)
+  // Tüm veri üzerinde filtreleme (harita için) - static + realtime birleştir
   const allFilteredData = useMemo(() => {
-    return data.filter(item => {
+    const combinedData = [...data, ...realtimeData]
+    
+    return combinedData.filter(item => {
       if (activeFilters.type !== 'all' && item.type !== activeFilters.type) return false
       
       if (activeFilters.keyword) {
@@ -223,7 +234,7 @@ function ModernAppContent() {
       
       return true
     })
-  }, [data, activeFilters])
+  }, [data, realtimeData, activeFilters])
 
   // Mesafeye göre sıralı veri (liste için)
   const sortedData = useMemo(() => {
@@ -341,24 +352,46 @@ function ModernAppContent() {
       {isMobile ? (
         // Mobile View
         <div className="h-[calc(100vh-120px)] w-full relative">
-          <MapComponent 
-            data={allFilteredData} 
-            selectedLocation={selectedLocation} 
-            userLocation={userLocation} 
-          />
+          <ComponentErrorBoundary 
+            componentName="Harita" 
+            fallback={(error, retry) => (
+              <div className="h-full flex items-center justify-center bg-gray-100">
+                <div className="text-center p-4">
+                  <div className="text-4xl mb-4">🗺️</div>
+                  <h3 className="font-medium mb-2">Harita yüklenemedi</h3>
+                  <button 
+                    onClick={retry}
+                    className="bg-blue-600 text-white px-4 py-2 rounded text-sm"
+                  >
+                    Tekrar Dene
+                  </button>
+                </div>
+              </div>
+            )}
+          >
+            <MapComponent 
+              data={allFilteredData} 
+              selectedLocation={selectedLocation} 
+              userLocation={userLocation} 
+            />
+          </ComponentErrorBoundary>
           
           {/* Mobile Controls */}
           <div className="absolute bottom-4 left-4 right-4 z-[1001] bg-white rounded-2xl shadow-lg p-4">
-            <FilterComponent 
-              onFilterChange={handleFilterChange}
-              setCurrentPage={setCurrentPage}
-            />
-            <div className="mt-4 max-h-48 overflow-y-auto">
-              <ListComponent 
-                data={paginatedData.slice(0, 50)} // Mobile'da daha fazla göster
-                onRowClick={handleRowClick} 
-                userLocation={userLocation} 
+            <ComponentErrorBoundary componentName="Filter">
+              <FilterComponent 
+                onFilterChange={handleFilterChange}
+                setCurrentPage={setCurrentPage}
               />
+            </ComponentErrorBoundary>
+            <div className="mt-4 max-h-48 overflow-y-auto">
+              <ComponentErrorBoundary componentName="İş Listesi">
+                <ListComponent 
+                  data={paginatedData.slice(0, 50)} // Mobile'da daha fazla göster
+                  onRowClick={handleRowClick} 
+                  userLocation={userLocation} 
+                />
+              </ComponentErrorBoundary>
             </div>
           </div>
         </div>
@@ -368,24 +401,47 @@ function ModernAppContent() {
           {/* Map & Form Row */}
           <div className="flex h-[70vh] bg-white mx-4 rounded-lg shadow-sm overflow-hidden">
             <div className="w-[35%] h-full p-4 bg-gray-50 flex flex-col">
-              <EntryFormComponent onAddEntry={handleAddEntry} userLocation={userLocation} />
+              <ComponentErrorBoundary componentName="Form">
+                <EntryFormComponent onAddEntry={handleAddEntry} userLocation={userLocation} />
+              </ComponentErrorBoundary>
             </div>
             <div className="w-[65%] h-full">
-              <MapComponent 
-                data={allFilteredData} 
-                selectedLocation={selectedLocation} 
-                userLocation={userLocation} 
-              />
+              <ComponentErrorBoundary 
+                componentName="Harita"
+                fallback={(error, retry) => (
+                  <div className="h-full flex items-center justify-center bg-gray-100">
+                    <div className="text-center p-6">
+                      <div className="text-gray-500 mb-4">🗺️</div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Harita yüklenemedi</h3>
+                      <p className="text-sm text-gray-600 mb-4">Harita bileşeni hata verdi. Tekrar deneyin.</p>
+                      <button 
+                        onClick={retry}
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                      >
+                        Haritayı Yenile
+                      </button>
+                    </div>
+                  </div>
+                )}
+              >
+                <MapComponent 
+                  data={allFilteredData} 
+                  selectedLocation={selectedLocation} 
+                  userLocation={userLocation} 
+                />
+              </ComponentErrorBoundary>
             </div>
           </div>
           
           {/* Filter & List Section */}
           <div className="bg-white mx-4 mt-4 rounded-lg shadow-sm border border-gray-200">
             <div className="p-4 bg-gray-50 border-b border-gray-200">
-              <FilterComponent 
-                onFilterChange={handleFilterChange}
-                setCurrentPage={setCurrentPage}
-              />
+              <ComponentErrorBoundary componentName="Filter">
+                <FilterComponent 
+                  onFilterChange={handleFilterChange}
+                  setCurrentPage={setCurrentPage}
+                />
+              </ComponentErrorBoundary>
             </div>
             
             <div className="p-4">
@@ -394,11 +450,13 @@ function ModernAppContent() {
                 {userLocation && <span className="ml-2">• Konumunuza göre sıralandı</span>}
               </div>
               
-              <ListComponent 
-                data={paginatedData} 
-                onRowClick={handleRowClick} 
-                userLocation={userLocation} 
-              />
+              <ComponentErrorBoundary componentName="İş Listesi">
+                <ListComponent 
+                  data={paginatedData} 
+                  onRowClick={handleRowClick} 
+                  userLocation={userLocation} 
+                />
+              </ComponentErrorBoundary>
               
               {totalPages > 1 && (
                 <div className="mt-6">
@@ -414,6 +472,8 @@ function ModernAppContent() {
         </div>
       )}
       
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   )
 }

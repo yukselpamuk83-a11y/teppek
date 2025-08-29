@@ -25,7 +25,13 @@
       "Bash(git clone:*)",
       "Bash(lsof:*)",
       "Bash(grep:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(coder version)",
+      "Bash(powershell:*)",
+      "WebFetch(domain:coder.com)",
+      "Bash(winget install:*)",
+      "Bash(unzip:*)",
+      "WebFetch(domain:supabase.com)"
     ],
     "deny": [],
     "ask": [],

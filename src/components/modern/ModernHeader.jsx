@@ -1,9 +1,7 @@
 // DENEYSEL PROJE - Modern Header Component
 import React, { useState } from 'react'
 import { Button } from '../ui/Button'
-import { AuthModal } from '../auth/AuthModal'
-import { RegistrationModal } from '../auth/RegistrationModal'
-import { PostRegistrationUserTypeModal } from '../auth/PostRegistrationUserTypeModal'
+import { SimpleAuthModal } from '../auth/SimpleAuthModal'
 import { useAuthStore } from '../../stores/authStore'
 import { analytics } from '../../lib/analytics'
 import { 
@@ -18,6 +16,7 @@ import {
 
 export function ModernHeader() {
   const [authModal, setAuthModal] = useState({ isOpen: false, mode: 'signin', userType: 'candidate' })
+  // Simple fallback for removed auth components
   const [registrationModal, setRegistrationModal] = useState(false)
   const [postRegistrationModal, setPostRegistrationModal] = useState(false)
   const { user, signOut, isAuthenticated } = useAuthStore()

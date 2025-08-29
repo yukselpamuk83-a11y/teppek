@@ -8,30 +8,22 @@ export default defineConfig({
     assetsDir: 'assets',
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'vendor'
-            }
-            if (id.includes('@vercel')) {
-              return 'analytics'
-            }
-            if (id.includes('leaflet')) {
-              return 'leaflet'
-            }
-            return 'vendor'
-          }
+        manualChunks: {
+          // Sadece Leaflet'ı ayır (çünkü CDN'den yükleniyor)
+          leaflet: ['leaflet', 'leaflet.markercluster']
         }
       }
     },
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 1000, // Tek vendor chunk için
     minify: 'terser',
     terserOptions: {
       compress: {
         drop_console: true,
         drop_debugger: true
       }
-    }
+    },
+    sourcemap: false,
+    cssCodeSplit: true,
   },
   server: {
     port: 3000,
@@ -43,5 +35,8 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react', 'react-dom'],
     exclude: ['leaflet']
+  },
+  resolve: {
+    dedupe: ['react', 'react-dom']
   }
 })
