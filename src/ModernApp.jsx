@@ -5,6 +5,7 @@ import { UserDashboard } from './components/modern/UserDashboard'
 import { SimpleAuthCallback } from './components/auth/SimpleAuthCallback'
 import { SimpleAuthProvider, useSimpleAuth } from './hooks/useSimpleAuth.jsx'
 import { useToastStore } from './stores/toastStore'
+import { analytics, speedInsights } from './lib/analytics'
 
 // Original components (gradual migration yapacağız)
 import MapComponent from './components/MapComponent'
@@ -61,7 +62,7 @@ function ModernAppContent() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Fetch jobs data - Real API call
+  // Fetch jobs data - Development'ta fake data kullan
   useEffect(() => {
     if (!userLocation?.lat || !userLocation?.lng) return
     
@@ -71,22 +72,45 @@ function ModernAppContent() {
       try {
         console.log('🔄 Modern App: İş ilanları yükleniyor...')
         
-        // Real API call
-        const response = await fetch('/api/get-jobs?limit=100000&page=1')
-        
-        // Check if response is JSON
-        const contentType = response.headers.get('content-type')
-        if (!contentType || !contentType.includes('application/json')) {
-          const text = await response.text()
-          console.warn('Non-JSON response:', text.substring(0, 100))
-          throw new Error('API returned non-JSON response')
-        }
-        
-        const result = await response.json()
-        
-        if (result.success && result.jobs?.length > 0) {
-          const formattedJobs = result.jobs.map(job => ({
-            id: `modern-${job.id}`,
+        // Development'ta fake data, Production'da gerçek API
+        if (import.meta.env.MODE === 'development') {
+          console.log('🧪 Development mode: Fake data kullanılıyor')
+          
+          // Fake data generator
+          const generateFakeJobs = () => {
+            const companies = ['Teknoloji A.Ş.', 'Yazılım Ltd.', 'Digital Corp', 'Tech Solutions', 'Innovation Co.']
+            const titles = ['Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'DevOps Engineer', 'UI/UX Designer']
+            const cities = ['İstanbul', 'Ankara', 'İzmir', 'Bursa', 'Antalya']
+            const countries = ['Turkey', 'Germany', 'Netherlands', 'UK', 'USA']
+            
+            const jobs = []
+            for (let i = 0; i < 50; i++) {
+              const lat = 41.01 + (Math.random() - 0.5) * 0.1
+              const lng = 28.97 + (Math.random() - 0.5) * 0.1
+              
+              jobs.push({
+                id: i + 1,
+                title: titles[Math.floor(Math.random() * titles.length)],
+                company: companies[Math.floor(Math.random() * companies.length)],
+                city: cities[Math.floor(Math.random() * cities.length)],
+                country: countries[Math.floor(Math.random() * countries.length)],
+                lat: lat,
+                lon: lng,
+                source: 'fake',
+                created_at: new Date().toISOString(),
+                salary_min: Math.floor(Math.random() * 5000) + 3000,
+                salary_max: Math.floor(Math.random() * 10000) + 8000,
+                currency: 'TRY',
+                remote: Math.random() > 0.7
+              })
+            }
+            return jobs
+          }
+          
+          const fakeJobs = generateFakeJobs()
+          
+          const formattedJobs = fakeJobs.map(job => ({
+            id: `fake-${job.id}`,
             type: 'job',
             title: job.title,
             company: job.company || 'Şirket Belirtilmemiş',
@@ -99,9 +123,7 @@ function ModernAppContent() {
             salary_min: job.salary_min,
             salary_max: job.salary_max,
             currency: job.currency,
-            applyUrl: job.source === 'manual' ? null : job.url,
-            contact: job.source === 'manual' ? job.contact : null,
-            source: job.source || 'unknown',
+            source: job.source,
             postedDate: job.created_at,
             distance: userLocation ? getDistance(
               userLocation.lat, 
@@ -109,17 +131,70 @@ function ModernAppContent() {
               parseFloat(job.lat), 
               parseFloat(job.lon)
             ) : 0
-          })).filter(job => job.location.lat && job.location.lng)
+          }))
           
           setData(formattedJobs)
-          
           measureDataLoad(formattedJobs.length)
           analytics.track('jobs_loaded', { 
             count: formattedJobs.length,
-            source: 'api_real_data' 
+            source: 'fake_data_dev' 
           })
           
-          console.log(`✅ Modern App: ${formattedJobs.length} ilan yüklendi`)
+          console.log(`✅ Modern App: ${formattedJobs.length} fake ilan yüklendi`)
+          return
+        }
+        
+        // Production'da gerçek API call - unified endpoint
+        const response = await fetch('/api/get-map-data?limit=100000&page=1&type=jobs')
+        
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type')
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text()
+          console.warn('Non-JSON response:', text.substring(0, 100))
+          throw new Error('API returned non-JSON response')
+        }
+        
+        const result = await response.json()
+        
+        if (result.success && result.data?.length > 0) {
+          const formattedData = result.data.map(item => ({
+            id: item.id, // Already formatted as 'job-123' or 'cv-456'
+            type: item.type, // 'job' or 'cv'
+            title: item.title,
+            company: item.name || item.company || 'Belirtilmemiş',
+            name: item.name || item.company,
+            location: item.location, // Already formatted
+            address: item.address, // Already formatted
+            salary_min: item.salary_min,
+            salary_max: item.salary_max,
+            currency: item.currency,
+            applyUrl: item.type === 'job' && item.source !== 'manual' ? item.url : null,
+            contact: item.contact,
+            source: item.source || 'manual',
+            skills: item.skills, // For CVs
+            experience_years: item.experience_years, // For CVs
+            remote: item.remote,
+            postedDate: item.postedDate,
+            distance: userLocation ? getDistance(
+              userLocation.lat, 
+              userLocation.lng, 
+              item.location.lat, 
+              item.location.lng
+            ) : 0
+          })).filter(item => item.location.lat && item.location.lng)
+          
+          setData(formattedData)
+          
+          measureDataLoad(formattedData.length)
+          analytics.track('data_loaded', { 
+            count: formattedData.length,
+            jobs: formattedData.filter(item => item.type === 'job').length,
+            cvs: formattedData.filter(item => item.type === 'cv').length,
+            source: 'api_unified_data' 
+          })
+          
+          console.log(`✅ Modern App: ${formattedData.length} kayıt yüklendi (${formattedData.filter(item => item.type === 'job').length} iş ilanı, ${formattedData.filter(item => item.type === 'cv').length} CV)`)
         }
       } catch (error) {
         console.error('Modern App: Veri yükleme hatası:', error)
@@ -128,7 +203,19 @@ function ModernAppContent() {
     }
     
     fetchJobs()
-  }, [userLocation])
+    
+    // Auth state değişikliklerini dinle
+    const handleAuthStateChange = () => {
+      console.log('🔄 Auth state değişti, veri yeniden yükleniyıor...')
+      setTimeout(fetchJobs, 500) // Kısa delay ile auth state'in tam olarak güncellenmesini bekle
+    }
+    
+    window.addEventListener('auth-state-changed', handleAuthStateChange)
+    
+    return () => {
+      window.removeEventListener('auth-state-changed', handleAuthStateChange)
+    }
+  }, [userLocation, isAuthenticated]) // Auth state değiştiğinde de veri yükle
 
   // Filter data
   const processedData = data.filter(item => {
@@ -171,7 +258,7 @@ function ModernAppContent() {
 
   // Auth Callback Route
   if (isAuthCallback) {
-    return <AuthCallback />
+    return <SimpleAuthCallback />
   }
 
   // Loading state - reduced loading time for production

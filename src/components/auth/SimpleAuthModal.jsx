@@ -72,29 +72,22 @@ export function SimpleAuthModal({ isOpen, onClose, defaultMode = 'signin' }) {
   // Kullanıcı profili oluştur
   const createUserProfile = async (userId, data) => {
     try {
-      // users tablosuna ekle
-      await supabase.from('users').upsert({
+      // Profiles tablosuna ekle (RLS trigger handle_new_user() otomatik çalışacak)
+      const fullName = `${data.firstName} ${data.lastName}`.trim()
+      
+      // Eğer trigger çalışmamışsa manuel olarak profiles oluştur
+      await supabase.from('profiles').upsert({
         id: userId,
         email: data.email,
-        first_name: data.firstName,
-        last_name: data.lastName,
-        user_type: data.userType
+        full_name: fullName,
+        user_type: data.userType === 'candidate' ? 'job_seeker' : 'employer'
       })
-
-      // Profile tablosuna ekle
-      if (data.userType === 'candidate') {
-        await supabase.from('candidate_profiles').insert({
-          user_id: userId
-        })
-      } else {
-        await supabase.from('company_profiles').insert({
-          user_id: userId
-        })
-      }
       
       console.log('✅ Profil oluşturuldu')
     } catch (error) {
       console.error('Profile creation error:', error)
+      // Profil oluşturulamasa bile kayıt başarısız sayılmasın
+      console.log('⚠️ Profil oluşturulamadı ama kayıt tamamlandı')
     }
   }
 

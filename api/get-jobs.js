@@ -1,19 +1,28 @@
 // GET JOBS API - PostgreSQL'den iş ilanlarını getir
 const { Pool } = require('pg');
 
-module.exports = async (req, res) => {
+async function getJobsHandler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
+  if (req.method !== 'GET') {
+    return res.status(405).json({
+      success: false,
+      error: 'Method not allowed',
+      code: 'METHOD_NOT_ALLOWED'
+    });
+  }
+
   if (!process.env.DATABASE_URL) {
     return res.status(500).json({
       success: false,
-      error: 'DATABASE_URL not configured'
+      error: 'Database configuration error',
+      code: 'DATABASE_CONFIG_ERROR'
     });
   }
 
@@ -27,9 +36,15 @@ module.exports = async (req, res) => {
     clear = ''        // Filtreleri temizle (hızlı tüm veri)
   } = req.query;
 
-  const pageNum = Math.max(1, parseInt(page));
-  const limitNum = Math.min(100000, Math.max(1, parseInt(limit)));
+  // Input validation and sanitization
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const limitNum = Math.min(1000, Math.max(1, parseInt(limit) || 20)); // Reduced max limit for security
   const offset = (pageNum - 1) * limitNum;
+
+  // Validate and sanitize search query
+  const sanitizedQuery = q.trim().substring(0, 100); // Limit query length
+  const sanitizedCountry = country.trim().substring(0, 50);
+  const sanitizedCity = city.trim().substring(0, 50);
 
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -48,21 +63,21 @@ module.exports = async (req, res) => {
       // Normal filtreleme
       const conditions = [];
       
-      if (q.trim()) {
-        params.push(`%${q.trim().toLowerCase()}%`);
+      if (sanitizedQuery) {
+        params.push(`%${sanitizedQuery.toLowerCase()}%`);
         conditions.push(`(
           LOWER(title) LIKE $${params.length} OR 
           LOWER(company) LIKE $${params.length}
         )`);
       }
       
-      if (country.trim()) {
-        params.push(country.trim().toUpperCase());
+      if (sanitizedCountry) {
+        params.push(sanitizedCountry.toUpperCase());
         conditions.push(`country = $${params.length}`);
       }
       
-      if (city.trim()) {
-        params.push(city.trim().toLowerCase());
+      if (sanitizedCity) {
+        params.push(sanitizedCity.toLowerCase());
         conditions.push(`LOWER(city) = $${params.length}`);
       }
       
@@ -121,21 +136,29 @@ module.exports = async (req, res) => {
       jobs,
       stats,
       filters: {
-        search_query: q,
-        country: country || 'all',
-        city: city || 'all',
+        search_query: sanitizedQuery,
+        country: sanitizedCountry || 'all',
+        city: sanitizedCity || 'all',
         remote: remote || 'all'
       }
     });
 
   } catch (error) {
     console.error('Database error:', error);
+    
+    // Don't expose sensitive error details in production
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
     return res.status(500).json({
       success: false,
-      error: error.message
+      error: isDevelopment ? error.message : 'Internal server error',
+      code: 'DATABASE_ERROR'
     });
   } finally {
     if (client) client.release();
     await pool.end();
   }
-};
+}
+
+// Apply rate limiting: 100 requests per minute for GET requests
+module.exports = getJobsHandler;

@@ -23,11 +23,16 @@ export function SimpleAuthCallback() {
           // Kullanıcı profili oluştur (eğer yoksa)
           await createUserProfileIfNeeded(data.session.user)
           
-          setStatus('Giriş başarılı! Yönlendiriliyor...')
+          setStatus('Giriş başarılı! Ana sayfaya yönlendiriliyor...')
           
-          // Ana sayfaya yönlendir
+          // State refresh için ana sayfaya yumuşak geçiş
           setTimeout(() => {
-            window.location.href = '/'
+            // History API kullanarak sayfa yenilenmeden navigation
+            window.history.replaceState({}, '', '/')
+            // Custom event göndererek app'in state'ini refresh et
+            window.dispatchEvent(new CustomEvent('auth-state-changed'))
+            // Fallback olarak sayfa yenile
+            window.location.reload()
           }, 1000)
         }
         
@@ -42,32 +47,30 @@ export function SimpleAuthCallback() {
 
   const createUserProfileIfNeeded = async (user) => {
     try {
-      // Kullanıcı var mı kontrol et
-      const { data: existingUser } = await supabase
-        .from('users')
+      // Kullanıcı profili var mı kontrol et
+      const { data: existingProfile } = await supabase
+        .from('profiles')
         .select('id')
         .eq('id', user.id)
         .single()
 
-      if (!existingUser) {
-        // users tablosuna ekle
-        await supabase.from('users').upsert({
+      if (!existingProfile) {
+        // Profiles tablosuna ekle (RLS trigger otomatik oluşturacak)
+        const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Kullanıcı'
+        
+        await supabase.from('profiles').upsert({
           id: user.id,
           email: user.email,
-          first_name: user.user_metadata?.full_name?.split(' ')[0] || '',
-          last_name: user.user_metadata?.full_name?.split(' ')[1] || '',
-          user_type: 'candidate' // OAuth için varsayılan
-        })
-
-        // Candidate profile oluştur
-        await supabase.from('candidate_profiles').insert({
-          user_id: user.id
+          full_name: fullName,
+          user_type: 'job_seeker' // OAuth için varsayılan
         })
         
         console.log('✅ OAuth profil oluşturuldu')
       }
     } catch (error) {
       console.error('Profile creation error:', error)
+      // Profil oluşturulamasa bile callback başarısız sayılmasın
+      console.log('⚠️ Profil oluşturulamadı ama giriş devam ediyor')
     }
   }
 

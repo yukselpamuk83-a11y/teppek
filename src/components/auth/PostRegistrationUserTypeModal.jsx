@@ -20,37 +20,30 @@ export function PostRegistrationUserTypeModal({ isOpen, onClose }) {
     
     setLoading(true)
     try {
-      // Update user metadata
+      // Update user metadata and create/update profile
       const { error: updateError } = await supabase.auth.updateUser({
         data: { user_type: userType }
       })
 
       if (updateError) throw updateError
 
-      // Create appropriate profile record
-      if (userType === 'candidate') {
-        const { error } = await supabase
-          .from('candidate_profiles')
-          .insert([{
-            user_id: user.id,
-            full_name: `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() || user.email?.split('@')[0] || 'Kullanıcı'
-          }])
-        
-        if (error && error.code !== '23505') { // 23505 = duplicate key error (already exists)
-          throw error
-        }
-      } else {
-        const { error } = await supabase
-          .from('company_profiles')
-          .insert([{
-            user_id: user.id,
-            company_name: `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() || user.email?.split('@')[0] || 'Şirket',
-            contact_email: user.email
-          }])
-        
-        if (error && error.code !== '23505') { // 23505 = duplicate key error (already exists)
-          throw error
-        }
+      // Create or update profile in the profiles table
+      const fullName = `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() || user.email?.split('@')[0] || 'Kullanıcı'
+      
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          email: user.email,
+          full_name: fullName,
+          user_type: userType === 'candidate' ? 'job_seeker' : 'employer',
+          company_name: userType === 'company' ? fullName : null,
+          updated_at: new Date().toISOString()
+        })
+      
+      if (profileError) {
+        console.error('Profile creation error:', profileError)
+        // Profil hatası olsa bile devam et
       }
 
       toast.success(`${userType === 'candidate' ? 'İş arayan' : 'İşveren'} hesabınız oluşturuldu!`)
