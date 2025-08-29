@@ -19,8 +19,8 @@ function EntryFormComponent({ onAddEntry, userLocation }) {
     const isEmployer = userType === 'employer' || userType === 'company'
     const isJobSeeker = userType === 'job_seeker' || userType === 'candidate'
 
-    // Eğer kullanıcı giriş yapmamışsa veya işveren ise CV seçeneğini gösterme
-    const canDropCV = isAuthenticated && isJobSeeker
+    // Herkes hem iş ilanı hem de CV ekleyebilir
+    const canDropCV = true
     
     // Default olarak işverenlerde job, çalışanlarda cv seçili olsun
     useState(() => {
@@ -31,17 +31,9 @@ function EntryFormComponent({ onAddEntry, userLocation }) {
     const handleSubmit = async (e) => {
         e.preventDefault()
         
-        // Giriş kontrolü
-        if (!isAuthenticated) {
-            alert('Giriş yapmanız gerekiyor!')
-            return
-        }
+        // Giriş kontrolü kaldırıldı - herkes kullanabilir
 
-        // Kullanıcı tipi kontrolü
-        if (entryType === 'cv' && !canDropCV) {
-            alert('Sadece çalışan kullanıcılar CV bırakabilir!')
-            return
-        }
+        // Kullanıcı tipi kontrolü kaldırıldı - herkes CV bırakabilir
         
         // Koordinatları gerçek adrese çevir
         let address = `${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}`
@@ -153,24 +145,7 @@ function EntryFormComponent({ onAddEntry, userLocation }) {
         setRemoteAvailable(false)
     }
 
-    // Giriş yapılmamışsa uyarı göster
-    if (!isAuthenticated) {
-        return (
-            <div className="flex flex-col h-full items-center justify-center text-center p-6">
-                <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-                    <h3 className="text-lg font-semibold text-blue-800 mb-2">
-                        Giriş Gerekli
-                    </h3>
-                    <p className="text-blue-600 mb-4">
-                        İş ilanı vermek veya CV bırakmak için giriş yapmanız gerekiyor.
-                    </p>
-                    <p className="text-sm text-blue-500">
-                        Sağ üstteki giriş butonunu kullanabilirsiniz.
-                    </p>
-                </div>
-            </div>
-        )
-    }
+    // Form her zaman görünsün - giriş yapmadan da kullanılabilir
 
     return (
         <div className="flex flex-col h-full">
