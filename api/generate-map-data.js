@@ -18,7 +18,7 @@ export default async function handler(req, res) {
         // 1. Aktif olan tüm iş ilanlarını çek. Sadece gerekli sütunları alıyoruz.
         const { data: jobs, error: jobsError } = await supabase
             .from('jobs')
-            .select('id, title, lat, lon, company')
+            .select('id, title, lat, lon, company').range(0, 19999)
             
 
         if (jobsError) throw jobsError;
