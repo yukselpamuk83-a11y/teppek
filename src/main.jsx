@@ -6,6 +6,7 @@ import ModernApp from './ModernApp.jsx'
 import { queryClient } from './lib/queryClient.js'
 import { ErrorBoundary } from './components/ui/ErrorAlert.jsx'
 import './styles/index.css'
+import './styles/popups.css'
 
 // Environment indicator
 console.log(`🚀 Teppek Modern ${import.meta.env.PROD ? 'Production' : 'Development'} Mode`)

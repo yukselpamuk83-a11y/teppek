@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { debounce } from '../utils/debounce'
+import { createPopup, createPremiumPopup } from '../utils/popupGenerator'
 
 // Leaflet global import - bu şekilde çalışacak
 let L
@@ -276,41 +277,8 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
             
             const leafletMarker = L.marker([item.location.lat, item.location.lng], { icon: customIcon })
             
-            // Popup HTML oluştur
-            let popupContent
-            if (canView) {
-                let applyButton = ''
-                if (item.type === 'cv' && item.contact) {
-                    applyButton = `<div style="background-color: #fff7ed; padding: 12px; border-radius: 8px; margin-top: 12px;">
-                        <div style="font-weight: 600; color: #ea580c; margin-bottom: 6px;">İletişim Bilgileri</div>
-                        <div style="color: #ea580c; word-break: break-all; font-size: 14px;">${item.contact}</div>
-                    </div>`
-                } else if (item.type === 'job' && item.source === 'manual' && item.contact) {
-                    applyButton = `<div style="background-color: #f0f9ff; padding: 12px; border-radius: 8px; margin-top: 12px;">
-                        <div style="font-weight: 600; color: #1e40af; margin-bottom: 6px;">İletişim Bilgileri</div>
-                        <div style="color: #1e40af; word-break: break-all; font-size: 14px;">${item.contact}</div>
-                    </div>`
-                } else if (item.type === 'job' && item.applyUrl) {
-                    applyButton = `<a href="${item.applyUrl}" target="_blank" style="display: block; background-color: #2563eb; color: white; padding: 12px; text-align: center; border-radius: 8px; text-decoration: none; margin-top: 12px;">İlana Başvur</a>`
-                }
-                
-                popupContent = `<div class="custom-popup-container">
-                    <div style="font-size: 18px; font-weight: bold; color: #0097A7; margin-bottom: 8px;">${item.title}</div>
-                    ${item.type === 'job' && item.salary_min ? `<div style="font-size: 15px; font-weight: bold; color: #059669; margin-bottom: 12px; padding: 8px; background-color: #f0fdf4; border-radius: 6px;">${item.currency || 'USD'} ${item.salary_min?.toLocaleString() || '?'} - ${item.salary_max?.toLocaleString() || '?'}</div>` : ''}
-                    <div style="font-size: 14px; color: #4b5563; margin-bottom: 12px;">
-                        <i class="fa-solid fa-building" style="margin-right: 8px;"></i>${item.company || 'Şirket bilgisi yok'}
-                        <br><i class="fa-solid fa-location-dot" style="margin-right: 8px; margin-top: 4px;"></i>${item.address}
-                    </div>
-                    ${applyButton}
-                </div>`
-            } else {
-                popupContent = `<div class="custom-popup-container text-center">
-                    <div class="font-bold text-lg text-ilan">${item.title}</div>
-                    <div class="text-base font-semibold text-gray-800">${item.company}</div>
-                    <p class="text-sm text-gray-600 my-2">Bu kayıt <b>50 km'lik ücretsiz alanınızın dışında</b> kaldığı için detayları gizlenmiştir.</p>
-                    <button id="subscribe-btn-${item.id}" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Abonelik Seçenekleri</button>
-                </div>`
-            }
+            // Yeni popup sistemi - kaynak bazlı tasarım
+            const popupContent = canView ? createPopup(item) : createPremiumPopup()
             
             leafletMarker.bindPopup(popupContent)
             
