@@ -1,7 +1,8 @@
 // Test API endpoint to debug 500 errors
-const { Pool } = require('pg')
+import pg from 'pg'
+const { Pool } = pg
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -91,4 +92,4 @@ module.exports = async function handler(req, res) {
       details: error.message
     });
   }
-};
+}
