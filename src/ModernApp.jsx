@@ -144,61 +144,56 @@ function ModernAppContent() {
           return
         }
         
-        try { // <--- ADDED THIS LINE
-        try { // <--- ADDED THIS LINE
-        try { // <--- ADDED THIS LINE
         // Production'da gerçek API call - statik GeoJSON dosyası
-        const response = await fetch('https://fcsggaggjtxqwatimplk.supabase.co/storage/v1/object/public/public-assets/map-data.geojson')
-        
-        const geoJsonData = await response.json()
-        
-        if (geoJsonData.type === 'FeatureCollection' && geoJsonData.features?.length > 0) {
-          const formattedData = geoJsonData.features.map(feature => ({
-            id: feature.properties.id,
-            type: feature.properties.type,
-            title: feature.properties.title,
-            company: feature.properties.company || feature.properties.user || 'Belirtilmemiş', // Hem company hem user olabilir
-            name: feature.properties.company || feature.properties.user,
-            location: {
-              lat: feature.geometry.coordinates[1], // GeoJSON: [lon, lat]
-              lng: feature.geometry.coordinates[0]
-            },
-            // Diğer özellikler GeoJSON properties'den alınacak
-            salary_min: feature.properties.salary_min,
-            salary_max: feature.properties.salary_max,
-            currency: feature.properties.currency,
-            applyUrl: feature.properties.applyUrl,
-            contact: feature.properties.contact,
-            source: feature.properties.source || 'manual',
-            skills: feature.properties.skills,
-            experience_years: feature.properties.experience_years,
-            remote: feature.properties.remote,
-            postedDate: feature.properties.postedDate,
-            distance: userLocation ? getDistance(
-              userLocation.lat, 
-              userLocation.lng, 
-              feature.geometry.coordinates[1], 
-              feature.geometry.coordinates[0]
-            ) : 0
-          })).filter(item => item.location.lat && item.location.lng)
+        try {
+          const response = await fetch('https://fcsggaggjtxqwatimplk.supabase.co/storage/v1/object/public/public-assets/map-data.geojson')
           
-          setData(formattedData)
+          const geoJsonData = await response.json()
           
-          measureDataLoad(formattedData.length)
-          analytics.track('data_loaded', { 
-            count: formattedData.length,
-            jobs: formattedData.filter(item => item.type === 'job').length,
-            cvs: formattedData.filter(item => item.type === 'cv').length,
-            source: 'static_geojson' 
-          })
-          
-          console.log(`✅ Modern App: ${formattedData.length} kayıt yüklendi (${formattedData.filter(item => item.type === 'job').length} iş ilanı, ${formattedData.filter(item => item.type === 'cv').length} CV)`)
-        }
-        } catch (error) { // <--- ADDED THIS LINE
-          console.error('Modern App: Veri yükleme hatası:', error)
-          analytics.track('data_load_error', { error: error.message })
-        }
-        }
+          if (geoJsonData.type === 'FeatureCollection' && geoJsonData.features?.length > 0) {
+            const formattedData = geoJsonData.features.map(feature => ({
+              id: feature.properties.id,
+              type: feature.properties.type,
+              title: feature.properties.title,
+              company: feature.properties.company || feature.properties.user || 'Belirtilmemiş',
+              name: feature.properties.company || feature.properties.user,
+              location: {
+                lat: feature.geometry.coordinates[1], // GeoJSON: [lon, lat]
+                lng: feature.geometry.coordinates[0]
+              },
+              salary_min: feature.properties.salary_min,
+              salary_max: feature.properties.salary_max,
+              currency: feature.properties.currency,
+              applyUrl: feature.properties.applyUrl,
+              contact: feature.properties.contact,
+              source: feature.properties.source || 'manual',
+              skills: feature.properties.skills,
+              experience_years: feature.properties.experience_years,
+              remote: feature.properties.remote,
+              postedDate: feature.properties.postedDate,
+              distance: userLocation ? getDistance(
+                userLocation.lat, 
+                userLocation.lng, 
+                feature.geometry.coordinates[1], 
+                feature.geometry.coordinates[0]
+              ) : 0
+            })).filter(item => item.location.lat && item.location.lng)
+            
+            setData(formattedData)
+            
+            measureDataLoad(formattedData.length)
+            analytics.track('data_loaded', { 
+              count: formattedData.length,
+              jobs: formattedData.filter(item => item.type === 'job').length,
+              cvs: formattedData.filter(item => item.type === 'cv').length,
+              source: 'static_geojson' 
+            })
+            
+            console.log(`✅ Modern App: ${formattedData.length} kayıt yüklendi (${formattedData.filter(item => item.type === 'job').length} iş ilanı, ${formattedData.filter(item => item.type === 'cv').length} CV)`)
+          }
+        } catch (staticError) {
+          console.error('Static GeoJSON yükleme hatası:', staticError)
+          analytics.track('static_geojson_error', { error: staticError.message })
         }
       } catch (error) {
         console.error('Modern App: Veri yükleme hatası:', error)
