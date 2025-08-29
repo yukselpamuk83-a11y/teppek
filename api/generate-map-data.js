@@ -53,7 +53,7 @@ export default async function handler(req, res) {
                 properties: {
                     id: cv.id,
                     title: cv.title,
-                    user: cv.user_name,
+                    user: cv.full_name,
                     type: 'cv'
                 }
             }));
