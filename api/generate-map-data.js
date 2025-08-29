@@ -1,28 +1,93 @@
+
 import { createClient } from '@supabase/supabase-js';
 
-// HATA AYIKLAMA MODU - BU KOD GEÇİCİDİR
+// Bu Vercel Sunucusuz Fonksiyonu, harita verilerini oluşturmak için kullanılır.
 export default async function handler(req, res) {
-    // Güvenlik kontrolünü geçici olarak basitleştiriyoruz
+    // Güvenlik: Bu fonksiyonun sadece Vercel Cron Job tarafından tetiklendiğinden emin olun.
     if (req.headers['authorization'] !== `Bearer ${process.env.CRON_SECRET}`) {
         return res.status(401).send('Unauthorized');
     }
 
     try {
-        // Hata ayıklama için ortam değişkenlerini kontrol et
-        const debugInfo = {
-            SUPABASE_URL_VAR_EXISTS: !!process.env.SUPABASE_URL,
-            SUPABASE_SERVICE_KEY_VAR_EXISTS: !!process.env.SUPABASE_SERVICE_KEY,
-            SERVICE_KEY_FIRST_5_CHARS: process.env.SUPABASE_SERVICE_KEY ? process.env.SUPABASE_SERVICE_KEY.substring(0, 5) + '...' : 'NOT FOUND',
-            VITE_SUPABASE_URL_VAR_EXISTS: !!process.env.VITE_SUPABASE_URL, // Bunu da kontrol edelim
+        // Supabase istemcisini, tüm verilere erişebilmek için SERVICE_ROLE anahtarı ile başlatıyoruz.
+        const supabase = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_KEY,
+            { auth: { persistSession: false } }
+        );
+
+        // 1. Aktif olan tüm iş ilanlarını çek. Sadece gerekli sütunları alıyoruz.
+        const { data: jobs, error: jobsError } = await supabase
+            .from('jobs')
+            .select('id, title, lat, lon, company_name')
+            .eq('is_active', true);
+
+        if (jobsError) throw jobsError;
+
+        // 2. İş arayan ve aktif olan tüm CV'leri çek.
+        const { data: cvs, error: cvsError } = await supabase
+            .from('cvs')
+            .select('id, title, lat, lon, user_name')
+            .eq('available_for_work', true);
+
+        if (cvsError) throw cvsError;
+
+        // 3. Veriyi GeoJSON formatına dönüştür.
+        const jobFeatures = jobs
+            .filter(job => job.lat && job.lon) // Konumu olmayanları filtrele
+            .map(job => ({
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [job.lon, job.lat] },
+                properties: {
+                    id: job.id,
+                    title: job.title,
+                    company: job.company_name,
+                    type: 'job'
+                }
+            }));
+
+        const cvFeatures = cvs
+            .filter(cv => cv.lat && cv.lon) // Konumu olmayanları filtrele
+            .map(cv => ({
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [cv.lon, cv.lat] },
+                properties: {
+                    id: cv.id,
+                    title: cv.title,
+                    user: cv.user_name,
+                    type: 'cv'
+                }
+            }));
+
+        const geoJsonData = {
+            type: 'FeatureCollection',
+            features: [...jobFeatures, ...cvFeatures]
         };
 
-        // Asıl işlemi çalıştırmadan önce bu bilgiyi döndür
+        // 4. Oluşturulan GeoJSON dosyasını Supabase Storage'a yükle.
+        const fileName = 'map-data.geojson';
+        const bucketName = 'public-assets';
+
+        const { error: uploadError } = await supabase.storage
+            .from(bucketName)
+            .upload(fileName, JSON.stringify(geoJsonData), {
+                cacheControl: '3600',
+                upsert: true,
+                contentType: 'application/json; charset=utf-8'
+            });
+
+        if (uploadError) throw uploadError;
+
+        // 5. Başarılı yanıtı gönder.
         return res.status(200).json({
-            message: "DEBUGGING OUTPUT",
-            variables_seen_by_function: debugInfo
+            message: `Harita verisi başarıyla oluşturuldu ve yüklendi: ${fileName}`,
+            jobs_processed: jobs.length,
+            cvs_processed: cvs.length,
+            total_features: geoJsonData.features.length
         });
 
     } catch (error) {
-        return res.status(500).json({ error: 'Hata ayıklama sırasında bir sorun oluştu.', details: error.message });
+        console.error('Harita verisi oluşturma hatası:', error);
+        return res.status(500).json({ error: 'Harita verisi oluşturulamadı.', details: error.message });
     }
 }
