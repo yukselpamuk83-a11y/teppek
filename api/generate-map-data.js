@@ -15,21 +15,52 @@ export default async function handler(req, res) {
             { auth: { persistSession: false } }
         );
 
-        // 1. Aktif olan tüm iş ilanlarını çek. Sadece gerekli sütunları alıyoruz.
-        const { data: jobs, error: jobsError } = await supabase
-            .from('jobs')
-            .select('id, title, lat, lon, company').range(0, 19999)
-            
+        const limit = 1000; // Supabase API varsayılan limiti
 
-        if (jobsError) throw jobsError;
+        // 1. Aktif olan tüm iş ilanlarını çek (sayfalama ile).
+        let allJobs = [];
+        let offset = 0;
+        let hasMoreJobs = true;
 
-        // 2. İş arayan ve aktif olan tüm CV'leri çek.
-        const { data: cvs, error: cvsError } = await supabase
-            .from('cvs')
-            .select('id, title, lat, lon, full_name').range(0, 19999)
-            .eq('available_for_work', true);
+        while (hasMoreJobs) {
+            const { data: chunk, error: chunkError } = await supabase
+                .from('jobs')
+                .select('id, title, lat, lon, company')
+                .range(offset, offset + limit - 1);
 
-        if (cvsError) throw cvsError;
+            if (chunkError) throw chunkError;
+
+            allJobs = allJobs.concat(chunk);
+            if (chunk.length < limit) {
+                hasMoreJobs = false; // Daha fazla veri yok
+            } else {
+                offset += limit;
+            }
+        }
+        const jobs = allJobs;
+
+        // 2. İş arayan ve aktif olan tüm CV'leri çek (sayfalama ile).
+        let allCvs = [];
+        offset = 0; // Offset'i sıfırla
+        let hasMoreCvs = true;
+
+        while (hasMoreCvs) {
+            const { data: chunk, error: chunkError } = await supabase
+                .from('cvs')
+                .select('id, title, lat, lon, full_name')
+                .eq('available_for_work', true)
+                .range(offset, offset + limit - 1);
+
+            if (chunkError) throw chunkError;
+
+            allCvs = allCvs.concat(chunk);
+            if (chunk.length < limit) {
+                hasMoreCvs = false; // Daha fazla veri yok
+            } else {
+                offset += limit;
+            }
+        }
+        const cvs = allCvs;
 
         // 3. Veriyi GeoJSON formatına dönüştür.
         const jobFeatures = jobs
@@ -40,7 +71,7 @@ export default async function handler(req, res) {
                 properties: {
                     id: job.id,
                     title: job.title,
-                    company: job.company_name,
+                    company: job.company,
                     type: 'job'
                 }
             }));
