@@ -280,6 +280,9 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
             // Yeni popup sistemi - kaynak bazlı tasarım
             const popupContent = canView ? createPopup(item) : createPremiumPopup()
             
+            // Global premium handler for popup buttons
+            window.handlePremiumClick = onPremiumClick
+            
             leafletMarker.bindPopup(popupContent)
             
             if (!canView) {

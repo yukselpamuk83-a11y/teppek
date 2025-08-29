@@ -7,6 +7,7 @@ import { SimpleAuthProvider, useSimpleAuth } from './hooks/useSimpleAuth.jsx'
 import { useToastStore } from './stores/toastStore'
 import { ToastContainer } from './components/ui/Toast'
 import { ComponentErrorBoundary } from './components/ui/ComponentErrorBoundary'
+import { PremiumModal } from './components/ui/PremiumModal'
 import { analytics, speedInsights } from './lib/analytics'
 
 // Original components (gradual migration yapacağız)
@@ -33,6 +34,7 @@ function ModernAppContent() {
   const [selectedLocation, setSelectedLocation] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [userLocation, setUserLocation] = useState(null)
+  const [showPremiumModal, setShowPremiumModal] = useState(false)
   
   // Realtime data from manual entries
   const realtimeData = useRealtimeData(userLocation)
@@ -262,6 +264,11 @@ function ModernAppContent() {
     analytics.events.jobClick(item.id, 'list')
   }
 
+  const handlePremiumClick = () => {
+    setShowPremiumModal(true)
+    analytics.events.premiumModalOpen('map_popup')
+  }
+
 
   // Auth Callback Route
   if (isAuthCallback) {
@@ -384,6 +391,7 @@ function ModernAppContent() {
                 <ListComponent 
                   data={paginatedData.slice(0, 50)} // Mobile'da daha fazla göster
                   onRowClick={handleRowClick} 
+                  onPremiumClick={handlePremiumClick}
                   userLocation={userLocation} 
                 />
               </ComponentErrorBoundary>
@@ -416,7 +424,8 @@ function ModernAppContent() {
               <MapComponent 
                 data={allFilteredData} 
                 selectedLocation={selectedLocation} 
-                userLocation={userLocation} 
+                userLocation={userLocation}
+                onPremiumClick={handlePremiumClick}
               />
             </ComponentErrorBoundary>
           </div>
@@ -441,7 +450,8 @@ function ModernAppContent() {
               <ComponentErrorBoundary componentName="İş Listesi">
                 <ListComponent 
                   data={paginatedData} 
-                  onRowClick={handleRowClick} 
+                  onRowClick={handleRowClick}
+                  onPremiumClick={handlePremiumClick}
                   userLocation={userLocation} 
                 />
               </ComponentErrorBoundary>

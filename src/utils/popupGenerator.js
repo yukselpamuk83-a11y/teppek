@@ -211,7 +211,7 @@ export function createPremiumPopup() {
         <p>Bu ilan 50km'den uzakta. Detayları görmek için premium üyelik gerekli.</p>
       </div>
       
-      <button class="popup-apply-btn premium-upgrade" onclick="window.showPremiumModal?.()">
+      <button class="popup-apply-btn premium-upgrade" onclick="window.handlePremiumClick?.()">
         <i class="fa-solid fa-star"></i>
         Premium'a Geç
       </button>
