@@ -125,24 +125,28 @@ export function ModernHeader() {
         </div>
       </header>
 
-      {/* Auth Modals */}
-      <RegistrationModal
-        isOpen={registrationModal}
-        onClose={() => setRegistrationModal(false)}
-        onRegistrationSuccess={handleRegistrationSuccess}
-      />
+      {/* Auth Modals - Temporarily disabled */}
+      {false && (
+        <>
+          <RegistrationModal
+            isOpen={registrationModal}
+            onClose={() => setRegistrationModal(false)}
+            onRegistrationSuccess={handleRegistrationSuccess}
+          />
 
-      <PostRegistrationUserTypeModal
-        isOpen={postRegistrationModal}
-        onClose={() => setPostRegistrationModal(false)}
-      />
+          <PostRegistrationUserTypeModal
+            isOpen={postRegistrationModal}
+            onClose={() => setPostRegistrationModal(false)}
+          />
 
-      <AuthModal
-        isOpen={authModal.isOpen}
-        onClose={() => setAuthModal({ isOpen: false, mode: 'signin', userType: 'candidate' })}
-        defaultMode={authModal.mode}
-        initialUserType={authModal.userType}
-      />
+          <AuthModal
+            isOpen={authModal.isOpen}
+            onClose={() => setAuthModal({ isOpen: false, mode: 'signin', userType: 'candidate' })}
+            defaultMode={authModal.mode}
+            initialUserType={authModal.userType}
+          />
+        </>
+      )}
     </>
   )
 }
