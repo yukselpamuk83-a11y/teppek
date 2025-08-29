@@ -78,19 +78,42 @@ async function saveJobToDatabase(client, job, country) {
   const markerHtml = `<div class="marker-container"><div class="icon-wrapper" style="border-color: #0097A7;"><i class="fa-solid fa-briefcase" style="color: #0097A7;"></i></div><div class="marker-label">${job.title.substring(0, 50)}</div></div>`;
   
   const address = `${city || ''}, ${country.toUpperCase()}`.replace(/^,\\s*|,\\s*$/g, '');
+  
+  // Adzuna-branded popup HTML
   const popupHtml = `
-    <div class="custom-popup-container">
-        <div style="font-size: 18px; font-weight: bold; color: #1f2937; margin-bottom: 8px;">${job.title}</div>
-        <div style="font-size: 15px; font-weight: bold; color: #059669; margin-bottom: 12px; padding: 8px; background-color: #f0fdf4; border-radius: 6px; display: flex; align-items: center;">
-            <i class="fa-solid fa-dollar-sign" style="margin-right: 8px; font-size: 14px;"></i>
-            ${job.salary_currency || 'USD'} ${Math.round(job.salary_min)?.toLocaleString() || '?'} - ${Math.round(job.salary_max)?.toLocaleString() || '?'}
+    <div class="custom-popup-container adzuna-popup">
+      <div class="popup-header">
+        <div class="popup-title">${job.title}</div>
+        <div class="popup-source">
+          <i class="fa-solid fa-globe"></i>
+          Adzuna
         </div>
-        <div style="font-size: 14px; color: #4b5563; margin-bottom: 12px; line-height: 1.4; border-left: 3px solid #e5e7eb; padding-left: 12px;">
-            <i class="fa-solid fa-building" style="margin-right: 8px; color: #6b7280;"></i>${job.company?.display_name || 'Şirket bilgisi mevcut değil'}
-            <br><i class="fa-solid fa-location-dot" style="margin-right: 8px; color: #6b7280; margin-top: 4px;"></i>${address}
+      </div>
+      
+      <div class="popup-salary adzuna-salary">
+        <i class="fa-solid fa-dollar-sign"></i>
+        ${job.salary_currency || 'USD'} ${Math.round(job.salary_min)?.toLocaleString() || '?'} - ${Math.round(job.salary_max)?.toLocaleString() || '?'}
+      </div>
+      
+      <div class="popup-details">
+        <div class="popup-company">
+          <i class="fa-solid fa-building"></i>
+          ${job.company?.display_name || 'Şirket bilgisi mevcut değil'}
         </div>
-        <a href="${job.redirect_url}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #059669; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-bottom: 8px;">İlana Başvur</a>
-        <div style="text-align: center; margin-top: 8px; font-size: 11px; color: #9ca3af;">Powered by Adzuna</div>
+        <div class="popup-location">
+          <i class="fa-solid fa-location-dot"></i>
+          ${address}
+        </div>
+      </div>
+      
+      <a href="${job.redirect_url}" target="_blank" rel="noopener noreferrer" class="popup-apply-btn adzuna-apply">
+        <i class="fa-solid fa-external-link"></i>
+        İlana Başvur
+      </a>
+      
+      <div class="popup-footer">
+        <small>Powered by Adzuna API</small>
+      </div>
     </div>`;
   
   const values = [
