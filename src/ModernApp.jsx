@@ -144,6 +144,7 @@ function ModernAppContent() {
           return
         }
         
+        try { // <--- ADDED THIS LINE
         // Production'da gerçek API call - statik GeoJSON dosyası
         const response = await fetch('https://fcsggaggjtxqwatimplk.supabase.co/storage/v1/object/public/public-assets/map-data.geojson')
         
@@ -190,6 +191,11 @@ function ModernAppContent() {
           })
           
           console.log(`✅ Modern App: ${formattedData.length} kayıt yüklendi (${formattedData.filter(item => item.type === 'job').length} iş ilanı, ${formattedData.filter(item => item.type === 'cv').length} CV)`)
+        }
+        } catch (error) { // <--- ADDED THIS LINE
+          console.error('Modern App: Veri yükleme hatası:', error)
+          analytics.track('data_load_error', { error: error.message })
+        }
         }
         }
       } catch (error) {
