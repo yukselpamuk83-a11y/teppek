@@ -1,7 +1,7 @@
-// GET MAP DATA API - Hem iş ilanları hem CV'leri getir
-const { Pool } = require('pg');
+// GET MAP DATA API - Supabase Client Version (PostgreSQL yerine)
+import { createClient } from '@supabase/supabase-js';
 
-async function getMapDataHandler(req, res) {
+export default async function getMapDataHandler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -18,12 +18,13 @@ async function getMapDataHandler(req, res) {
     });
   }
 
-  if (!process.env.DATABASE_URL) {
-    console.error('❌ DATABASE_URL environment variable is missing!');
+  // Check Supabase environment variables
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+    console.error('❌ Supabase environment variables missing!');
     return res.status(500).json({
       success: false,
-      error: 'Database configuration error - DATABASE_URL missing',
-      code: 'DATABASE_CONFIG_ERROR'
+      error: 'Database configuration error - Supabase credentials missing',
+      code: 'SUPABASE_CONFIG_ERROR'
     });
   }
 
@@ -47,203 +48,150 @@ async function getMapDataHandler(req, res) {
   const sanitizedCountry = country.trim().substring(0, 50);
   const sanitizedCity = city.trim().substring(0, 50);
 
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-  });
+  // Initialize Supabase client
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY,
+    { auth: { persistSession: false } }
+  );
 
-  let client;
   try {
-    client = await pool.connect();
-    
     let allData = [];
     let totalCount = 0;
 
     // İş ilanlarını getir
     if (type === 'all' || type === 'jobs') {
-      let jobWhereClause = '';
-      let jobParams = [];
-      
-      if (clear !== 'true') {
-        const jobConditions = [];
-        
-        if (sanitizedQuery) {
-          jobParams.push(`%${sanitizedQuery.toLowerCase()}%`);
-          jobConditions.push(`(
-            LOWER(title) LIKE $${jobParams.length} OR 
-            LOWER(company) LIKE $${jobParams.length}
-          )`);
-        }
-        
-        if (sanitizedCountry) {
-          jobParams.push(sanitizedCountry.toUpperCase());
-          jobConditions.push(`country = $${jobParams.length}`);
-        }
-        
-        if (sanitizedCity) {
-          jobParams.push(sanitizedCity.toLowerCase());
-          jobConditions.push(`LOWER(city) = $${jobParams.length}`);
-        }
-        
-        if (remote === 'true') {
-          jobConditions.push('remote = true');
-        } else if (remote === 'false') {
-          jobConditions.push('remote = false');
-        }
-
-        jobWhereClause = jobConditions.length > 0 ? 
-          `WHERE ${jobConditions.join(' AND ')}` : '';
-      }
-
-      const jobQuery = `
-        SELECT 
-          id, adzuna_id, title, company as name, city, country, 
-          lat, lon, url, contact, salary_min, salary_max, currency, 
-          remote, source, created_at,
-          'job' as type
-        FROM jobs
-        ${jobWhereClause}
-        ORDER BY created_at DESC
-      `;
-
-      const jobCountQuery = `
-        SELECT COUNT(*) as total
-        FROM jobs
-        ${jobWhereClause}
-      `;
-
       try {
-        const [jobsResult, jobCountResult] = await Promise.all([
-          client.query(jobQuery, jobParams),
-          client.query(jobCountQuery, jobParams)
-        ]);
+        let jobsQuery = supabase
+          .from('jobs')
+          .select('id, adzuna_id, title, company, city, country, lat, lon, url, contact, salary_min, salary_max, currency, remote, source, created_at', { count: 'exact' });
 
-        const jobs = jobsResult.rows.map(job => ({
-          id: `job-${job.id}`,
-          adzuna_id: job.adzuna_id,
-          type: 'job',
-          title: job.title,
-          company: job.name,
-          name: job.name,
-          location: {
-            lat: parseFloat(job.lat),
-            lng: parseFloat(job.lon)
-          },
-          address: `${job.city || ''}, ${job.country || ''}`.replace(/^,\s*|,\s*$/g, ''),
-          url: job.url,
-          salary_min: job.salary_min,
-          salary_max: job.salary_max,
-          currency: job.currency,
-          remote: job.remote,
-          contact: job.contact,
-          source: job.source,
-          postedDate: job.created_at
-        }));
-
-        allData = allData.concat(jobs);
-        totalCount += parseInt(jobCountResult.rows[0].total);
-      } catch (jobError) {
-        console.error('Job query error:', jobError);
-        // Jobs query başarısız olursa boş array dön
-      }
-    }
-
-    // CV'leri getir - sadece CV tablosu mevcutsa
-    if ((type === 'all' || type === 'cvs')) {
-      try {
-        // Önce CV tablosunun var olup olmadığını kontrol et
-        await client.query('SELECT 1 FROM cvs LIMIT 1');
-        
-        let cvWhereClause = '';
-        let cvParams = [];
-        
+        // Filtreleri uygula
         if (clear !== 'true') {
-          const cvConditions = [];
-          
           if (sanitizedQuery) {
-            cvParams.push(`%${sanitizedQuery.toLowerCase()}%`);
-            cvConditions.push(`(
-              LOWER(title) LIKE $${cvParams.length} OR 
-              LOWER(full_name) LIKE $${cvParams.length} OR
-              LOWER(description) LIKE $${cvParams.length}
-            )`);
+            jobsQuery = jobsQuery.or(`title.ilike.%${sanitizedQuery}%,company.ilike.%${sanitizedQuery}%`);
           }
           
           if (sanitizedCountry) {
-            cvParams.push(sanitizedCountry.toUpperCase());
-            cvConditions.push(`country = $${cvParams.length}`);
+            jobsQuery = jobsQuery.eq('country', sanitizedCountry.toUpperCase());
           }
           
           if (sanitizedCity) {
-            cvParams.push(sanitizedCity.toLowerCase());
-            cvConditions.push(`LOWER(city) = $${cvParams.length}`);
+            jobsQuery = jobsQuery.ilike('city', sanitizedCity);
           }
           
           if (remote === 'true') {
-            cvConditions.push('remote_available = true');
+            jobsQuery = jobsQuery.eq('remote', true);
           } else if (remote === 'false') {
-            cvConditions.push('remote_available = false');
+            jobsQuery = jobsQuery.eq('remote', false);
           }
-
-          cvWhereClause = cvConditions.length > 0 ? 
-            `WHERE ${cvConditions.join(' AND ')}` : '';
         }
 
-        const cvQuery = `
-          SELECT 
-            id, full_name, title, city, country, 
-            lat, lon, contact, salary_expectation_min, salary_expectation_max, currency, 
-            remote_available, skills, experience_years, created_at,
-            'cv' as type
-          FROM cvs
-          ${cvWhereClause}
-          AND available_for_work = true
-          ORDER BY created_at DESC
-        `;
+        // Sıralama ve sayfalama
+        const { data: jobsData, error: jobsError, count: jobsCount } = await jobsQuery
+          .order('created_at', { ascending: false })
+          .range(0, 999); // Supabase max 1000 limit
 
-        const cvCountQuery = `
-          SELECT COUNT(*) as total
-          FROM cvs
-          ${cvWhereClause}
-          AND available_for_work = true
-        `;
+        if (jobsError) {
+          console.error('Jobs query error:', jobsError);
+        } else {
+          const jobs = jobsData.map(job => ({
+            id: `job-${job.id}`,
+            adzuna_id: job.adzuna_id,
+            type: 'job',
+            title: job.title,
+            company: job.company,
+            name: job.company,
+            location: {
+              lat: parseFloat(job.lat),
+              lng: parseFloat(job.lon)
+            },
+            address: `${job.city || ''}, ${job.country || ''}`.replace(/^,\s*|,\s*$/g, ''),
+            url: job.url,
+            salary_min: job.salary_min,
+            salary_max: job.salary_max,
+            currency: job.currency,
+            remote: job.remote,
+            contact: job.contact,
+            source: job.source,
+            postedDate: job.created_at
+          }));
 
-        const [cvsResult, cvCountResult] = await Promise.all([
-          client.query(cvQuery, cvParams),
-          client.query(cvCountQuery, cvParams)
-        ]);
-
-        const cvs = cvsResult.rows.map(cv => ({
-          id: `cv-${cv.id}`,
-          type: 'cv',
-          title: cv.title,
-          name: cv.full_name,
-          company: cv.full_name,
-          location: {
-            lat: parseFloat(cv.lat),
-            lng: parseFloat(cv.lon)
-          },
-          address: `${cv.city || ''}, ${cv.country || ''}`.replace(/^,\s*|,\s*$/g, ''),
-          salary_min: cv.salary_expectation_min,
-          salary_max: cv.salary_expectation_max,
-          currency: cv.currency,
-          remote: cv.remote_available,
-          contact: cv.contact,
-          skills: cv.skills,
-          experience_years: cv.experience_years,
-          source: 'manual',
-          postedDate: cv.created_at
-        }));
-
-        allData = allData.concat(cvs);
-        totalCount += parseInt(cvCountResult.rows[0].total);
-      } catch (cvError) {
-        console.warn('CV table not available or query failed:', cvError.message);
-        // CV tablosu yoksa veya hata varsa sessizce devam et
+          allData = allData.concat(jobs);
+          totalCount += jobsCount || 0;
+        }
+      } catch (jobError) {
+        console.error('Job query error:', jobError);
       }
     }
 
-    // Sayfalama uygula
+    // CV'leri getir
+    if (type === 'all' || type === 'cvs') {
+      try {
+        let cvsQuery = supabase
+          .from('cvs')
+          .select('id, full_name, title, city, country, lat, lon, contact, salary_expectation_min, salary_expectation_max, currency, remote_available, skills, experience_years, created_at', { count: 'exact' })
+          .eq('available_for_work', true);
+
+        // Filtreleri uygula
+        if (clear !== 'true') {
+          if (sanitizedQuery) {
+            cvsQuery = cvsQuery.or(`title.ilike.%${sanitizedQuery}%,full_name.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%`);
+          }
+          
+          if (sanitizedCountry) {
+            cvsQuery = cvsQuery.eq('country', sanitizedCountry.toUpperCase());
+          }
+          
+          if (sanitizedCity) {
+            cvsQuery = cvsQuery.ilike('city', sanitizedCity);
+          }
+          
+          if (remote === 'true') {
+            cvsQuery = cvsQuery.eq('remote_available', true);
+          } else if (remote === 'false') {
+            cvsQuery = cvsQuery.eq('remote_available', false);
+          }
+        }
+
+        const { data: cvsData, error: cvsError, count: cvsCount } = await cvsQuery
+          .order('created_at', { ascending: false })
+          .range(0, 999);
+
+        if (cvsError) {
+          console.warn('CVs query error:', cvsError.message);
+        } else {
+          const cvs = cvsData.map(cv => ({
+            id: `cv-${cv.id}`,
+            type: 'cv',
+            title: cv.title,
+            name: cv.full_name,
+            company: cv.full_name,
+            location: {
+              lat: parseFloat(cv.lat),
+              lng: parseFloat(cv.lon)
+            },
+            address: `${cv.city || ''}, ${cv.country || ''}`.replace(/^,\s*|,\s*$/g, ''),
+            salary_min: cv.salary_expectation_min,
+            salary_max: cv.salary_expectation_max,
+            currency: cv.currency,
+            remote: cv.remote_available,
+            contact: cv.contact,
+            skills: cv.skills,
+            experience_years: cv.experience_years,
+            source: 'manual',
+            postedDate: cv.created_at
+          }));
+
+          allData = allData.concat(cvs);
+          totalCount += cvsCount || 0;
+        }
+      } catch (cvError) {
+        console.warn('CV query error:', cvError.message);
+      }
+    }
+
+    // Sayfalama uygula (client-side, Supabase limit'i 1000)
     const paginatedData = allData
       .sort((a, b) => new Date(b.postedDate) - new Date(a.postedDate))
       .slice(offset, offset + limitNum);
@@ -276,32 +224,20 @@ async function getMapDataHandler(req, res) {
     });
 
   } catch (error) {
-    console.error('❌ Database error in get-map-data:', {
-      message: error.message,
-      code: error.code,
-      detail: error.detail,
-      hint: error.hint,
-      stack: error.stack
-    });
+    console.error('❌ Supabase API error:', error);
     
     const isDevelopment = process.env.NODE_ENV === 'development';
     
     return res.status(500).json({
       success: false,
-      error: isDevelopment ? `Database error: ${error.message}` : 'Internal server error',
-      code: 'DATABASE_ERROR',
+      error: isDevelopment ? `Supabase error: ${error.message}` : 'Internal server error',
+      code: 'SUPABASE_ERROR',
       ...(isDevelopment && {
         details: {
-          code: error.code,
-          detail: error.detail,
-          hint: error.hint
+          message: error.message,
+          stack: error.stack
         }
       })
     });
-  } finally {
-    if (client) client.release();
-    await pool.end();
   }
 }
-
-module.exports = getMapDataHandler;
