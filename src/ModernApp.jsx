@@ -29,7 +29,7 @@ function ModernAppContent() {
   const [currentPage, setCurrentPage] = useState(1)
   const [userLocation, setUserLocation] = useState(null)
   
-  const itemsPerPage = 75
+  const itemsPerPage = 10000 // Unlimited görünüm için yüksek sayı
 
   // Check for auth callback
   const isAuthCallback = window.location.pathname === '/auth/callback'
@@ -353,7 +353,7 @@ function ModernAppContent() {
             />
             <div className="mt-4 max-h-48 overflow-y-auto">
               <ListComponent 
-                data={paginatedData.slice(0, 5)} // Mobile'da sadece 5 göster
+                data={paginatedData.slice(0, 50)} // Mobile'da daha fazla göster
                 onRowClick={handleRowClick} 
                 userLocation={userLocation} 
               />
