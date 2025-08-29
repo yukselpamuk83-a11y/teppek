@@ -14,7 +14,6 @@ import MapComponent from './components/MapComponent'
 import FilterComponent from './components/FilterComponent'
 import ListComponent from './components/ListComponent'
 import PaginationComponent from './components/PaginationComponent'
-import EntryFormComponent from './components/EntryFormComponent'
 import { useRealtimeData } from './hooks/useRealtimeData'
 import { getDistance } from './utils/distance'
 
@@ -263,10 +262,6 @@ function ModernAppContent() {
     analytics.events.jobClick(item.id, 'list')
   }
 
-  const handleAddEntry = (newEntry) => {
-    setData(prev => [{ ...newEntry, id: `user-${Date.now()}` }, ...prev])
-    analytics.track('job_added', { source: 'user', type: newEntry.type })
-  }
 
   // Auth Callback Route
   if (isAuthCallback) {
@@ -398,39 +393,32 @@ function ModernAppContent() {
       ) : (
         // Desktop View  
         <div className="max-w-7xl mx-auto">
-          {/* Map & Form Row */}
-          <div className="flex h-[70vh] bg-white mx-4 rounded-lg shadow-sm overflow-hidden">
-            <div className="w-[35%] h-full p-4 bg-gray-50 flex flex-col">
-              <ComponentErrorBoundary componentName="Form">
-                <EntryFormComponent onAddEntry={handleAddEntry} userLocation={userLocation} />
-              </ComponentErrorBoundary>
-            </div>
-            <div className="w-[65%] h-full">
-              <ComponentErrorBoundary 
-                componentName="Harita"
-                fallback={(error, retry) => (
-                  <div className="h-full flex items-center justify-center bg-gray-100">
-                    <div className="text-center p-6">
-                      <div className="text-gray-500 mb-4">🗺️</div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Harita yüklenemedi</h3>
-                      <p className="text-sm text-gray-600 mb-4">Harita bileşeni hata verdi. Tekrar deneyin.</p>
-                      <button 
-                        onClick={retry}
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-                      >
-                        Haritayı Yenile
-                      </button>
-                    </div>
+          {/* Map Only Row */}
+          <div className="h-[70vh] bg-white mx-4 rounded-lg shadow-sm overflow-hidden">
+            <ComponentErrorBoundary 
+              componentName="Harita"
+              fallback={(error, retry) => (
+                <div className="h-full flex items-center justify-center bg-gray-100">
+                  <div className="text-center p-6">
+                    <div className="text-gray-500 mb-4">🗺️</div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Harita yüklenemedi</h3>
+                    <p className="text-sm text-gray-600 mb-4">Harita bileşeni hata verdi. Tekrar deneyin.</p>
+                    <button 
+                      onClick={retry}
+                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                    >
+                      Haritayı Yenile
+                    </button>
                   </div>
-                )}
-              >
-                <MapComponent 
-                  data={allFilteredData} 
-                  selectedLocation={selectedLocation} 
-                  userLocation={userLocation} 
-                />
-              </ComponentErrorBoundary>
-            </div>
+                </div>
+              )}
+            >
+              <MapComponent 
+                data={allFilteredData} 
+                selectedLocation={selectedLocation} 
+                userLocation={userLocation} 
+              />
+            </ComponentErrorBoundary>
           </div>
           
           {/* Filter & List Section */}
