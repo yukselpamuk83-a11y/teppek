@@ -144,43 +144,38 @@ function ModernAppContent() {
           return
         }
         
-        // Production'da gerçek API call - unified endpoint
-        const response = await fetch('/api/get-map-data?limit=100000&page=1&type=jobs')
+        // Production'da gerçek API call - statik GeoJSON dosyası
+        const response = await fetch('https://fcsggaggjtxqwatimplk.supabase.co/storage/v1/object/public/public-assets/map-data.geojson')
         
-        // Check if response is JSON
-        const contentType = response.headers.get('content-type')
-        if (!contentType || !contentType.includes('application/json')) {
-          const text = await response.text()
-          console.warn('Non-JSON response:', text.substring(0, 100))
-          throw new Error('API returned non-JSON response')
-        }
+        const geoJsonData = await response.json()
         
-        const result = await response.json()
-        
-        if (result.success && result.data?.length > 0) {
-          const formattedData = result.data.map(item => ({
-            id: item.id, // Already formatted as 'job-123' or 'cv-456'
-            type: item.type, // 'job' or 'cv'
-            title: item.title,
-            company: item.name || item.company || 'Belirtilmemiş',
-            name: item.name || item.company,
-            location: item.location, // Already formatted
-            address: item.address, // Already formatted
-            salary_min: item.salary_min,
-            salary_max: item.salary_max,
-            currency: item.currency,
-            applyUrl: item.type === 'job' && item.source !== 'manual' ? item.url : null,
-            contact: item.contact,
-            source: item.source || 'manual',
-            skills: item.skills, // For CVs
-            experience_years: item.experience_years, // For CVs
-            remote: item.remote,
-            postedDate: item.postedDate,
+        if (geoJsonData.type === 'FeatureCollection' && geoJsonData.features?.length > 0) {
+          const formattedData = geoJsonData.features.map(feature => ({
+            id: feature.properties.id,
+            type: feature.properties.type,
+            title: feature.properties.title,
+            company: feature.properties.company || feature.properties.user || 'Belirtilmemiş', // Hem company hem user olabilir
+            name: feature.properties.company || feature.properties.user,
+            location: {
+              lat: feature.geometry.coordinates[1], // GeoJSON: [lon, lat]
+              lng: feature.geometry.coordinates[0]
+            },
+            // Diğer özellikler GeoJSON properties'den alınacak
+            salary_min: feature.properties.salary_min,
+            salary_max: feature.properties.salary_max,
+            currency: feature.properties.currency,
+            applyUrl: feature.properties.applyUrl,
+            contact: feature.properties.contact,
+            source: feature.properties.source || 'manual',
+            skills: feature.properties.skills,
+            experience_years: feature.properties.experience_years,
+            remote: feature.properties.remote,
+            postedDate: feature.properties.postedDate,
             distance: userLocation ? getDistance(
               userLocation.lat, 
               userLocation.lng, 
-              item.location.lat, 
-              item.location.lng
+              feature.geometry.coordinates[1], 
+              feature.geometry.coordinates[0]
             ) : 0
           })).filter(item => item.location.lat && item.location.lng)
           
@@ -191,10 +186,11 @@ function ModernAppContent() {
             count: formattedData.length,
             jobs: formattedData.filter(item => item.type === 'job').length,
             cvs: formattedData.filter(item => item.type === 'cv').length,
-            source: 'api_unified_data' 
+            source: 'static_geojson' 
           })
           
           console.log(`✅ Modern App: ${formattedData.length} kayıt yüklendi (${formattedData.filter(item => item.type === 'job').length} iş ilanı, ${formattedData.filter(item => item.type === 'cv').length} CV)`)
+        }
         }
       } catch (error) {
         console.error('Modern App: Veri yükleme hatası:', error)
