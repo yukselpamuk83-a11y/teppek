@@ -26,7 +26,7 @@ export default async function handler(req, res) {
         // 2. İş arayan ve aktif olan tüm CV'leri çek.
         const { data: cvs, error: cvsError } = await supabase
             .from('cvs')
-            .select('id, title, lat, lon, full_name')
+            .select('id, title, lat, lon, full_name').range(0, 19999)
             .eq('available_for_work', true);
 
         if (cvsError) throw cvsError;
