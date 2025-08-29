@@ -13,7 +13,7 @@ export default async function handler(req, res) {
         // Supabase istemcisini, tüm verilere erişebilmek için SERVICE_ROLE anahtarı ile başlatıyoruz.
         // Bu anahtar, RLS (Row Level Security) kurallarını atlar ve Vercel Ortam Değişkenlerinde saklanmalıdır.
         const supabase = createClient(
-            process.env.VITE_SUPABASE_URL,
+            process.env.SUPABASE_URL,
             process.env.SUPABASE_SERVICE_KEY,
             { auth: { persistSession: false } }
         );
