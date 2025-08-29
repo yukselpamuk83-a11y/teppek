@@ -179,15 +179,25 @@ export function createCVPopup(item) {
  * Gelecekteki API'ler için genişletilebilir popup factory
  */
 export function createPopup(item) {
+  console.log('🎨 Popup Generator - Item:', { 
+    id: item.id, 
+    source: item.source, 
+    type: item.type,
+    title: item.title?.substring(0, 30) + '...'
+  })
+  
   // Kaynak bazlı popup seçimi
   if (item.source === 'adzuna') {
+    console.log('✅ Using Adzuna popup for:', item.title?.substring(0, 30))
     return createAdzunaJobPopup(item)
   } else if (item.type === 'cv') {
+    console.log('✅ Using CV popup for:', item.title?.substring(0, 30))
     return createCVPopup(item)
   } else if (item.source === 'manual' || !item.source) {
+    console.log('✅ Using Manual popup for:', item.title?.substring(0, 30))
     return createManualJobPopup(item)
   } else {
-    // Gelecekteki API'ler için fallback
+    console.log('⚠️ Fallback to Manual popup for:', item.title?.substring(0, 30), 'source:', item.source)
     return createManualJobPopup(item)
   }
 }
