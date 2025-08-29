@@ -2,7 +2,7 @@
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = 'https://fcsggaggjtxqwatimplk.supabase.co';
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjc2dnYWdnanR4cXdhdGltcGxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM4ODU4OTksImV4cCI6MjA0OTQ2MTg5OX0.ksNjvTIQ6Tm9c_K8EDdNc3SgCRkVLZdnZNmTKzrjD0c';
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
