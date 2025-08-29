@@ -179,27 +179,23 @@ export function createCVPopup(item) {
  * Gelecekteki API'ler için genişletilebilir popup factory
  */
 export function createPopup(item) {
-  console.log('🎨 Popup Generator - Item:', { 
-    id: item.id, 
-    source: item.source, 
-    type: item.type,
-    title: item.title?.substring(0, 30) + '...'
-  })
+  // Force console log ve alert ile debug
+  console.error('🔥 POPUP DEBUG - Full Item Object:', JSON.stringify(item, null, 2))
   
-  // Kaynak bazlı popup seçimi
-  if (item.source === 'adzuna') {
-    console.log('✅ Using Adzuna popup for:', item.title?.substring(0, 30))
-    return createAdzunaJobPopup(item)
-  } else if (item.type === 'cv') {
-    console.log('✅ Using CV popup for:', item.title?.substring(0, 30))
-    return createCVPopup(item)
-  } else if (item.source === 'manual' || !item.source) {
-    console.log('✅ Using Manual popup for:', item.title?.substring(0, 30))
-    return createManualJobPopup(item)
-  } else {
-    console.log('⚠️ Fallback to Manual popup for:', item.title?.substring(0, 30), 'source:', item.source)
-    return createManualJobPopup(item)
+  // Alert ile de göster (geliştirme için)
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    alert(`DEBUG: source="${item.source}", type="${item.type}", title="${item.title}"`)
   }
+  
+  // Her zaman Adzuna popup göster test için
+  if (item.source === 'adzuna' || item.adzuna_id) {
+    console.error('🟢 ADZUNA POPUP SELECTED for:', item.title)
+    return createAdzunaJobPopup(item)
+  }
+  
+  // Manuel popup
+  console.error('🔴 MANUAL POPUP SELECTED for:', item.title, 'source:', item.source)
+  return createManualJobPopup(item)
 }
 
 /**
