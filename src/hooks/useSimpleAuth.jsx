@@ -7,6 +7,7 @@ const AuthContext = createContext()
 export function SimpleAuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [isPremiumUser, setIsPremiumUser] = useState(false)
 
   useEffect(() => {
     // Mevcut session'ı kontrol et
@@ -23,6 +24,14 @@ export function SimpleAuthProvider({ children }) {
       async (event, session) => {
         setUser(session?.user ?? null)
         setLoading(false)
+        
+        // Premium durumunu kontrol et (user metadata'dan)
+        if (session?.user) {
+          const premiumStatus = session.user.user_metadata?.premium_active || false
+          setIsPremiumUser(premiumStatus)
+        } else {
+          setIsPremiumUser(false)
+        }
       }
     )
 
@@ -31,12 +40,39 @@ export function SimpleAuthProvider({ children }) {
 
   const signOut = async () => {
     await supabase.auth.signOut()
+    setIsPremiumUser(false)
+  }
+
+  // Premium activate function (simulates subscription)
+  const activatePremium = async (planName) => {
+    if (!user) return false
+    
+    try {
+      // Update user metadata with premium status
+      const { error } = await supabase.auth.updateUser({
+        data: { 
+          premium_active: true,
+          premium_plan: planName,
+          premium_activated_at: new Date().toISOString()
+        }
+      })
+      
+      if (!error) {
+        setIsPremiumUser(true)
+        return true
+      }
+    } catch (error) {
+      console.error('Premium activation error:', error)
+    }
+    return false
   }
 
   const value = {
     user,
     loading,
+    isPremiumUser,
     signOut,
+    activatePremium,
     isAuthenticated: !!user
   }
 

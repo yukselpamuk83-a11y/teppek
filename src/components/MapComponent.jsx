@@ -255,7 +255,8 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
             console.log(`📍 Creating marker ${index + 1}:`, item.title, 'at', item.location)
             // Development modunda tüm ilanları göster
             const isDevelopment = import.meta.env.DEV
-            const canView = isDevelopment || item.canView || (isSubscribed || item.distance <= 50)
+            // Tüm veriyi açık göster - premium kaldırıldı
+            const canView = true
             
             // Basit marker HTML oluştur
             const iconClass = item.type === 'job' ? 'fa-briefcase' : 'fa-user'

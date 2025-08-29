@@ -7,7 +7,6 @@ import { SimpleAuthProvider, useSimpleAuth } from './hooks/useSimpleAuth.jsx'
 import { useToastStore } from './stores/toastStore'
 import { ToastContainer } from './components/ui/Toast'
 import { ComponentErrorBoundary } from './components/ui/ComponentErrorBoundary'
-import { PremiumModal } from './components/ui/PremiumModal'
 import { analytics, speedInsights } from './lib/analytics'
 
 // Original components (gradual migration yapacağız)
@@ -34,7 +33,6 @@ function ModernAppContent() {
   const [selectedLocation, setSelectedLocation] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [userLocation, setUserLocation] = useState(null)
-  const [showPremiumModal, setShowPremiumModal] = useState(false)
   
   // Realtime data from manual entries
   const realtimeData = useRealtimeData(userLocation)
@@ -265,8 +263,7 @@ function ModernAppContent() {
   }
 
   const handlePremiumClick = () => {
-    setShowPremiumModal(true)
-    analytics.events.premiumModalOpen('map_popup')
+    // Premium kaldırıldı - boş fonksiyon
   }
 
 
@@ -392,6 +389,7 @@ function ModernAppContent() {
                   data={paginatedData.slice(0, 50)} // Mobile'da daha fazla göster
                   onRowClick={handleRowClick} 
                   onPremiumClick={handlePremiumClick}
+                  isSubscribed={true}
                   userLocation={userLocation} 
                 />
               </ComponentErrorBoundary>
@@ -426,6 +424,7 @@ function ModernAppContent() {
                 selectedLocation={selectedLocation} 
                 userLocation={userLocation}
                 onPremiumClick={handlePremiumClick}
+                isSubscribed={true}
               />
             </ComponentErrorBoundary>
           </div>
@@ -452,6 +451,7 @@ function ModernAppContent() {
                   data={paginatedData} 
                   onRowClick={handleRowClick}
                   onPremiumClick={handlePremiumClick}
+                  isSubscribed={true}
                   userLocation={userLocation} 
                 />
               </ComponentErrorBoundary>

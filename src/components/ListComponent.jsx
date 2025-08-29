@@ -7,10 +7,8 @@ const VirtualJobRow = memo(({ index, style, data }) => {
     const item = items[index]
     
     const distance = getDistance(userLocation.lat, userLocation.lng, item.location.lat, item.location.lng)
-    const isPremiumContent = distance > 50
-    // Development modunda tüm ilanları göster
-    const isDevelopment = import.meta.env.DEV
-    const canView = isDevelopment || isSubscribed || !isPremiumContent
+    // Tüm veriyi açık göster - premium kaldırıldı
+    const canView = true
     
     return (
         <div 
