@@ -1,93 +1,34 @@
-
 import { createClient } from '@supabase/supabase-js';
 
-// Bu Vercel Sunucusuz Fonksiyonu, harita verilerini oluşturmak için kullanılır.
+// SON TEŞHİS KODU
 export default async function handler(req, res) {
-    // Güvenlik: Bu fonksiyonun sadece Vercel Cron Job tarafından tetiklendiğinden emin olun.
+    // Güvenlik kontrolü
     if (req.headers['authorization'] !== `Bearer ${process.env.CRON_SECRET}`) {
         return res.status(401).send('Unauthorized');
     }
 
+    // 1. ADIM: Teşhis bilgilerini Vercel Loglarına yazdır.
+    console.log("--- FONKSİYON İÇİ ORTAM DEĞİŞKENİ KONTROLÜ ---");
+    console.log("SUPABASE_URL Değişkeni Var Mı?", !!process.env.SUPABASE_URL);
+    console.log("SUPABASE_SERVICE_KEY Değişkeni Var Mı?", !!process.env.SUPABASE_SERVICE_KEY);
+    console.log("SERVICE_KEY İlk 5 Karakteri:", process.env.SUPABASE_SERVICE_KEY ? process.env.SUPABASE_SERVICE_KEY.substring(0, 5) + '...' : 'BULUNAMADI');
+    console.log("--- KONTROL SONU ---");
+
     try {
-        // Supabase istemcisini, tüm verilere erişebilmek için SERVICE_ROLE anahtarı ile başlatıyoruz.
+        // 2. ADIM: Normal işlemi yapmayı dene.
         const supabase = createClient(
             process.env.SUPABASE_URL,
             process.env.SUPABASE_SERVICE_KEY,
             { auth: { persistSession: false } }
         );
 
-        // 1. Aktif olan tüm iş ilanlarını çek. Sadece gerekli sütunları alıyoruz.
-        const { data: jobs, error: jobsError } = await supabase
-            .from('jobs')
-            .select('id, title, lat, lon, company_name')
-            .eq('is_active', true);
+        const { data, error } = await supabase.from('jobs').select('id').limit(1);
+        if (error) throw error;
 
-        if (jobsError) throw jobsError;
-
-        // 2. İş arayan ve aktif olan tüm CV'leri çek.
-        const { data: cvs, error: cvsError } = await supabase
-            .from('cvs')
-            .select('id, title, lat, lon, user_name')
-            .eq('available_for_work', true);
-
-        if (cvsError) throw cvsError;
-
-        // 3. Veriyi GeoJSON formatına dönüştür.
-        const jobFeatures = jobs
-            .filter(job => job.lat && job.lon) // Konumu olmayanları filtrele
-            .map(job => ({
-                type: 'Feature',
-                geometry: { type: 'Point', coordinates: [job.lon, job.lat] },
-                properties: {
-                    id: job.id,
-                    title: job.title,
-                    company: job.company_name,
-                    type: 'job'
-                }
-            }));
-
-        const cvFeatures = cvs
-            .filter(cv => cv.lat && cv.lon) // Konumu olmayanları filtrele
-            .map(cv => ({
-                type: 'Feature',
-                geometry: { type: 'Point', coordinates: [cv.lon, cv.lat] },
-                properties: {
-                    id: cv.id,
-                    title: cv.title,
-                    user: cv.user_name,
-                    type: 'cv'
-                }
-            }));
-
-        const geoJsonData = {
-            type: 'FeatureCollection',
-            features: [...jobFeatures, ...cvFeatures]
-        };
-
-        // 4. Oluşturulan GeoJSON dosyasını Supabase Storage'a yükle.
-        const fileName = 'map-data.geojson';
-        const bucketName = 'public-assets';
-
-        const { error: uploadError } = await supabase.storage
-            .from(bucketName)
-            .upload(fileName, JSON.stringify(geoJsonData), {
-                cacheControl: '3600',
-                upsert: true,
-                contentType: 'application/json; charset=utf-8'
-            });
-
-        if (uploadError) throw uploadError;
-
-        // 5. Başarılı yanıtı gönder.
-        return res.status(200).json({
-            message: `Harita verisi başarıyla oluşturuldu ve yüklendi: ${fileName}`,
-            jobs_processed: jobs.length,
-            cvs_processed: cvs.length,
-            total_features: geoJsonData.features.length
-        });
+        return res.status(200).json({ message: "Bağlantı başarılı ve anahtar geçerli!" });
 
     } catch (error) {
-        console.error('Harita verisi oluşturma hatası:', error);
-        return res.status(500).json({ error: 'Harita verisi oluşturulamadı.', details: error.message });
+        console.error('Supabase bağlantı hatası:', error);
+        return res.status(500).json({ error: 'Supabase istemcisi başlatılırken veya sorgu yapılırken hata oluştu.', details: error.message });
     }
 }
