@@ -19,7 +19,7 @@ export default async function handler(req, res) {
         const { data: jobs, error: jobsError } = await supabase
             .from('jobs')
             .select('id, title, lat, lon, company')
-            .eq('is_active', true);
+            
 
         if (jobsError) throw jobsError;
 
