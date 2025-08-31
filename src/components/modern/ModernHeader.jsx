@@ -19,13 +19,8 @@ export function ModernHeader() {
             <img 
               src="/logo.svg" 
               alt="Teppek Logo" 
-              className="h-10 w-auto"
+              className="h-40 w-auto"
             />
-          </div>
-          <div className="hidden sm:block">
-            <span className="text-sm text-gray-500 bg-yellow-100 px-2 py-1 rounded-full">
-              🧪 Deneysel Versiyon
-            </span>
           </div>
         </div>
         

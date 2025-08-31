@@ -36,11 +36,6 @@ const FilterComponent = memo(({ onFilterChange, setCurrentPage, isSubscribed, on
                     <button onClick={handleFilter} className="bg-blue-600 text-white font-semibold px-4 rounded-lg hover:bg-blue-700">Filtrele</button>
                     <button onClick={handleClear} className="bg-gray-200 text-gray-700 font-semibold px-4 rounded-lg hover:bg-gray-300">Temizle</button>
                 </div>
-                {/* Abonelik Test Butonu */}
-                <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={isSubscribed} onChange={onSubscribeToggle} className="w-5 h-5" />
-                    <span className="text-sm font-medium">Abone Olundu</span>
-                </label>
             </div>
         </div>
     )
