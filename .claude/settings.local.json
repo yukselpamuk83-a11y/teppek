@@ -42,7 +42,11 @@
       "Bash(set NOVU_SECRET_KEY=9c41cb0bab17d41c8c12d6ecea4f56a3)",
       "Bash(npx novu:*)",
       "Bash(npm ci:*)",
-      "Bash(git filter-branch:*)"
+      "Bash(git filter-branch:*)",
+      "Bash(git stash:*)",
+      "Bash(npx supabase:*)",
+      "Bash(del \"C:\\Users\\seher\\Desktop\\geoo\\src\\stores\\authStore.js\")",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": [],

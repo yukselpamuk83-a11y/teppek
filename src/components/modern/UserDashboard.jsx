@@ -1,6 +1,6 @@
 // DENEYSEL PROJE - Modern User Dashboard
 import React, { useState, useEffect } from 'react'
-import { useAuthStore } from '../../stores/authStore'
+import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../ui/Button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/Dialog'
 import { Input } from '../ui/Input'
@@ -24,7 +24,7 @@ import {
 } from 'lucide-react'
 
 export function UserDashboard() {
-  const { user } = useAuthStore()
+  const { user, userMetadata } = useAuth()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [stats, setStats] = useState({
     savedJobs: 12,
@@ -34,13 +34,13 @@ export function UserDashboard() {
   })
   
   const [profileData, setProfileData] = useState({
-    firstName: user?.user_metadata?.first_name || '',
-    lastName: user?.user_metadata?.last_name || '',
+    firstName: userMetadata?.first_name || userMetadata?.name?.split(' ')[0] || '',
+    lastName: userMetadata?.last_name || userMetadata?.name?.split(' ')[1] || '',
     email: user?.email || '',
-    phone: '',
-    location: '',
-    bio: '',
-    skills: ''
+    phone: userMetadata?.phone || '',
+    location: userMetadata?.location || '',
+    bio: userMetadata?.bio || '',
+    skills: userMetadata?.skills || ''
   })
 
   useEffect(() => {
@@ -75,7 +75,7 @@ export function UserDashboard() {
     )
   }
 
-  const userType = user.user_metadata?.user_type || 'user'
+  const userType = userMetadata?.user_type || 'user'
   const isCompany = userType === 'company'
 
   return (
@@ -86,7 +86,7 @@ export function UserDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold mb-2">
-                Hoş geldin, {user.user_metadata?.first_name || 'Kullanıcı'}! 👋
+                Hoş geldin, {userMetadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Kullanıcı'}! 👋
               </h1>
               <p className="opacity-90">
                 {isCompany ? 'İşveren Paneli' : 'İş Arayan Paneli'} - Son giriş: {stats.lastLogin.toLocaleDateString('tr-TR')}

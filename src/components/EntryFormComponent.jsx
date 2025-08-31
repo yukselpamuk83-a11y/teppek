@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { useSimpleAuth } from '../hooks/useSimpleAuth.jsx'
+// Auth import kaldırıldı
 import { toast } from '../stores/toastStore'
 
 function EntryFormComponent({ onAddEntry, userLocation }) {
-    const { user, isAuthenticated } = useSimpleAuth()
+    const user = null // Auth kaldırıldı
+    const isAuthenticated = false
     const [entryType, setEntryType] = useState('job')
     const [title, setTitle] = useState('')
     const [companyOrName, setCompanyOrName] = useState('')

@@ -1,7 +1,7 @@
 // MODERN TEPPEK APP - Basit ve Çalışan Versiyon
 import React, { useState, useEffect, useMemo, useCallback, Suspense, lazy } from 'react'
 import { ModernHeader } from './components/modern/ModernHeader'
-import { SimpleAuthProvider, useSimpleAuth } from './hooks/useSimpleAuth.jsx'
+import { AuthProvider } from './contexts/AuthContext'
 import { useToastStore } from './stores/toastStore'
 import { ToastContainer } from './components/ui/Toast'
 import { ComponentErrorBoundary } from './components/ui/ComponentErrorBoundary'
@@ -13,7 +13,7 @@ import NotificationInbox from './components/ui/inbox/NotificationInbox'
 
 // Lazy loaded components - performans için
 const UserDashboard = lazy(() => import('./components/modern/UserDashboard'))
-const SimpleAuthCallback = lazy(() => import('./components/auth/SimpleAuthCallback'))
+const AuthCallback = lazy(() => import('./components/auth/AuthCallback'))
 const MapComponent = lazy(() => import('./components/MapComponent'))
 const FilterComponent = lazy(() => import('./components/FilterComponent'))
 const ListComponent = lazy(() => import('./components/ListComponent'))
@@ -21,8 +21,6 @@ const PaginationComponent = lazy(() => import('./components/PaginationComponent'
 const TestNotificationButton = lazy(() => import('./components/TestNotificationButton'))
 
 function ModernAppContent() {
-  // Auth state (basit)
-  const { user, loading, isAuthenticated } = useSimpleAuth()
   const [startTime] = useState(Date.now())
   
   // Toast state
@@ -339,66 +337,18 @@ function ModernAppContent() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
       }>
-        <SimpleAuthCallback />
+        <AuthCallback />
       </Suspense>
     )
   }
 
-  // Loading state - reduced loading time for production
-  if (loading && Date.now() - startTime > 5000) { // 5 saniye sonra loading'i atlat
-    console.log('Loading timeout - showing app anyway')
-    setLoading(false)
-  }
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Teppek yükleniyor...</p>
-          <p className="text-gray-400 text-sm mt-2">Eğer uzun süre bekliyorsa sayfayı yenileyin</p>
-        </div>
-      </div>
-    )
-  }
+  // Loading removed - auth context will handle loading
 
 
   // Show main auth section if not authenticated - REMOVED
   // Ana sayfa her zaman gösterilecek, sadece header'da auth butonları olacak
 
-  // Show dashboard if authenticated and dashboard view selected
-  if (isAuthenticated && currentView === 'dashboard') {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <ModernHeader />
-        <div className="pt-4">
-          <div className="max-w-7xl mx-auto px-4 mb-6">
-            <div className="flex space-x-4">
-              <button
-                onClick={() => setCurrentView('map')}
-                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
-              >
-                🗺️ Harita
-              </button>
-              <button
-                onClick={() => setCurrentView('dashboard')}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white"
-              >
-                📊 Dashboard
-              </button>
-            </div>
-          </div>
-          <Suspense fallback={
-            <div className="flex items-center justify-center p-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          }>
-            <UserDashboard />
-          </Suspense>
-        </div>
-      </div>
-    )
-  }
+  // Show dashboard if authenticated and dashboard view selected - removed for now
 
   // Main map view (default)
   return (
@@ -410,28 +360,26 @@ function ModernAppContent() {
       {/* View Toggle and Test Button */}
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
-          {isAuthenticated && (
-            <div className="flex space-x-4">
-              <button
-                onClick={() => setCurrentView('map')}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white"
-              >
-                🗺️ Harita
-              </button>
-              <button
-                onClick={() => setCurrentView('dashboard')}
-                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
-              >
-                📊 Dashboard
-              </button>
-            </div>
-          )}
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setCurrentView('map')}
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white"
+            >
+              🗺️ Harita
+            </button>
+            <button
+              onClick={() => setCurrentView('dashboard')}
+              className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+            >
+              📊 Dashboard
+            </button>
+          </div>
           
           {/* Test Notification Button - Always visible */}
           <Suspense fallback={<div>Loading...</div>}>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
               <span className="text-xs text-yellow-700 mr-2">Novu Test:</span>
-              <TestNotificationButton userId={user?.id || '68b3af7a3c95e3a7907d87cb'} />
+              <TestNotificationButton userId={'68b3af7a3c95e3a7907d87cb'} />
             </div>
           </Suspense>
         </div>
@@ -576,11 +524,11 @@ function ModernAppContent() {
   )
 }
 
-// Main App wrapper with auth provider
+// Main App - AuthProvider wrapper
 export default function ModernApp() {
   return (
-    <SimpleAuthProvider>
+    <AuthProvider>
       <ModernAppContent />
-    </SimpleAuthProvider>
+    </AuthProvider>
   )
 }

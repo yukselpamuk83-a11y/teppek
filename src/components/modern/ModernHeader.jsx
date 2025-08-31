@@ -1,44 +1,14 @@
-// DENEYSEL PROJE - Modern Header Component
+// BASIT HEADER - Auth ile
 import React, { useState } from 'react'
 import { Button } from '../ui/Button'
-import { SimpleAuthModal } from '../auth/SimpleAuthModal'
-import { useAuthStore } from '../../stores/authStore'
-import { analytics } from '../../lib/analytics'
-import NotificationInbox from '../ui/inbox/NotificationInbox'
-import { 
-  LogIn, 
-  UserPlus, 
-  User, 
-  Building,
-  LogOut,
-  Settings,
-  BarChart3
-} from 'lucide-react'
+import { Settings, BarChart3, LogIn } from 'lucide-react'
+import { useAuth } from '../../contexts/AuthContext'
+import UserAvatar from '../auth/UserAvatar'
+import AuthModal from '../auth/AuthModal'
 
 export function ModernHeader() {
-  const [authModal, setAuthModal] = useState({ isOpen: false, mode: 'signin', userType: 'candidate' })
-  // Simple fallback for removed auth components
-  const [registrationModal, setRegistrationModal] = useState(false)
-  const [postRegistrationModal, setPostRegistrationModal] = useState(false)
-  const { user, signOut, isAuthenticated } = useAuthStore()
-
-  const handleRegisterClick = () => {
-    setRegistrationModal(true)
-  }
-
-  const handleLoginTypeSelect = (userType) => {
-    setAuthModal({ isOpen: true, mode: 'signin', userType })
-  }
-
-  const handleRegistrationSuccess = () => {
-    setRegistrationModal(false)
-    setPostRegistrationModal(true)
-  }
-
-  const handleSignOut = async () => {
-    await signOut()
-    analytics.events.authAction('sign_out', user?.user_metadata?.user_type)
-  }
+  const { isAuthenticated, loading } = useAuth()
+  const [showAuthModal, setShowAuthModal] = useState(false)
 
   return (
     <>
@@ -62,18 +32,8 @@ export function ModernHeader() {
         
         {/* Navigation */}
         <div className="flex items-center space-x-3">
-          {isAuthenticated() ? (
-            // Authenticated User Menu
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600 hidden sm:block">
-                Merhaba, {user?.user_metadata?.first_name || 'Kullanıcı'}!
-              </span>
-              
-              <NotificationInbox 
-                userId={user?.id || '68b3af7a3c95e3a7907d87cb'} 
-                userEmail={user?.email || 'test@example.com'} 
-              />
-              
+          {isAuthenticated ? (
+            <>
               <Button variant="ghost" size="sm">
                 <Settings className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Ayarlar</span>
@@ -84,75 +44,26 @@ export function ModernHeader() {
                 <span className="hidden sm:inline">İstatistikler</span>
               </Button>
               
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleSignOut}
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Çıkış
-              </Button>
-            </div>
-          ) : (
-            // Guest User Menu - Yeni Renkli Tasarım
-            <>
-              <Button 
-                variant="candidate"
-                size="sm"
-                onClick={() => handleLoginTypeSelect('candidate')}
-                className="hidden sm:flex font-semibold"
-              >
-                <User className="h-4 w-4 mr-2" />
-                İş Arayan
-              </Button>
-              
-              <Button 
-                variant="employer"
-                size="sm"
-                onClick={() => handleLoginTypeSelect('company')}
-                className="hidden sm:flex font-semibold"
-              >
-                <Building className="h-4 w-4 mr-2" />
-                İşveren
-              </Button>
-              
-              <Button 
-                variant="register"
-                size="sm"
-                onClick={handleRegisterClick}
-                className="shadow-lg hover:shadow-xl font-semibold"
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Kayıt Ol</span>
-                <span className="sm:hidden">Kayıt</span>
-              </Button>
+              <UserAvatar />
             </>
+          ) : (
+            <Button 
+              onClick={() => setShowAuthModal(true)}
+              disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <LogIn className="h-4 w-4 mr-2" />
+              Giriş Yap
+            </Button>
           )}
         </div>
       </header>
-
-      {/* Auth Modals - Temporarily disabled */}
-      {false && (
-        <>
-          <RegistrationModal
-            isOpen={registrationModal}
-            onClose={() => setRegistrationModal(false)}
-            onRegistrationSuccess={handleRegistrationSuccess}
-          />
-
-          <PostRegistrationUserTypeModal
-            isOpen={postRegistrationModal}
-            onClose={() => setPostRegistrationModal(false)}
-          />
-
-          <AuthModal
-            isOpen={authModal.isOpen}
-            onClose={() => setAuthModal({ isOpen: false, mode: 'signin', userType: 'candidate' })}
-            defaultMode={authModal.mode}
-            initialUserType={authModal.userType}
-          />
-        </>
-      )}
+      
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+      />
     </>
   )
 }
