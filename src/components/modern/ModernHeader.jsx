@@ -13,15 +13,14 @@ export function ModernHeader() {
   return (
     <>
       <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm z-[1000] sticky top-0">
-        {/* Logo & Title */}
+        {/* Logo */}
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">T</span>
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-              Teppek Dev
-            </h1>
+          <div className="flex items-center">
+            <img 
+              src="/logo.svg" 
+              alt="Teppek Logo" 
+              className="h-10 w-auto"
+            />
           </div>
           <div className="hidden sm:block">
             <span className="text-sm text-gray-500 bg-yellow-100 px-2 py-1 rounded-full">
