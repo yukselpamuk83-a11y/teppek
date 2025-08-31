@@ -7,9 +7,14 @@ import { getDistance } from '../utils/distance'
 export function useRealtimeData(userLocation) {
   const [realtimeData, setRealtimeData] = useState([])
   const channelsRef = useRef(null)
+  const isInitializedRef = useRef(false)
 
   useEffect(() => {
     if (!userLocation) return
+    
+    // Prevent multiple initializations in development
+    if (isInitializedRef.current) return
+    isInitializedRef.current = true
 
     // Initial data fetch - ONLY last 24 hours manual entries
     const fetchManualEntries = async () => {
@@ -201,13 +206,18 @@ export function useRealtimeData(userLocation) {
     //   )
     //   .subscribe()
 
+    // Store channels for cleanup
+    channelsRef.current = { jobsChannel }
+
     // Cleanup
     return () => {
-      jobsChannel.unsubscribe()
-      // cvsChannel.unsubscribe() // CVs devre dışı
+      if (channelsRef.current?.jobsChannel) {
+        channelsRef.current.jobsChannel.unsubscribe()
+      }
+      isInitializedRef.current = false
     }
 
-  }, [userLocation])
+  }, [userLocation?.lat, userLocation?.lng]) // Only depend on lat/lng to prevent unnecessary re-runs
 
   return realtimeData
 }

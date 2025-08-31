@@ -36,8 +36,9 @@ function ModernAppContent() {
   const [currentPage, setCurrentPage] = useState(1)
   const [userLocation, setUserLocation] = useState(null)
   
-  // Realtime data from manual entries
-  const realtimeData = useRealtimeData(userLocation)
+  // Realtime data disabled to reduce database load
+  // const realtimeData = useRealtimeData(userLocation)
+  const realtimeData = [] // Empty array for now
   
   const itemsPerPage = 100 // İlk 100 ilan performans için
 
