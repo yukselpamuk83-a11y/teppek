@@ -12,13 +12,11 @@ import { getDistance } from './utils/distance'
 import NotificationInbox from './components/ui/inbox/NotificationInbox'
 
 // Lazy loaded components - performans için
-const UserDashboard = lazy(() => import('./components/modern/UserDashboard'))
 const AuthCallback = lazy(() => import('./components/auth/AuthCallback'))
 const MapComponent = lazy(() => import('./components/MapComponent'))
 const FilterComponent = lazy(() => import('./components/FilterComponent'))
 const ListComponent = lazy(() => import('./components/ListComponent'))
 const PaginationComponent = lazy(() => import('./components/PaginationComponent'))
-const TestNotificationButton = lazy(() => import('./components/TestNotificationButton'))
 
 function ModernAppContent() {
   const { user, isAuthenticated, loading: authLoading } = useAuth()
@@ -28,7 +26,6 @@ function ModernAppContent() {
   const { toasts, removeToast } = useToastStore()
   
   // App state  
-  const [currentView, setCurrentView] = useState('map') // 'map', 'dashboard'
   const [data, setData] = useState([])
   const [activeFilters, setActiveFilters] = useState({ type: 'all', keyword: '' })
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
@@ -350,39 +347,7 @@ function ModernAppContent() {
   // Show main auth section if not authenticated - REMOVED
   // Ana sayfa her zaman gösterilecek, sadece header'da auth butonları olacak
 
-  // Show dashboard if authenticated and dashboard view selected
-  if (isAuthenticated && currentView === 'dashboard') {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <ModernHeader />
-        <div className="pt-4">
-          <div className="max-w-7xl mx-auto px-4 mb-6">
-            <div className="flex space-x-4">
-              <button
-                onClick={() => setCurrentView('map')}
-                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
-              >
-                🗺️ Harita
-              </button>
-              <button
-                onClick={() => setCurrentView('dashboard')}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white"
-              >
-                📊 Dashboard
-              </button>
-            </div>
-          </div>
-          <Suspense fallback={
-            <div className="flex items-center justify-center p-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          }>
-            <UserDashboard />
-          </Suspense>
-        </div>
-      </div>
-    )
-  }
+  // Dashboard view removed - only map/list view for now
 
   // Main map view (default)
   return (
@@ -391,35 +356,7 @@ function ModernAppContent() {
       
       {/* Auth Form removed - not needed */}
       
-      {/* View Toggle and Test Button */}
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="flex justify-between items-center">
-          <div className="flex space-x-4">
-            <button
-              onClick={() => setCurrentView('map')}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white"
-            >
-              🗺️ Harita
-            </button>
-            {isAuthenticated && (
-              <button
-                onClick={() => setCurrentView('dashboard')}
-                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
-              >
-                📊 Dashboard
-              </button>
-            )}
-          </div>
-          
-          {/* Test Notification Button - Always visible */}
-          <Suspense fallback={<div>Loading...</div>}>
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
-              <span className="text-xs text-yellow-700 mr-2">Novu Test:</span>
-              <TestNotificationButton userId={'68b3af7a3c95e3a7907d87cb'} />
-            </div>
-          </Suspense>
-        </div>
-      </div>
+      {/* Clean interface - no extra buttons */}
 
       {isMobile ? (
         // Mobile View
