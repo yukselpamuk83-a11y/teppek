@@ -1,4 +1,5 @@
 // POPUP GENERATOR - Kaynak bazlı farklı popup tasarımları
+import { svgIcons } from './svgIcons.js'
 
 /**
  * Adzuna API'sinden gelen iş ilanları için popup
@@ -12,25 +13,25 @@ export function createAdzunaJobPopup(item) {
       <div class="popup-header">
         <div class="popup-title">${item.title}</div>
         <div class="popup-source">
-          <i class="fa-solid fa-globe"></i>
+          ${svgIcons.globe}
           Adzuna
         </div>
       </div>
       
       ${item.salary_min && item.salary_max ? `
         <div class="popup-salary adzuna-salary">
-          <i class="fa-solid fa-dollar-sign"></i>
+          ${svgIcons.dollar}
           ${item.currency || 'USD'} ${Math.round(item.salary_min)?.toLocaleString() || '?'} - ${Math.round(item.salary_max)?.toLocaleString() || '?'}
         </div>
       ` : ''}
       
       <div class="popup-details">
         <div class="popup-company">
-          <i class="fa-solid fa-building"></i>
+          ${svgIcons.building}
           ${item.company || 'Şirket bilgisi mevcut değil'}
         </div>
         <div class="popup-location">
-          <i class="fa-solid fa-location-dot"></i>
+          ${svgIcons.location}
           ${address}
         </div>
       </div>
@@ -43,7 +44,7 @@ export function createAdzunaJobPopup(item) {
       
       ${item.url ? `
         <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="popup-apply-btn adzuna-apply">
-          <i class="fa-solid fa-external-link"></i>
+          ${svgIcons.externalLink}
           İlana Başvur
         </a>
       ` : ''}
@@ -67,25 +68,25 @@ export function createManualJobPopup(item) {
       <div class="popup-header">
         <div class="popup-title">${item.title}</div>
         <div class="popup-source manual-source">
-          <i class="fa-solid fa-user-plus"></i>
+          ${svgIcons.userPlus}
           Manuel İlan
         </div>
       </div>
       
       ${item.salary_min && item.salary_max ? `
         <div class="popup-salary manual-salary">
-          <i class="fa-solid fa-money-bill-wave"></i>
+          ${svgIcons.moneyBillWave}
           ${item.currency || 'TRY'} ${Math.round(item.salary_min)?.toLocaleString() || '?'} - ${Math.round(item.salary_max)?.toLocaleString() || '?'}
         </div>
       ` : ''}
       
       <div class="popup-details">
         <div class="popup-company">
-          <i class="fa-solid fa-building"></i>
+          ${svgIcons.building}
           ${item.company || 'Şirket bilgisi mevcut değil'}
         </div>
         <div class="popup-location">
-          <i class="fa-solid fa-location-dot"></i>
+          ${svgIcons.location}
           ${address}
         </div>
       </div>
@@ -99,7 +100,7 @@ export function createManualJobPopup(item) {
       ${item.contact ? `
         <div class="popup-contact manual-contact">
           <div class="contact-label">
-            <i class="fa-solid fa-envelope"></i>
+            ${svgIcons.envelope}
             İletişim Bilgileri
           </div>
           <div class="contact-info">${item.contact}</div>
@@ -125,14 +126,14 @@ export function createCVPopup(item) {
       <div class="popup-header">
         <div class="popup-title">${item.title || 'Profesyonel Profil'}</div>
         <div class="popup-source cv-source">
-          <i class="fa-solid fa-user"></i>
+          ${svgIcons.user}
           Aday Profili
         </div>
       </div>
       
       <div class="popup-candidate">
         <div class="candidate-name">
-          <i class="fa-solid fa-user-tie"></i>
+          ${svgIcons.userTie}
           ${item.name || item.full_name || 'İsim belirtilmemiş'}
         </div>
       </div>
@@ -152,7 +153,7 @@ export function createCVPopup(item) {
           </div>
         ` : ''}
         <div class="popup-location">
-          <i class="fa-solid fa-location-dot"></i>
+          ${svgIcons.location}
           ${address}
         </div>
         ${item.remote ? `
@@ -176,7 +177,7 @@ export function createCVPopup(item) {
       ${item.contact ? `
         <div class="popup-contact cv-contact">
           <div class="contact-label">
-            <i class="fa-solid fa-envelope"></i>
+            ${svgIcons.envelope}
             İletişim
           </div>
           <div class="contact-info">${item.contact}</div>
