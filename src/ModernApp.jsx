@@ -399,6 +399,7 @@ function ModernAppContent() {
           <button
             onClick={() => setShowMobileSearch(!showMobileSearch)}
             className="fixed bottom-6 right-6 z-[1002] bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-200"
+            aria-label="Arama ve filtre panelini aç"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

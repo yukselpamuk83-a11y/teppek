@@ -31,7 +31,9 @@ const FilterComponent = memo(({ onFilterChange, setCurrentPage, isSubscribed, on
                 <div className="flex-grow flex gap-2">
                     <div className="relative flex-grow">
                         <input type="text" placeholder="Anahtar kelime ile ara..." value={localKeyword} onChange={e => setLocalKeyword(e.target.value)} className="w-full h-full p-3 pl-10 border rounded-lg" />
-                        <i className="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
                     </div>
                     <button onClick={handleFilter} className="bg-blue-600 text-white font-semibold px-4 rounded-lg hover:bg-blue-700">Filtrele</button>
                     <button onClick={handleClear} className="bg-gray-200 text-gray-700 font-semibold px-4 rounded-lg hover:bg-gray-300">Temizle</button>

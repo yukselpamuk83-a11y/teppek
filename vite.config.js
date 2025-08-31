@@ -26,7 +26,9 @@ export default defineConfig({
           // Supabase ayrı
           'supabase': ['@supabase/supabase-js'],
           // UI kütüphaneleri ayrı
-          'ui-libs': ['zustand']
+          'ui-libs': ['zustand'],
+          // Leaflet ayrı chunk'ta
+          'leaflet': ['leaflet', 'leaflet.markercluster']
         }
       }
     },
@@ -51,8 +53,8 @@ export default defineConfig({
     global: 'globalThis',
   },
   optimizeDeps: {
-    include: ['react', 'react-dom'],
-    exclude: ['leaflet']
+    include: ['react', 'react-dom', 'leaflet', 'leaflet.markercluster'],
+    exclude: []
   },
   resolve: {
     dedupe: ['react', 'react-dom']
