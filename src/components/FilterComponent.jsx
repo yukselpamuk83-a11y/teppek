@@ -1,16 +1,16 @@
-import { useState } from 'react'
+import { useState, memo, useCallback } from 'react'
 
-function FilterComponent({ onFilterChange, setCurrentPage, isSubscribed, onSubscribeToggle }) {
+const FilterComponent = memo(({ onFilterChange, setCurrentPage, isSubscribed, onSubscribeToggle }) => {
     const [localKeyword, setLocalKeyword] = useState('')
     const [localFilterType, setLocalFilterType] = useState('all')
 
-    const handleFilter = () => {
+    const handleFilter = useCallback(() => {
         console.log('🔍 Frontend filtre uygulanıyor...')
         onFilterChange({ type: localFilterType, keyword: localKeyword })
         setCurrentPage(1)
-    }
+    }, [localFilterType, localKeyword, onFilterChange, setCurrentPage])
 
-    const handleClear = () => {
+    const handleClear = useCallback(() => {
         console.log('🧹 TEMIZLE - Cache\'den ilk veri yükleniyor')
         setLocalKeyword('')
         setLocalFilterType('all')
@@ -18,7 +18,7 @@ function FilterComponent({ onFilterChange, setCurrentPage, isSubscribed, onSubsc
         
         // İlk açılışta gelen DB verisini restore et
         onFilterChange({ type: 'all', keyword: '', restoreInitialData: true })
-    }
+    }, [onFilterChange, setCurrentPage])
 
     return (
         <div className="mb-4">
@@ -44,6 +44,6 @@ function FilterComponent({ onFilterChange, setCurrentPage, isSubscribed, onSubsc
             </div>
         </div>
     )
-}
+})
 
 export default FilterComponent

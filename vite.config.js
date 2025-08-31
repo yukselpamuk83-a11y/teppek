@@ -1,25 +1,43 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    visualizer({
+      filename: './dist/stats.html',
+      open: false,
+      gzipSize: true
+    })
+  ],
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    modulePreload: {
+      // Sadece kritik modülleri preload et
+      polyfill: false
+    },
     rollupOptions: {
       output: {
         manualChunks: {
-          // Sadece Leaflet'ı ayır (çünkü CDN'den yükleniyor)
-          leaflet: ['leaflet', 'leaflet.markercluster']
+          // React ecosystem birlikte olmalı
+          'vendor': ['react', 'react-dom'],
+          // Supabase ayrı
+          'supabase': ['@supabase/supabase-js'],
+          // UI kütüphaneleri ayrı
+          'ui-libs': ['zustand']
         }
       }
     },
-    chunkSizeWarningLimit: 1000, // Tek vendor chunk için
+    chunkSizeWarningLimit: 500, // Daha küçük chunk'lar için
     minify: 'terser',
     terserOptions: {
       compress: {
         drop_console: true,
-        drop_debugger: true
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug'],
+        passes: 2
       }
     },
     sourcemap: false,

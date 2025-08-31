@@ -84,4 +84,4 @@ if (typeof window !== 'undefined' && !window.speedInsights) {
   window.speedInsights = speedInsights
 }
 
-console.log('🧪 Deneysel Analytics kuruldu - Mevcut canlı site etkilenmez')
+// Analytics kuruldu

@@ -4,6 +4,7 @@ import { Button } from '../ui/Button'
 import { SimpleAuthModal } from '../auth/SimpleAuthModal'
 import { useAuthStore } from '../../stores/authStore'
 import { analytics } from '../../lib/analytics'
+import NotificationInbox from '../ui/inbox/NotificationInbox'
 import { 
   LogIn, 
   UserPlus, 
@@ -67,6 +68,11 @@ export function ModernHeader() {
               <span className="text-sm text-gray-600 hidden sm:block">
                 Merhaba, {user?.user_metadata?.first_name || 'Kullanıcı'}!
               </span>
+              
+              <NotificationInbox 
+                userId={user?.id || '68b3af7a3c95e3a7907d87cb'} 
+                userEmail={user?.email || 'test@example.com'} 
+              />
               
               <Button variant="ghost" size="sm">
                 <Settings className="h-4 w-4 mr-2" />

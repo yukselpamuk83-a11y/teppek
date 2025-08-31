@@ -278,6 +278,18 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
             
             const leafletMarker = L.marker([item.location.lat, item.location.lng], { icon: customIcon })
             
+            // Debug: item içeriğini kontrol et
+            if (index === 0) {
+                console.log('🔍 MapComponent - İlk item verisi:', {
+                    title: item.title,
+                    city: item.city,
+                    country: item.country,
+                    address: item.address,
+                    source: item.source,
+                    allFields: Object.keys(item)
+                })
+            }
+            
             // Yeni popup sistemi - kaynak bazlı tasarım
             const popupContent = canView ? createPopup(item) : createPremiumPopup()
             

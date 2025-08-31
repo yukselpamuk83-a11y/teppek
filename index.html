@@ -15,9 +15,12 @@
     
     <!-- Critical CSS inline for fastest render -->
     <style>
+        /* Critical CSS for immediate render */
+        body{margin:0;font-family:system-ui,-apple-system,sans-serif}
+        .loading{display:flex;align-items:center;justify-content:center;height:100vh;background:#f9fafb}
         .fa-spinner.fa-spin{animation:fa-spin 1s infinite linear}
         @keyframes fa-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-        .loading{display:flex;align-items:center;justify-content:center;height:100vh}
+        #root{min-height:100vh}
     </style>
     
     <!-- Font Awesome -->

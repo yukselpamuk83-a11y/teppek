@@ -1,8 +1,12 @@
 // DENEYSEL PROJE - Supabase Client Configuration
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://fcsggaggjtxqwatimplk.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjc2dnYWdnanR4cXdhdGltcGxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3OTg2MzAsImV4cCI6MjA3MTM3NDYzMH0.VKTZTVSqBvzVrP8pabPqFfAetfMjZSj45YwkXPOM9Bg'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables. Please configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.')
+}
 
 // Test için geçici development keys (gerçek prod'a etki etmez)
 const devSupabaseUrl = supabaseUrl

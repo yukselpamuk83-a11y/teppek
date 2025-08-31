@@ -4,7 +4,8 @@
  * Adzuna API'sinden gelen iş ilanları için popup
  */
 export function createAdzunaJobPopup(item) {
-  const address = `${item.city || ''}, ${item.country || ''}`.replace(/^,\s*|,\s*$/g, '')
+  // Sadece city bilgisini göster
+  const address = item.city || ''
   
   return `
     <div class="custom-popup-container adzuna-popup">
@@ -33,6 +34,12 @@ export function createAdzunaJobPopup(item) {
           ${address}
         </div>
       </div>
+
+      ${item.description?.text ? `
+      <div class="popup-description">
+        ${item.description.text.substring(0, 150)}...
+      </div>
+      ` : ''}
       
       ${item.url ? `
         <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="popup-apply-btn adzuna-apply">
@@ -52,7 +59,8 @@ export function createAdzunaJobPopup(item) {
  * Manuel eklenen iş ilanları için popup
  */
 export function createManualJobPopup(item) {
-  const address = `${item.city || ''}, ${item.country || ''}`.replace(/^,\s*|,\s*$/g, '')
+  // Sadece city bilgisini göster
+  const address = item.city || ''
   
   return `
     <div class="custom-popup-container manual-job-popup">
@@ -81,6 +89,12 @@ export function createManualJobPopup(item) {
           ${address}
         </div>
       </div>
+
+      ${item.description?.text ? `
+      <div class="popup-description">
+        ${item.description.text.substring(0, 150)}...
+      </div>
+      ` : ''}
       
       ${item.contact ? `
         <div class="popup-contact manual-contact">
@@ -103,7 +117,8 @@ export function createManualJobPopup(item) {
  * CV (Aday) profilleri için popup
  */
 export function createCVPopup(item) {
-  const address = `${item.city || ''}, ${item.country || ''}`.replace(/^,\s*|,\s*$/g, '')
+  // Sadece city bilgisini göster
+  const address = item.city || ''
   
   return `
     <div class="custom-popup-container cv-popup">
@@ -179,22 +194,34 @@ export function createCVPopup(item) {
  * Gelecekteki API'ler için genişletilebilir popup factory
  */
 export function createPopup(item) {
-  // Force console log ve alert ile debug
-  console.error('🔥 POPUP DEBUG - Full Item Object:', JSON.stringify(item, null, 2))
+  // Enhanced Adzuna detection - multiple fallback checks
+  const isAdzunaJob = item.source === 'adzuna' || 
+                      item.adzuna_id || 
+                      (item.url && item.url.includes('adzuna')) ||
+                      (item.company && item.salary_min && item.salary_max && item.url)
   
-  // Alert ile de göster (geliştirme için)
-  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-    alert(`DEBUG: source="${item.source}", type="${item.type}", title="${item.title}"`)
+  // Debug log for development
+  if (import.meta.env.DEV) {
+    console.log(`🔍 Popup type detection for "${item.title}":`, {
+      source: item.source,
+      adzuna_id: item.adzuna_id,
+      has_url: !!item.url,
+      url_contains_adzuna: item.url?.includes('adzuna'),
+      has_salary: !!(item.salary_min && item.salary_max),
+      isAdzunaJob,
+      selectedType: isAdzunaJob ? 'Adzuna' : (item.type === 'cv' ? 'CV' : 'Manuel')
+    })
   }
   
-  // Her zaman Adzuna popup göster test için
-  if (item.source === 'adzuna' || item.adzuna_id) {
-    console.error('🟢 ADZUNA POPUP SELECTED for:', item.title)
+  if (isAdzunaJob) {
     return createAdzunaJobPopup(item)
   }
   
-  // Manuel popup
-  console.error('🔴 MANUAL POPUP SELECTED for:', item.title, 'source:', item.source)
+  if (item.type === 'cv') {
+    return createCVPopup(item)
+  }
+  
+  // Default: Manuel job popup
   return createManualJobPopup(item)
 }
 

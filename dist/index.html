@@ -15,16 +15,21 @@
     
     <!-- Critical CSS inline for fastest render -->
     <style>
+        /* Critical CSS for immediate render */
+        body{margin:0;font-family:system-ui,-apple-system,sans-serif}
+        .loading{display:flex;align-items:center;justify-content:center;height:100vh;background:#f9fafb}
         .fa-spinner.fa-spin{animation:fa-spin 1s infinite linear}
         @keyframes fa-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-        .loading{display:flex;align-items:center;justify-content:center;height:100vh}
+        #root{min-height:100vh}
     </style>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
-  <script type="module" crossorigin src="/assets/index-DDCRsfyj.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/leaflet-xIVmc9fU.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-Cw_WW2qG.css">
+  <script type="module" crossorigin src="/assets/index-C3BzcrBR.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/vendor-CRKWNzqH.js">
+  <link rel="modulepreload" crossorigin href="/assets/supabase-dOUp6-66.js">
+  <link rel="modulepreload" crossorigin href="/assets/ui-libs-K9mZ2qrl.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-BctPLQnP.css">
 </head>
 <body>
     <div id="root"></div>

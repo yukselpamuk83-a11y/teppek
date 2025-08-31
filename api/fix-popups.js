@@ -1,9 +1,4 @@
-// Run SQL update for Adzuna popups
-const { createClient } = require('@supabase/supabase-js');
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
-
+// Simple popup update without external dependencies
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -11,20 +6,29 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  if (!supabaseUrl || !supabaseKey) {
-    return res.status(500).json({ error: 'Supabase environment variables not configured' });
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseKey);
-
   try {
-    // Get Adzuna jobs first
-    const { data: jobs, error: fetchError } = await supabase
-      .from('jobs')
-      .select('*')  
-      .eq('source', 'adzuna');
-
-    if (fetchError) throw fetchError;
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      return res.status(500).json({ error: 'Supabase environment variables not configured' });
+    }
+    
+    // First get Adzuna jobs
+    const getResponse = await fetch(`${supabaseUrl}/rest/v1/jobs?source=eq.adzuna&select=*`, {
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!getResponse.ok) {
+      throw new Error(`Get failed: ${getResponse.statusText}`);
+    }
+    
+    const jobs = await getResponse.json();
+    
     if (!jobs || jobs.length === 0) {
       return res.status(200).json({
         success: true,
@@ -33,8 +37,9 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Update each job individually
     let updated = 0;
+    
+    // Update each job
     for (const job of jobs) {
       const address = `${job.city || ''}, ${job.country || ''}`.replace(/^,\s*|,\s*$/g, '');
       
@@ -69,12 +74,21 @@ ${address}
 </div>
 </div>`;
 
-      const { error: updateError } = await supabase
-        .from('jobs')
-        .update({ popup_html: newPopupHtml })
-        .eq('id', job.id);
-        
-      if (!updateError) updated++;
+      const updateResponse = await fetch(`${supabaseUrl}/rest/v1/jobs?id=eq.${job.id}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          popup_html: newPopupHtml
+        })
+      });
+      
+      if (updateResponse.ok) {
+        updated++;
+      }
     }
 
     return res.status(200).json({
@@ -85,9 +99,9 @@ ${address}
     });
 
   } catch (error) {
-    console.error('SQL Update error:', error);
+    console.error('Update error:', error);
     return res.status(500).json({
-      success: false, 
+      success: false,
       error: error.message
     });
   }

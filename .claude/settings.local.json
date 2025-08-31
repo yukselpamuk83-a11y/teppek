@@ -31,12 +31,23 @@
       "WebFetch(domain:coder.com)",
       "Bash(winget install:*)",
       "Bash(unzip:*)",
-      "WebFetch(domain:supabase.com)"
+      "WebFetch(domain:supabase.com)",
+      "Bash(tree:*)",
+      "Bash(gh pr:*)",
+      "WebFetch(domain:fcsggaggjtxqwatimplk.supabase.co)",
+      "Bash(git checkout:*)",
+      "Bash(npx add-inbox:*)",
+      "Bash(npx novu dev)",
+      "Bash(node:*)",
+      "Bash(set NOVU_SECRET_KEY=9c41cb0bab17d41c8c12d6ecea4f56a3)",
+      "Bash(npx novu:*)",
+      "Bash(npm ci:*)",
+      "Bash(git filter-branch:*)"
     ],
     "deny": [],
     "ask": [],
     "additionalDirectories": [
-      "C:\\c\\Users\\seher",
+      "C:\\Users\\seher",
       "C:\\Users\\seher\\Desktop"
     ]
   }

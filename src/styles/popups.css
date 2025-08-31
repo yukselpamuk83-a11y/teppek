@@ -56,7 +56,7 @@
 
 .adzuna-apply {
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  color: white;
+  color: white !important;
   border: none;
 }
 

@@ -1,30 +1,45 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { getDistance } from '../utils/distance'
 
+// OPTIMIZED VERSION - Only listens to INSERT events, not UPDATE/DELETE
+// Fetches only last 24 hours of data to reduce load
 export function useRealtimeData(userLocation) {
   const [realtimeData, setRealtimeData] = useState([])
+  const channelsRef = useRef(null)
 
   useEffect(() => {
     if (!userLocation) return
 
-    // Initial data fetch - sadece manuel girişler
+    // Initial data fetch - ONLY last 24 hours manual entries
     const fetchManualEntries = async () => {
       try {
-        // Jobs - source='manual' olanlar
+        // Calculate 24 hours ago
+        const yesterday = new Date()
+        yesterday.setHours(yesterday.getHours() - 24)
+        const yesterdayISO = yesterday.toISOString()
+
+        // Jobs - only manual entries from last 24h
         const { data: jobs, error: jobsError } = await supabase
           .from('jobs')
-          .select('*')
+          .select('id, title, company, lat, lon, city, country, salary_min, salary_max, currency, contact, created_at')
           .eq('source', 'manual')
+          .gte('created_at', yesterdayISO)
+          .order('created_at', { ascending: false })
+          .limit(100)
 
         if (jobsError) throw jobsError
 
-        // CVs - tüm cvs'ler manuel
-        const { data: cvs, error: cvsError } = await supabase
-          .from('cvs')
-          .select('*')
+        // CVs - devre dışı (tablo yok)
+        const cvs = []
+        // const { data: cvs, error: cvsError } = await supabase
+        //   .from('cvs')
+        //   .select('id, title, full_name, lat, lon, city, country, salary_expectation_min, salary_expectation_max, contact, skills, experience_years, remote_available, created_at')
+        //   .gte('created_at', yesterdayISO)
+        //   .order('created_at', { ascending: false })
+        //   .limit(100)
 
-        if (cvsError) throw cvsError
+        // if (cvsError) throw cvsError
 
         // Format data for map
         const formattedJobs = (jobs || []).map(job => ({
@@ -89,12 +104,12 @@ export function useRealtimeData(userLocation) {
 
     fetchManualEntries()
 
-    // Realtime subscriptions
+    // OPTIMIZED Realtime - ONLY listen to INSERT events
     const jobsChannel = supabase
-      .channel('jobs-changes')
+      .channel('new-manual-jobs-only')
       .on('postgres_changes', 
         { 
-          event: '*', 
+          event: 'INSERT', // ONLY new entries
           schema: 'public', 
           table: 'jobs',
           filter: 'source=eq.manual'
@@ -130,87 +145,66 @@ export function useRealtimeData(userLocation) {
             setRealtimeData(prev => [newJob, ...prev])
           }
           
-          if (payload.eventType === 'UPDATE') {
-            setRealtimeData(prev => prev.map(item => 
-              item.id === `manual-job-${payload.new.id}` 
-                ? { ...item, ...payload.new }
-                : item
-            ))
-          }
-          
-          if (payload.eventType === 'DELETE') {
-            setRealtimeData(prev => prev.filter(item => 
-              item.id !== `manual-job-${payload.old.id}`
-            ))
-          }
+          // Skip UPDATE and DELETE events to reduce load
+          // Only handle INSERT above
         }
       )
       .subscribe()
 
-    const cvsChannel = supabase
-      .channel('cvs-changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'cvs'
-        }, 
-        (payload) => {
-          console.log('🔄 CV realtime update:', payload)
-          
-          if (payload.eventType === 'INSERT') {
-            const newCv = {
-              id: `manual-cv-${payload.new.id}`,
-              type: 'cv',
-              title: payload.new.title,
-              company: payload.new.full_name,
-              name: payload.new.full_name,
-              location: {
-                lat: parseFloat(payload.new.lat),
-                lng: parseFloat(payload.new.lon)
-              },
-              address: `${payload.new.city || ''}, ${payload.new.country || ''}`.replace(/^,\\s*|,\\s*$/g, ''),
-              salary_min: payload.new.salary_expectation_min,
-              salary_max: payload.new.salary_expectation_max,
-              currency: 'TRY',
-              contact: payload.new.contact,
-              skills: payload.new.skills,
-              experience_years: payload.new.experience_years,
-              remote: payload.new.remote_available,
-              source: 'manual',
-              postedDate: payload.new.created_at,
-              distance: getDistance(
-                userLocation.lat, 
-                userLocation.lng, 
-                parseFloat(payload.new.lat), 
-                parseFloat(payload.new.lon)
-              )
-            }
-            
-            setRealtimeData(prev => [newCv, ...prev])
-          }
-          
-          if (payload.eventType === 'UPDATE') {
-            setRealtimeData(prev => prev.map(item => 
-              item.id === `manual-cv-${payload.new.id}` 
-                ? { ...item, ...payload.new }
-                : item
-            ))
-          }
-          
-          if (payload.eventType === 'DELETE') {
-            setRealtimeData(prev => prev.filter(item => 
-              item.id !== `manual-cv-${payload.old.id}`
-            ))
-          }
-        }
-      )
-      .subscribe()
+    // CVs channel - devre dışı (tablo yok)
+    // const cvsChannel = supabase
+    //   .channel('new-cvs-only')
+    //   .on('postgres_changes', 
+    //     { 
+    //       event: 'INSERT', // ONLY new entries
+    //       schema: 'public', 
+    //       table: 'cvs'
+    //     }, 
+    //     (payload) => {
+    //       console.log('🔄 CV realtime update:', payload)
+    //       
+    //       if (payload.eventType === 'INSERT') {
+    //         const newCv = {
+    //           id: `manual-cv-${payload.new.id}`,
+    //           type: 'cv',
+    //           title: payload.new.title,
+    //           company: payload.new.full_name,
+    //           name: payload.new.full_name,
+    //           location: {
+    //             lat: parseFloat(payload.new.lat),
+    //             lng: parseFloat(payload.new.lon)
+    //           },
+    //           address: `${payload.new.city || ''}, ${payload.new.country || ''}`.replace(/^,\\s*|,\\s*$/g, ''),
+    //           salary_min: payload.new.salary_expectation_min,
+    //           salary_max: payload.new.salary_expectation_max,
+    //           currency: 'TRY',
+    //           contact: payload.new.contact,
+    //           skills: payload.new.skills,
+    //           experience_years: payload.new.experience_years,
+    //           remote: payload.new.remote_available,
+    //           source: 'manual',
+    //           postedDate: payload.new.created_at,
+    //           distance: getDistance(
+    //             userLocation.lat, 
+    //             userLocation.lng, 
+    //             parseFloat(payload.new.lat), 
+    //             parseFloat(payload.new.lon)
+    //           )
+    //         }
+    //         
+    //         setRealtimeData(prev => [newCv, ...prev])
+    //       }
+    //       
+    //       // Skip UPDATE and DELETE events to reduce load
+    //       // Only handle INSERT above
+    //     }
+    //   )
+    //   .subscribe()
 
     // Cleanup
     return () => {
       jobsChannel.unsubscribe()
-      cvsChannel.unsubscribe()
+      // cvsChannel.unsubscribe() // CVs devre dışı
     }
 
   }, [userLocation])

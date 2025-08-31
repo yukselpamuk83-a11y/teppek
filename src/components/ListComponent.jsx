@@ -42,6 +42,11 @@ const VirtualJobRow = memo(({ index, style, data }) => {
                 }`}>
                     {item.company || item.name || 'Şirket bilgisi mevcut değil'}
                 </p>
+                {item.description?.text && (
+                  <p className="text-xs text-gray-500 mt-1 font-normal">
+                    {item.description.text.substring(0, 100)}...
+                  </p>
+                )}
             </div>
             
             {/* Uzaklık kolonu */}

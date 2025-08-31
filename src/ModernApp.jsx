@@ -1,21 +1,24 @@
 // MODERN TEPPEK APP - Basit ve Çalışan Versiyon
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback, Suspense, lazy } from 'react'
 import { ModernHeader } from './components/modern/ModernHeader'
-import { UserDashboard } from './components/modern/UserDashboard'
-import { SimpleAuthCallback } from './components/auth/SimpleAuthCallback'
 import { SimpleAuthProvider, useSimpleAuth } from './hooks/useSimpleAuth.jsx'
 import { useToastStore } from './stores/toastStore'
 import { ToastContainer } from './components/ui/Toast'
 import { ComponentErrorBoundary } from './components/ui/ComponentErrorBoundary'
 import { analytics, speedInsights } from './lib/analytics'
-
-// Original components (gradual migration yapacağız)
-import MapComponent from './components/MapComponent'
-import FilterComponent from './components/FilterComponent'
-import ListComponent from './components/ListComponent'
-import PaginationComponent from './components/PaginationComponent'
 import { useRealtimeData } from './hooks/useRealtimeData'
+import { useDataCache } from './hooks/useDataCache'
 import { getDistance } from './utils/distance'
+import NotificationInbox from './components/ui/inbox/NotificationInbox'
+
+// Lazy loaded components - performans için
+const UserDashboard = lazy(() => import('./components/modern/UserDashboard'))
+const SimpleAuthCallback = lazy(() => import('./components/auth/SimpleAuthCallback'))
+const MapComponent = lazy(() => import('./components/MapComponent'))
+const FilterComponent = lazy(() => import('./components/FilterComponent'))
+const ListComponent = lazy(() => import('./components/ListComponent'))
+const PaginationComponent = lazy(() => import('./components/PaginationComponent'))
+const TestNotificationButton = lazy(() => import('./components/TestNotificationButton'))
 
 function ModernAppContent() {
   // Auth state (basit)
@@ -70,11 +73,9 @@ function ModernAppContent() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Fetch jobs data - Development'ta fake data kullan
-  useEffect(() => {
-    if (!userLocation?.lat || !userLocation?.lng) return
-    
-    const fetchJobs = async () => {
+  // Cached data fetching function - DÜZELTME: setData çağrısını kaldır, sadece data return et
+  const fetchJobsData = useCallback(async () => {
+    if (!userLocation?.lat || !userLocation?.lng) return []
       const measureDataLoad = speedInsights.measureDataLoad('jobs')
       
       try {
@@ -96,12 +97,15 @@ function ModernAppContent() {
               const lat = 41.01 + (Math.random() - 0.5) * 0.1
               const lng = 28.97 + (Math.random() - 0.5) * 0.1
               
+              const cityName = cities[Math.floor(Math.random() * cities.length)]
+              const countryName = countries[Math.floor(Math.random() * countries.length)]
+              
               jobs.push({
                 id: i + 1,
                 title: titles[Math.floor(Math.random() * titles.length)],
                 company: companies[Math.floor(Math.random() * companies.length)],
-                city: cities[Math.floor(Math.random() * cities.length)],
-                country: countries[Math.floor(Math.random() * countries.length)],
+                city: cityName,
+                country: countryName,
                 lat: lat,
                 lon: lng,
                 source: 'fake',
@@ -123,6 +127,8 @@ function ModernAppContent() {
             title: job.title,
             company: job.company || 'Şirket Belirtilmemiş',
             name: job.company,
+            city: job.city,
+            country: job.country,
             location: {
               lat: parseFloat(job.lat),
               lng: parseFloat(job.lon)
@@ -141,20 +147,21 @@ function ModernAppContent() {
             ) : 0
           }))
           
-          setData(formattedJobs)
+          // DÜZELTME: setData kaldırıldı, sadece data return ediyoruz
           measureDataLoad(formattedJobs.length)
-          analytics.track('jobs_loaded', { 
+          analytics && analytics.track && analytics.track('jobs_loaded', { 
             count: formattedJobs.length,
             source: 'fake_data_dev' 
           })
           
           console.log(`✅ Modern App: ${formattedJobs.length} fake ilan yüklendi`)
-          return
+          return formattedJobs
         }
         
         // Production'da gerçek API call - statik GeoJSON dosyası
         try {
-          const response = await fetch('https://fcsggaggjtxqwatimplk.supabase.co/storage/v1/object/public/public-assets/map-data.geojson')
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+          const response = await fetch(`${supabaseUrl}/storage/v1/object/public/public-assets/map-data.geojson`)
           
           const geoJsonData = await response.json()
           
@@ -164,7 +171,12 @@ function ModernAppContent() {
               type: feature.properties.type,
               title: feature.properties.title,
               company: feature.properties.company || feature.properties.user || 'Belirtilmemiş',
-              name: feature.properties.company || feature.properties.user,
+              name: feature.properties.company || feature.properties.user || feature.properties.name,
+              city: feature.properties.city,
+              country: feature.properties.country,
+              address: feature.properties.city ? 
+                (feature.properties.country ? `${feature.properties.city}, ${feature.properties.country}` : feature.properties.city) :
+                (feature.properties.country || 'Lokasyon bilgisi yok'),
               location: {
                 lat: feature.geometry.coordinates[1], // GeoJSON: [lon, lat]
                 lng: feature.geometry.coordinates[0]
@@ -175,9 +187,12 @@ function ModernAppContent() {
               applyUrl: feature.properties.applyUrl,
               contact: feature.properties.contact,
               source: feature.properties.source || 'manual',
+              popup_html: feature.properties.popup_html, // ← EN ÖNEMLİSİ! DB'den gelen popup HTML
+              url: feature.properties.url, // Apply URL for Adzuna
               skills: feature.properties.skills,
               experience_years: feature.properties.experience_years,
               remote: feature.properties.remote,
+              full_name: feature.properties.name || feature.properties.user,
               postedDate: feature.properties.postedDate,
               distance: userLocation ? getDistance(
                 userLocation.lat, 
@@ -185,12 +200,12 @@ function ModernAppContent() {
                 feature.geometry.coordinates[1], 
                 feature.geometry.coordinates[0]
               ) : 0
-            })).filter(item => item.location.lat && item.location.lng)
+            }))
+            // Filter kaldırıldı - tüm veriler gelsin
             
-            setData(formattedData)
-            
+            // DÜZELTME: setData kaldırıldı, sadece data return ediyoruz
             measureDataLoad(formattedData.length)
-            analytics.track('data_loaded', { 
+            analytics && analytics.track && analytics.track('data_loaded', { 
               count: formattedData.length,
               jobs: formattedData.filter(item => item.type === 'job').length,
               cvs: formattedData.filter(item => item.type === 'cv').length,
@@ -198,27 +213,70 @@ function ModernAppContent() {
             })
             
             console.log(`✅ Modern App: ${formattedData.length} kayıt yüklendi (${formattedData.filter(item => item.type === 'job').length} iş ilanı, ${formattedData.filter(item => item.type === 'cv').length} CV)`)
+            
+            // DEBUG: İlk kayıtın field'larını kontrol et
+            if (formattedData.length > 0) {
+              console.log('🔍 Frontend\'e gelen field\'lar:', Object.keys(formattedData[0]))
+              console.log('🔍 İlk kayıt örneği:', {
+                title: formattedData[0].title,
+                source: formattedData[0].source,
+                city: formattedData[0].city,
+                country: formattedData[0].country,
+                address: formattedData[0].address,
+                popup_html: formattedData[0].popup_html ? 'VAR' : 'YOK'
+              })
+            }
+            
+            return formattedData
           }
         } catch (staticError) {
           console.error('Static GeoJSON yükleme hatası:', staticError)
-          analytics.track('static_geojson_error', { error: staticError.message })
+          analytics && analytics.track && analytics.track('static_geojson_error', { error: staticError.message })
+          return [] // Static yükleme başarısız olursa boş array dön
         }
       } catch (error) {
         console.error('Modern App: Veri yükleme hatası:', error)
-        analytics.track('data_load_error', { error: error.message })
+        analytics && analytics.track && analytics.track('data_load_error', { error: error.message })
+        return [] // Genel hata durumunda boş array dön
       }
+    }, [userLocation])
+
+  // Use cached data
+  const { data: cachedData, loading: dataLoading } = useDataCache(
+    `jobs-${userLocation?.lat}-${userLocation?.lng}`,
+    fetchJobsData,
+    {
+      memoryTTL: 300000, // 5 dakika
+      persistentTTL: 3600000, // 1 saat
+      staleWhileRevalidate: true
     }
-    
-    fetchJobs()
-    
-    // Auth state değişiklikleri için veri yeniden yükleme GEREKSİZ
-    // Static data zaten mevcut, sadece UI state güncellemesi yeterli
-    console.log('✅ Static data kullanıldığı için auth state değişikliği veri yeniden yüklemiyor')
-  }, [userLocation]) // Sadece konum değiştikçe veri yükle, auth state değişikliği etkilemesin
+  )
+  
+  // Set data from cache - artık useDataCache'den gelen veriyi direkt kullanıyoruz
+  useEffect(() => {
+    if (cachedData && Array.isArray(cachedData)) {
+      setData(cachedData)
+    }
+  }, [cachedData])
 
   // Tüm veri üzerinde filtreleme (harita için) - static + realtime birleştir
   const allFilteredData = useMemo(() => {
-    const combinedData = [...data, ...realtimeData]
+    // Duplicate ID'leri önlemek için Map kullan
+    const uniqueDataMap = new Map()
+    
+    // Önce data'yı ekle
+    data.forEach(item => {
+      uniqueDataMap.set(item.id, item)
+    })
+    
+    // Sonra realtime data'yı ekle (aynı ID varsa üzerine yazmasın)
+    realtimeData.forEach(item => {
+      if (!uniqueDataMap.has(item.id)) {
+        uniqueDataMap.set(item.id, item)
+      }
+    })
+    
+    const combinedData = Array.from(uniqueDataMap.values())
     
     return combinedData.filter(item => {
       if (activeFilters.type !== 'all' && item.type !== activeFilters.type) return false
@@ -250,17 +308,23 @@ function ModernAppContent() {
 
   const totalPages = Math.ceil(sortedData.length / itemsPerPage)
 
-  // Event handlers
-  const handleFilterChange = (newFilters) => {
+  // Event handlers - memoized
+  const handleFilterChange = useCallback((newFilters) => {
     setActiveFilters(newFilters)
     setCurrentPage(1)
-    analytics.events.filterUsage('combined', newFilters)
-  }
+    // Analytics güvenli çağrı
+    if (analytics && analytics.events && analytics.events.filterUsage) {
+      analytics.events.filterUsage('combined', newFilters)
+    }
+  }, [])
 
-  const handleRowClick = (item) => {
-    setSelectedLocation(item.location)
-    analytics.events.jobClick(item.id, 'list')
-  }
+  const handleRowClick = useCallback((location) => {
+    setSelectedLocation(location)
+    // Analytics güvenli çağrı
+    if (analytics && analytics.events && analytics.events.jobClick) {
+      analytics.events.jobClick(location, 'list')
+    }
+  }, [])
 
   const handlePremiumClick = () => {
     // Premium kaldırıldı - boş fonksiyon
@@ -269,7 +333,15 @@ function ModernAppContent() {
 
   // Auth Callback Route
   if (isAuthCallback) {
-    return <SimpleAuthCallback />
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      }>
+        <SimpleAuthCallback />
+      </Suspense>
+    )
   }
 
   // Loading state - reduced loading time for production
@@ -289,6 +361,7 @@ function ModernAppContent() {
       </div>
     )
   }
+
 
   // Show main auth section if not authenticated - REMOVED
   // Ana sayfa her zaman gösterilecek, sadece header'da auth butonları olacak
@@ -315,7 +388,13 @@ function ModernAppContent() {
               </button>
             </div>
           </div>
-          <UserDashboard />
+          <Suspense fallback={
+            <div className="flex items-center justify-center p-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          }>
+            <UserDashboard />
+          </Suspense>
         </div>
       </div>
     )
@@ -328,25 +407,35 @@ function ModernAppContent() {
       
       {/* Auth Form removed - not needed */}
       
-      {/* View Toggle */}
-      {isAuthenticated && (
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex space-x-4">
-            <button
-              onClick={() => setCurrentView('map')}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white"
-            >
-              🗺️ Harita
-            </button>
-            <button
-              onClick={() => setCurrentView('dashboard')}
-              className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
-            >
-              📊 Dashboard
-            </button>
-          </div>
+      {/* View Toggle and Test Button */}
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="flex justify-between items-center">
+          {isAuthenticated && (
+            <div className="flex space-x-4">
+              <button
+                onClick={() => setCurrentView('map')}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white"
+              >
+                🗺️ Harita
+              </button>
+              <button
+                onClick={() => setCurrentView('dashboard')}
+                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+              >
+                📊 Dashboard
+              </button>
+            </div>
+          )}
+          
+          {/* Test Notification Button - Always visible */}
+          <Suspense fallback={<div>Loading...</div>}>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+              <span className="text-xs text-yellow-700 mr-2">Novu Test:</span>
+              <TestNotificationButton userId={user?.id || '68b3af7a3c95e3a7907d87cb'} />
+            </div>
+          </Suspense>
         </div>
-      )}
+      </div>
 
       {isMobile ? (
         // Mobile View
@@ -368,20 +457,31 @@ function ModernAppContent() {
               </div>
             )}
           >
-            <MapComponent 
-              data={allFilteredData} 
-              selectedLocation={selectedLocation} 
-              userLocation={userLocation} 
-            />
+            <Suspense fallback={
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                  <p className="text-sm text-gray-600">Harita yükleniyor...</p>
+                </div>
+              </div>
+            }>
+              <MapComponent 
+                data={allFilteredData} 
+                selectedLocation={selectedLocation} 
+                userLocation={userLocation} 
+              />
+            </Suspense>
           </ComponentErrorBoundary>
           
           {/* Mobile Controls */}
           <div className="absolute bottom-4 left-4 right-4 z-[1001] bg-white rounded-2xl shadow-lg p-4">
             <ComponentErrorBoundary componentName="Filter">
-              <FilterComponent 
-                onFilterChange={handleFilterChange}
-                setCurrentPage={setCurrentPage}
-              />
+              <Suspense fallback={<div className="h-16 animate-pulse bg-gray-200 rounded"></div>}>
+                <FilterComponent 
+                  onFilterChange={handleFilterChange}
+                  setCurrentPage={setCurrentPage}
+                />
+              </Suspense>
             </ComponentErrorBoundary>
             <div className="mt-4 max-h-48 overflow-y-auto">
               <ComponentErrorBoundary componentName="İş Listesi">
