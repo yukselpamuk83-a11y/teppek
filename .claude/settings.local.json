@@ -46,7 +46,8 @@
       "Bash(git stash:*)",
       "Bash(npx supabase:*)",
       "Bash(del \"C:\\Users\\seher\\Desktop\\geoo\\src\\stores\\authStore.js\")",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "WebFetch(domain:teppek-2wh3l2jnz-yuksels-projects-5a72b11a.vercel.app)"
     ],
     "deny": [],
     "ask": [],

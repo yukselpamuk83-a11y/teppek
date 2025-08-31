@@ -59,6 +59,36 @@ export function UserDashboard() {
     setIsProfileOpen(false)
   }
 
+  const handleLocationUpdate = () => {
+    // Location update functionality
+    console.log('🗺️ Konum güncelleme başlatılıyor...')
+    // Geolocation API ile konum al
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        console.log('📍 Yeni konum:', position.coords)
+        // Toast notification göster
+      },
+      (error) => {
+        console.error('❌ Konum alınamadı:', error)
+      }
+    )
+  }
+
+  const handleCVUpdate = () => {
+    if (isCompany) {
+      console.log('🏢 İlan yayınlama başlatılıyor...')
+      // İlan yayınlama modal'ını aç
+    } else {
+      console.log('📄 CV güncelleme başlatılıyor...')
+      // CV güncelleme modal'ını aç
+    }
+  }
+
+  const handleStatsView = () => {
+    console.log('📊 İstatistikler görüntüleniyor...')
+    // İstatistikler sayfasına yönlendir
+  }
+
   if (!user) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -214,7 +244,11 @@ export function UserDashboard() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold mb-4">Hızlı İşlemler</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="outline" className="justify-start h-auto p-4">
+            <Button 
+              variant="outline" 
+              className="justify-start h-auto p-4 hover:bg-blue-50 transition-colors"
+              onClick={handleLocationUpdate}
+            >
               <MapPin className="h-5 w-5 mr-3 text-blue-600" />
               <div className="text-left">
                 <div className="font-medium">Konum Güncelle</div>
@@ -222,7 +256,11 @@ export function UserDashboard() {
               </div>
             </Button>
             
-            <Button variant="outline" className="justify-start h-auto p-4">
+            <Button 
+              variant="outline" 
+              className="justify-start h-auto p-4 hover:bg-green-50 transition-colors"
+              onClick={handleCVUpdate}
+            >
               <Briefcase className="h-5 w-5 mr-3 text-green-600" />
               <div className="text-left">
                 <div className="font-medium">{isCompany ? 'İlan Yayınla' : 'CV Güncelle'}</div>
@@ -230,7 +268,11 @@ export function UserDashboard() {
               </div>
             </Button>
             
-            <Button variant="outline" className="justify-start h-auto p-4">
+            <Button 
+              variant="outline" 
+              className="justify-start h-auto p-4 hover:bg-purple-50 transition-colors"
+              onClick={handleStatsView}
+            >
               <TrendingUp className="h-5 w-5 mr-3 text-purple-600" />
               <div className="text-left">
                 <div className="font-medium">İstatistikler</div>

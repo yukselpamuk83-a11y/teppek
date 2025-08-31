@@ -1,7 +1,7 @@
 // MODERN TEPPEK APP - Basit ve Çalışan Versiyon
 import React, { useState, useEffect, useMemo, useCallback, Suspense, lazy } from 'react'
 import { ModernHeader } from './components/modern/ModernHeader'
-import { AuthProvider } from './contexts/AuthContext'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { useToastStore } from './stores/toastStore'
 import { ToastContainer } from './components/ui/Toast'
 import { ComponentErrorBoundary } from './components/ui/ComponentErrorBoundary'
@@ -21,6 +21,7 @@ const PaginationComponent = lazy(() => import('./components/PaginationComponent'
 const TestNotificationButton = lazy(() => import('./components/TestNotificationButton'))
 
 function ModernAppContent() {
+  const { user, isAuthenticated, loading: authLoading } = useAuth()
   const [startTime] = useState(Date.now())
   
   // Toast state
@@ -348,7 +349,39 @@ function ModernAppContent() {
   // Show main auth section if not authenticated - REMOVED
   // Ana sayfa her zaman gösterilecek, sadece header'da auth butonları olacak
 
-  // Show dashboard if authenticated and dashboard view selected - removed for now
+  // Show dashboard if authenticated and dashboard view selected
+  if (isAuthenticated && currentView === 'dashboard') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <ModernHeader />
+        <div className="pt-4">
+          <div className="max-w-7xl mx-auto px-4 mb-6">
+            <div className="flex space-x-4">
+              <button
+                onClick={() => setCurrentView('map')}
+                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+              >
+                🗺️ Harita
+              </button>
+              <button
+                onClick={() => setCurrentView('dashboard')}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white"
+              >
+                📊 Dashboard
+              </button>
+            </div>
+          </div>
+          <Suspense fallback={
+            <div className="flex items-center justify-center p-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          }>
+            <UserDashboard />
+          </Suspense>
+        </div>
+      </div>
+    )
+  }
 
   // Main map view (default)
   return (
@@ -367,12 +400,14 @@ function ModernAppContent() {
             >
               🗺️ Harita
             </button>
-            <button
-              onClick={() => setCurrentView('dashboard')}
-              className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
-            >
-              📊 Dashboard
-            </button>
+            {isAuthenticated && (
+              <button
+                onClick={() => setCurrentView('dashboard')}
+                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+              >
+                📊 Dashboard
+              </button>
+            )}
           </div>
           
           {/* Test Notification Button - Always visible */}
