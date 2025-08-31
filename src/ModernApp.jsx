@@ -32,6 +32,7 @@ function ModernAppContent() {
   const [selectedLocation, setSelectedLocation] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [userLocation, setUserLocation] = useState(null)
+  const [showMobileSearch, setShowMobileSearch] = useState(false)
   
   // Realtime data disabled to reduce database load
   // const realtimeData = useRealtimeData(userLocation)
@@ -394,28 +395,59 @@ function ModernAppContent() {
             </Suspense>
           </ComponentErrorBoundary>
           
-          {/* Mobile Controls */}
-          <div className="absolute bottom-4 left-4 right-4 z-[1001] bg-white rounded-2xl shadow-lg p-4">
-            <ComponentErrorBoundary componentName="Filter">
-              <Suspense fallback={<div className="h-16 animate-pulse bg-gray-200 rounded"></div>}>
-                <FilterComponent 
-                  onFilterChange={handleFilterChange}
-                  setCurrentPage={setCurrentPage}
-                />
-              </Suspense>
-            </ComponentErrorBoundary>
-            <div className="mt-4 max-h-48 overflow-y-auto">
-              <ComponentErrorBoundary componentName="İş Listesi">
-                <ListComponent 
-                  data={paginatedData.slice(0, 50)} // Mobile'da daha fazla göster
-                  onRowClick={handleRowClick} 
-                  onPremiumClick={handlePremiumClick}
-                  isSubscribed={true}
-                  userLocation={userLocation} 
-                />
+          {/* Mobile Search Button */}
+          <button
+            onClick={() => setShowMobileSearch(!showMobileSearch)}
+            className="fixed bottom-6 right-6 z-[1002] bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-200"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+          
+          {/* Mobile Controls - Show/Hide based on search button */}
+          {showMobileSearch && (
+            <div className="fixed inset-x-4 bottom-24 z-[1001] bg-white rounded-2xl shadow-lg p-4 max-h-[60vh] overflow-hidden flex flex-col">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-semibold text-gray-800">Arama ve Filtrele</h3>
+                <button 
+                  onClick={() => setShowMobileSearch(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <ComponentErrorBoundary componentName="Filter">
+                <Suspense fallback={<div className="h-16 animate-pulse bg-gray-200 rounded"></div>}>
+                  <FilterComponent 
+                    onFilterChange={handleFilterChange}
+                    setCurrentPage={setCurrentPage}
+                  />
+                </Suspense>
               </ComponentErrorBoundary>
+              
+              <div className="flex-1 mt-4 overflow-y-auto">
+                <div className="mb-2 text-xs text-gray-600">
+                  <span className="font-medium">{allFilteredData.length}</span> sonuç bulundu
+                </div>
+                <ComponentErrorBoundary componentName="İş Listesi">
+                  <ListComponent 
+                    data={paginatedData.slice(0, 50)} 
+                    onRowClick={(location) => {
+                      handleRowClick(location);
+                      setShowMobileSearch(false); // Close search when item selected
+                    }} 
+                    onPremiumClick={handlePremiumClick}
+                    isSubscribed={true}
+                    userLocation={userLocation} 
+                  />
+                </ComponentErrorBoundary>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       ) : (
         // Desktop View  
