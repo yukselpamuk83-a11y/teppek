@@ -140,6 +140,8 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
             clusterGroupRef.current = L.markerClusterGroup({
                 maxClusterRadius: 50,
                 spiderfyOnMaxZoom: true,
+                spiderfyDistanceMultiplier: 3,     // 3x uzun mesafe
+                spiderfyOnEveryZoom: true,         // Zoom 17'de de spiderfy aktif
                 showCoverageOnHover: false,
                 zoomToBoundsOnClick: true
             })
@@ -246,6 +248,8 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
             clusterGroupRef.current = L.markerClusterGroup({
                 maxClusterRadius: 50,
                 spiderfyOnMaxZoom: true,
+                spiderfyDistanceMultiplier: 3,     // 3x uzun mesafe
+                spiderfyOnEveryZoom: true,         // Zoom 17'de de spiderfy aktif
                 showCoverageOnHover: false,
                 zoomToBoundsOnClick: true
             })
@@ -299,6 +303,11 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
             window.handlePremiumClick = onPremiumClick
             
             leafletMarker.bindPopup(popupContent)
+            
+            // Click-only popup functionality
+            leafletMarker.on('click', function(e) {
+                this.openPopup()
+            })
             
             if (!canView) {
                 leafletMarker.on('popupopen', () => {

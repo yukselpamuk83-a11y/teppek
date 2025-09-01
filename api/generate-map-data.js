@@ -74,8 +74,9 @@ export default async function handler(req, res) {
                     currency: job.currency,
                     url: job.url,
                     source: job.source,
-                    popup_html: job.popup_html,
+                    remote: job.remote,
                     type: 'job'
+                    // popup_html removed - frontend will generate dynamically
                 }
             }));
 
