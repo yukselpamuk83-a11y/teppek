@@ -1,5 +1,6 @@
 // MODERN TEPPEK APP - Basit ve Çalışan Versiyon
 import React, { useState, useEffect, useMemo, useCallback, Suspense, lazy } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ModernHeader } from './components/modern/ModernHeader'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { useToastStore } from './stores/toastStore'
@@ -20,6 +21,7 @@ const PaginationComponent = lazy(() => import('./components/PaginationComponent'
 
 function ModernAppContent() {
   const { user, isAuthenticated, loading: authLoading } = useAuth()
+  const { t } = useTranslation()
   const [startTime] = useState(Date.now())
   
   // Toast state
@@ -432,7 +434,7 @@ function ModernAppContent() {
               
               <div className="flex-1 mt-4 overflow-y-auto">
                 <div className="mb-2 text-xs text-gray-600">
-                  <span className="font-medium">{allFilteredData.length}</span> sonuç bulundu
+                  {t('list.foundResults', { count: allFilteredData.length })}
                 </div>
                 <ComponentErrorBoundary componentName="İş Listesi">
                   <ListComponent 
@@ -496,8 +498,8 @@ function ModernAppContent() {
             
             <div className="p-4">
               <div className="mb-4 text-sm text-gray-600">
-                <span className="font-medium">{allFilteredData.length}</span> sonuç bulundu
-                {userLocation && <span className="ml-2">• Konumunuza göre sıralandı</span>}
+                {t('list.foundResults', { count: allFilteredData.length })}
+                {userLocation && <span className="ml-2">• {t('list.sortedByLocation')}</span>}
               </div>
               
               <ComponentErrorBoundary componentName="İş Listesi">

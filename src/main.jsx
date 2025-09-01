@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import ModernApp from './ModernApp.jsx'
 import { ErrorBoundary } from './components/ui/ErrorAlert.jsx'
+import './i18n'
 import './styles/index.css'
 import './styles/popups.css'
 

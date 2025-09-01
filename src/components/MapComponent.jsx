@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { debounce } from '../utils/debounce'
 import { createPopup, createPremiumPopup } from '../utils/popupGenerator'
 
@@ -76,6 +77,7 @@ const loadLeaflet = async () => {
 }
 
 function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPremiumClick }) {
+    const { t } = useTranslation()
     const mapRef = useRef(null)
     const mapInstance = useRef(null)
     const clusterGroupRef = useRef(null)
@@ -324,11 +326,11 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
                     onClick={() => mapInstance.current && userLocation && mapInstance.current.setView([userLocation?.lat || 41.01, userLocation?.lng || 28.97], 14)} 
                     className="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg shadow-lg hover:bg-green-700 transition-colors"
                 >
-                    Konum
+                    {t('buttons.location')}
                 </button>
                 <div className="bg-white rounded-lg shadow-lg flex">
-                     <button onClick={() => changeMapLayer('street')} className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-l-lg transition-colors">Sokak</button>
-                     <button onClick={() => changeMapLayer('satellite')} className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-r-lg border-l transition-colors">Uydu</button>
+                     <button onClick={() => changeMapLayer('street')} className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-l-lg transition-colors">{t('map.street')}</button>
+                     <button onClick={() => changeMapLayer('satellite')} className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-r-lg border-l transition-colors">{t('map.satellite')}</button>
                 </div>
             </div>
         </div>

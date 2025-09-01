@@ -1,0 +1,108 @@
+{
+  "navigation": {
+    "home": "Home",
+    "search": "Search",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "buttons": {
+    "search": "Search",
+    "filter": "Filter",
+    "apply": "Apply",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "reset": "Reset",
+    "location": "Location",
+    "login": "Login"
+  },
+  "forms": {
+    "searchPlaceholder": "Search jobs or enter city...",
+    "jobTitle": "Job Title",
+    "company": "Company",
+    "location": "Location",
+    "salary": "Salary",
+    "description": "Description",
+    "requirements": "Requirements",
+    "benefits": "Benefits"
+  },
+  "filters": {
+    "jobType": "Job Type",
+    "fullTime": "Full Time",
+    "partTime": "Part Time",
+    "contract": "Contract",
+    "remote": "Remote",
+    "salaryRange": "Salary Range",
+    "experience": "Experience",
+    "clearAll": "Clear All",
+    "all": "All",
+    "jobs": "Job Listings",
+    "candidates": "Candidates"
+  },
+  "map": {
+    "street": "Street",
+    "satellite": "Satellite",
+    "userLocation": "Your Location"
+  },
+  "job": {
+    "applyNow": "Apply Now",
+    "viewDetails": "View Details",
+    "saveJob": "Save Job",
+    "shareJob": "Share Job",
+    "reportJob": "Report Job"
+  },
+  "profile": {
+    "myProfile": "My Profile",
+    "editProfile": "Edit Profile",
+    "savedJobs": "Saved Jobs",
+    "applications": "My Applications",
+    "logout": "Logout",
+    "settings": "Settings"
+  },
+  "messages": {
+    "noResults": "No results found",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Operation successful",
+    "locationPermission": "Location permission required",
+    "searchMinLength": "Enter at least 3 characters"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signInDescription": "Sign in to your account",
+    "signUpDescription": "Create a new account",
+    "signInWithSocial": "Sign in with your social accounts",
+    "soon": "Soon",
+    "orWithEmail": "or with email",
+    "fullName": "Full Name",
+    "emailPlaceholder": "Your email address",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "noAccount": "Don't have an account?",
+    "createAccount": "Create account",
+    "haveAccount": "Already have an account?",
+    "signInHere": "Sign in"
+  },
+  "list": {
+    "type": "Type",
+    "titlePosition": "Title / Position",
+    "distance": "Distance",
+    "location": "Location",
+    "actions": "Actions",
+    "job": "JOB",
+    "candidate": "Candidate",
+    "sponsored": "Sponsored",
+    "contact": "Contact",
+    "noCompanyInfo": "Company information not available",
+    "showingResults": "Showing {{count}} listings total",
+    "foundResults": "{{count}} results found",
+    "sortedByLocation": "Sorted by your location"
+  },
+  "brand": {
+    "tagline": "Global Job Search Platform"
+  }
+}

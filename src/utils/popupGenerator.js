@@ -28,7 +28,7 @@ export function createAdzunaJobPopup(item) {
       <div class="popup-details">
         <div class="popup-company">
           ${svgIcons.building}
-          ${item.company || 'Şirket bilgisi mevcut değil'}
+          ${item.company || 'Company information not available'}
         </div>
         <div class="popup-location">
           ${svgIcons.location}
@@ -45,7 +45,7 @@ export function createAdzunaJobPopup(item) {
       ${item.url ? `
         <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="popup-apply-btn adzuna-apply">
           ${svgIcons.externalLink}
-          İlana Başvur
+          Apply Now
         </a>
       ` : ''}
       
@@ -69,7 +69,7 @@ export function createManualJobPopup(item) {
         <div class="popup-title">${item.title}</div>
         <div class="popup-source manual-source">
           ${svgIcons.userPlus}
-          Manuel İlan
+          Manual Listing
         </div>
       </div>
       
@@ -83,7 +83,7 @@ export function createManualJobPopup(item) {
       <div class="popup-details">
         <div class="popup-company">
           ${svgIcons.building}
-          ${item.company || 'Şirket bilgisi mevcut değil'}
+          ${item.company || 'Company information not available'}
         </div>
         <div class="popup-location">
           ${svgIcons.location}
@@ -101,14 +101,14 @@ export function createManualJobPopup(item) {
         <div class="popup-contact manual-contact">
           <div class="contact-label">
             ${svgIcons.envelope}
-            İletişim Bilgileri
+            Contact Information
           </div>
           <div class="contact-info">${item.contact}</div>
         </div>
       ` : ''}
       
       <div class="popup-footer">
-        <small>Yerel İlan • Teppek</small>
+        <small>Local Listing • Teppek</small>
       </div>
     </div>
   `
@@ -127,21 +127,21 @@ export function createCVPopup(item) {
         <div class="popup-title">${item.title || 'Profesyonel Profil'}</div>
         <div class="popup-source cv-source">
           ${svgIcons.user}
-          Aday Profili
+          Candidate Profile
         </div>
       </div>
       
       <div class="popup-candidate">
         <div class="candidate-name">
           ${svgIcons.userTie}
-          ${item.name || item.full_name || 'İsim belirtilmemiş'}
+          ${item.name || item.full_name || 'Name not specified'}
         </div>
       </div>
       
       ${item.salary_min && item.salary_max ? `
         <div class="popup-salary cv-salary">
           <i class="fa-solid fa-chart-line"></i>
-          Beklenti: ${item.currency || 'TRY'} ${Math.round(item.salary_min)?.toLocaleString() || '?'} - ${Math.round(item.salary_max)?.toLocaleString() || '?'}
+          Expected: ${item.currency || 'TRY'} ${Math.round(item.salary_min)?.toLocaleString() || '?'} - ${Math.round(item.salary_max)?.toLocaleString() || '?'}
         </div>
       ` : ''}
       
@@ -149,7 +149,7 @@ export function createCVPopup(item) {
         ${item.experience_years ? `
           <div class="popup-experience">
             <i class="fa-solid fa-calendar-days"></i>
-            ${item.experience_years} yıl deneyim
+            ${item.experience_years} years experience
           </div>
         ` : ''}
         <div class="popup-location">
@@ -159,7 +159,7 @@ export function createCVPopup(item) {
         ${item.remote ? `
           <div class="popup-remote">
             <i class="fa-solid fa-wifi"></i>
-            Uzaktan çalışmaya açık
+            Open to remote work
           </div>
         ` : ''}
       </div>
@@ -168,7 +168,7 @@ export function createCVPopup(item) {
         <div class="popup-skills">
           <div class="skills-label">
             <i class="fa-solid fa-code"></i>
-            Yetenekler
+            Skills
           </div>
           <div class="skills-list">${item.skills.split(',').slice(0, 3).join(', ')}${item.skills.split(',').length > 3 ? '...' : ''}</div>
         </div>
@@ -178,14 +178,14 @@ export function createCVPopup(item) {
         <div class="popup-contact cv-contact">
           <div class="contact-label">
             ${svgIcons.envelope}
-            İletişim
+            Contact
           </div>
           <div class="contact-info">${item.contact}</div>
         </div>
       ` : ''}
       
       <div class="popup-footer">
-        <small>Aday Profili • Teppek</small>
+        <small>Candidate Profile • Teppek</small>
       </div>
     </div>
   `
@@ -242,16 +242,16 @@ export function createPremiumPopup() {
       
       <div class="premium-message">
         <i class="fa-solid fa-lock"></i>
-        <p>Bu ilan 50km'den uzakta. Detayları görmek için premium üyelik gerekli.</p>
+        <p>This listing is over 50km away. Premium membership required to view details.</p>
       </div>
       
       <button class="popup-apply-btn premium-upgrade" onclick="window.handlePremiumClick?.()">
         <i class="fa-solid fa-star"></i>
-        Premium'a Geç
+        Upgrade to Premium
       </button>
       
       <div class="popup-footer">
-        <small>Premium özellik • Teppek</small>
+        <small>Premium feature • Teppek</small>
       </div>
     </div>
   `

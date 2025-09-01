@@ -63,15 +63,15 @@ export const AuthProvider = ({ children }) => {
           switch (event) {
             case 'SIGNED_IN':
               addToast({
-                title: 'Başarıyla giriş yaptınız',
-                description: `Hoş geldiniz, ${session?.user?.email}`,
+                title: 'Successfully signed in',
+                description: `Welcome, ${session?.user?.email}`,
                 type: 'success'
               })
               break
             case 'SIGNED_OUT':
               addToast({
-                title: 'Çıkış yapıldı',
-                description: 'Güvenli bir şekilde çıkış yaptınız',
+                title: 'Signed out',
+                description: 'You have been signed out securely',
                 type: 'info'
               })
               break
@@ -100,7 +100,7 @@ export const AuthProvider = ({ children }) => {
       
       if (error) {
         addToast({
-          title: 'Giriş hatası',
+          title: 'Sign in error',
           description: error.message,
           type: 'error'
         })
@@ -110,7 +110,7 @@ export const AuthProvider = ({ children }) => {
       return { data }
     } catch (error) {
       addToast({
-        title: 'Beklenmeyen hata',
+        title: 'Unexpected error',
         description: error.message,
         type: 'error'
       })
@@ -127,7 +127,7 @@ export const AuthProvider = ({ children }) => {
       
       if (error) {
         addToast({
-          title: 'Kayıt hatası',
+          title: 'Registration error',
           description: error.message,
           type: 'error'
         })
@@ -136,8 +136,8 @@ export const AuthProvider = ({ children }) => {
 
       if (data.user && !data.session) {
         addToast({
-          title: 'Kayıt başarılı',
-          description: 'E-posta adresinizi kontrol edin ve hesabınızı doğrulayın',
+          title: 'Registration successful',
+          description: 'Please check your email and verify your account',
           type: 'success'
         })
       }
@@ -145,7 +145,7 @@ export const AuthProvider = ({ children }) => {
       return { data }
     } catch (error) {
       addToast({
-        title: 'Beklenmeyen hata',
+        title: 'Unexpected error',
         description: error.message,
         type: 'error'
       })
@@ -179,12 +179,12 @@ export const AuthProvider = ({ children }) => {
           result = await authHelpers.signInWithDiscord()
           break
         default:
-          throw new Error(`Desteklenmeyen provider: ${provider}`)
+          throw new Error(`Unsupported provider: ${provider}`)
       }
 
       if (result.error) {
         addToast({
-          title: 'Giriş hatası',
+          title: 'Sign in error',
           description: result.error.message,
           type: 'error'
         })
@@ -195,7 +195,7 @@ export const AuthProvider = ({ children }) => {
       return { data: result.data }
     } catch (error) {
       addToast({
-        title: 'Sosyal medya girişi hatası',
+        title: 'Social media sign in error',
         description: error.message,
         type: 'error'
       })
@@ -210,7 +210,7 @@ export const AuthProvider = ({ children }) => {
       
       if (error) {
         addToast({
-          title: 'Çıkış hatası',
+          title: 'Sign out error',
           description: error.message,
           type: 'error'
         })
@@ -220,7 +220,7 @@ export const AuthProvider = ({ children }) => {
       return { success: true }
     } catch (error) {
       addToast({
-        title: 'Beklenmeyen hata',
+        title: 'Unexpected error',
         description: error.message,
         type: 'error'
       })

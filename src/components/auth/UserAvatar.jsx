@@ -44,7 +44,7 @@ const UserAvatar = ({ showName = true, size = 'default' }) => {
   }
 
   const getUserDisplayName = () => {
-    return userMetadata?.name || userEmail?.split('@')[0] || 'Kullanıcı'
+    return userMetadata?.name || userEmail?.split('@')[0] || 'User'
   }
 
   const avatarSize = size === 'small' ? 'h-8 w-8' : size === 'large' ? 'h-12 w-12' : 'h-10 w-10'
@@ -86,22 +86,22 @@ const UserAvatar = ({ showName = true, size = 'default' }) => {
         
         <DropdownMenuItem className="cursor-pointer">
           <User className="mr-2 h-4 w-4" />
-          <span>Profil</span>
+          <span>Profile</span>
         </DropdownMenuItem>
         
         <DropdownMenuItem className="cursor-pointer">
           <Settings className="mr-2 h-4 w-4" />
-          <span>Ayarlar</span>
+          <span>Settings</span>
         </DropdownMenuItem>
         
         <DropdownMenuItem className="cursor-pointer">
           <Shield className="mr-2 h-4 w-4" />
-          <span>Güvenlik</span>
+          <span>Security</span>
         </DropdownMenuItem>
         
         <DropdownMenuItem className="cursor-pointer">
           <CreditCard className="mr-2 h-4 w-4" />
-          <span>Faturalandırma</span>
+          <span>Billing</span>
         </DropdownMenuItem>
         
         <DropdownMenuSeparator />
@@ -112,7 +112,7 @@ const UserAvatar = ({ showName = true, size = 'default' }) => {
           disabled={isLoading}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          <span>{isLoading ? 'Çıkış yapılıyor...' : 'Çıkış Yap'}</span>
+          <span>{isLoading ? 'Signing out...' : 'Sign Out'}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

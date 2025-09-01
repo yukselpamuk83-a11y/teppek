@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/Dialog'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react'
 
 const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }) => {
+  const { t } = useTranslation()
   const [mode, setMode] = useState(defaultMode) // 'signin', 'signup'
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
@@ -107,42 +109,42 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }) => {
       name: 'GitHub',
       icon: Github,
       color: 'bg-gray-800 hover:bg-gray-900',
-      available: true
+      available: false
     },
     {
       id: 'apple',
       name: 'Apple',
       icon: Apple,
       color: 'bg-black hover:bg-gray-800',
-      available: false // Supabase'de Apple Sign-in konfigürasyonu gerekli
+      available: false
     },
     {
       id: 'microsoft',
       name: 'Microsoft',
       icon: Microsoft,
       color: 'bg-blue-600 hover:bg-blue-700',
-      available: false // Azure AD konfigürasyonu gerekli
+      available: false
     },
     {
       id: 'facebook',
       name: 'Facebook',
       icon: Facebook,
       color: 'bg-blue-600 hover:bg-blue-700',
-      available: true
+      available: false
     },
     {
       id: 'twitter',
       name: 'Twitter',
       icon: Twitter,
       color: 'bg-sky-500 hover:bg-sky-600',
-      available: true
+      available: false
     },
     {
       id: 'linkedin',
       name: 'LinkedIn',
       icon: Linkedin,
       color: 'bg-blue-700 hover:bg-blue-800',
-      available: true
+      available: false
     }
   ]
 
@@ -151,12 +153,12 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }) => {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center">
-            {mode === 'signin' ? 'Giriş Yap' : 'Hesap Oluştur'}
+            {mode === 'signin' ? t('auth.signIn') : t('auth.signUp')}
           </DialogTitle>
           <DialogDescription className="text-center">
             {mode === 'signin' 
-              ? 'Hesabınıza giriş yapın' 
-              : 'Yeni hesap oluşturun'
+              ? t('auth.signInDescription') 
+              : t('auth.signUpDescription')
             }
           </DialogDescription>
         </DialogHeader>
@@ -165,7 +167,7 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }) => {
           {/* Social Login Buttons */}
           <div className="space-y-3">
             <p className="text-sm text-gray-600 text-center">
-              Sosyal medya hesaplarınızla giriş yapın
+              {t('auth.signInWithSocial')}
             </p>
             
             <div className="grid grid-cols-2 gap-3">
@@ -184,7 +186,7 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }) => {
                     {provider.name}
                     {!provider.available && (
                       <span className="absolute top-0 right-0 text-xs bg-yellow-500 text-white px-1 rounded-bl">
-                        Soon
+                        {t('auth.soon')}
                       </span>
                     )}
                   </Button>
@@ -199,7 +201,7 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }) => {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-white px-2 text-muted-foreground">
-                veya e-posta ile
+                {t('auth.orWithEmail')}
               </span>
             </div>
           </div>
@@ -211,7 +213,7 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }) => {
                 <Input
                   name="name"
                   type="text"
-                  placeholder="Ad Soyad"
+                  placeholder={t('auth.fullName')}
                   value={formData.name}
                   onChange={handleInputChange}
                   required
@@ -224,7 +226,7 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }) => {
               <Input
                 name="email"
                 type="email"
-                placeholder="E-posta adresiniz"
+                placeholder={t('auth.emailPlaceholder')}
                 value={formData.email}
                 onChange={handleInputChange}
                 required
@@ -238,7 +240,7 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }) => {
               <Input
                 name="password"
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Şifre"
+                placeholder={t('auth.password')}
                 value={formData.password}
                 onChange={handleInputChange}
                 required
@@ -264,7 +266,7 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }) => {
                 <Input
                   name="confirmPassword"
                   type="password"
-                  placeholder="Şifreyi tekrar girin"
+                  placeholder={t('auth.confirmPassword')}
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   required
@@ -281,7 +283,7 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }) => {
               {isLoading ? (
                 <LoadingSpinner className="h-4 w-4 mr-2" />
               ) : null}
-              {mode === 'signin' ? 'Giriş Yap' : 'Hesap Oluştur'}
+              {mode === 'signin' ? t('auth.signIn') : t('auth.signUp')}
             </Button>
           </form>
 
@@ -289,26 +291,26 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }) => {
           <div className="text-center text-sm">
             {mode === 'signin' ? (
               <>
-                Hesabınız yok mu?{' '}
+                {t('auth.noAccount')}{' '}
                 <button
                   type="button"
                   className="text-blue-600 hover:text-blue-800 font-medium"
                   onClick={() => switchMode('signup')}
                   disabled={isLoading}
                 >
-                  Hesap oluşturun
+                  {t('auth.createAccount')}
                 </button>
               </>
             ) : (
               <>
-                Zaten hesabınız var mı?{' '}
+                {t('auth.haveAccount')}{' '}
                 <button
                   type="button"
                   className="text-blue-600 hover:text-blue-800 font-medium"
                   onClick={() => switchMode('signin')}
                   disabled={isLoading}
                 >
-                  Giriş yapın
+                  {t('auth.signInHere')}
                 </button>
               </>
             )}

@@ -1,0 +1,108 @@
+{
+  "navigation": {
+    "home": "Ana Sayfa",
+    "search": "Arama",
+    "profile": "Profil",
+    "settings": "Ayarlar"
+  },
+  "buttons": {
+    "search": "Ara",
+    "filter": "Filtrele",
+    "apply": "Başvur",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "close": "Kapat",
+    "back": "Geri",
+    "next": "İleri",
+    "submit": "Gönder",
+    "reset": "Sıfırla",
+    "location": "Konum",
+    "login": "Giriş Yap"
+  },
+  "forms": {
+    "searchPlaceholder": "İş ara veya şehir gir...",
+    "jobTitle": "İş Başlığı",
+    "company": "Şirket",
+    "location": "Konum",
+    "salary": "Maaş",
+    "description": "Açıklama",
+    "requirements": "Gereksinimler",
+    "benefits": "Yan Haklar"
+  },
+  "filters": {
+    "jobType": "İş Türü",
+    "fullTime": "Tam Zamanlı",
+    "partTime": "Yarı Zamanlı",
+    "contract": "Sözleşmeli",
+    "remote": "Uzaktan",
+    "salaryRange": "Maaş Aralığı",
+    "experience": "Deneyim",
+    "clearAll": "Tümünü Temizle",
+    "all": "Tümü",
+    "jobs": "İş İlanları",
+    "candidates": "Adaylar"
+  },
+  "map": {
+    "street": "Sokak",
+    "satellite": "Uydu",
+    "userLocation": "Konumun"
+  },
+  "job": {
+    "applyNow": "İlana Başvur",
+    "viewDetails": "Detayları Gör",
+    "saveJob": "İşi Kaydet",
+    "shareJob": "İşi Paylaş",
+    "reportJob": "İşi Bildir"
+  },
+  "profile": {
+    "myProfile": "Profilim",
+    "editProfile": "Profili Düzenle",
+    "savedJobs": "Kaydedilen İşler",
+    "applications": "Başvurularım",
+    "logout": "Çıkış Yap",
+    "settings": "Ayarlar"
+  },
+  "messages": {
+    "noResults": "Sonuç bulunamadı",
+    "loading": "Yükleniyor...",
+    "error": "Bir hata oluştu",
+    "success": "İşlem başarılı",
+    "locationPermission": "Konum izni gerekli",
+    "searchMinLength": "En az 3 karakter giriniz"
+  },
+  "auth": {
+    "signIn": "Giriş Yap",
+    "signUp": "Hesap Oluştur",
+    "signInDescription": "Hesabınıza giriş yapın",
+    "signUpDescription": "Yeni hesap oluşturun",
+    "signInWithSocial": "Sosyal medya hesaplarınızla giriş yapın",
+    "soon": "Yakında",
+    "orWithEmail": "veya e-posta ile",
+    "fullName": "Ad Soyad",
+    "emailPlaceholder": "E-posta adresiniz",
+    "password": "Şifre",
+    "confirmPassword": "Şifreyi tekrar girin",
+    "noAccount": "Hesabınız yok mu?",
+    "createAccount": "Hesap oluşturun",
+    "haveAccount": "Zaten hesabınız var mı?",
+    "signInHere": "Giriş yapın"
+  },
+  "list": {
+    "type": "Tür",
+    "titlePosition": "Başlık / Ünvan",
+    "distance": "Uzaklık",
+    "location": "Konum",
+    "actions": "Aksiyonlar",
+    "job": "İLAN",
+    "candidate": "Aday",
+    "sponsored": "Sponsorlu",
+    "contact": "İletişim",
+    "noCompanyInfo": "Şirket bilgisi mevcut değil",
+    "showingResults": "Toplam {{count}} ilan gösteriliyor",
+    "foundResults": "{{count}} sonuç bulundu",
+    "sortedByLocation": "Konumunuza göre sıralandı"
+  },
+  "brand": {
+    "tagline": "Küresel İş Arama Platformu"
+  }
+}

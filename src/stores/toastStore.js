@@ -37,7 +37,7 @@ export const useToastStore = create((set, get) => ({
     return get().addToast({ 
       type: 'success', 
       message,
-      title: 'Başarılı!',
+      title: 'Success!',
       ...options 
     })
   },
@@ -46,7 +46,7 @@ export const useToastStore = create((set, get) => ({
     return get().addToast({ 
       type: 'error', 
       message,
-      title: 'Hata!',
+      title: 'Error!',
       duration: 7000, // Errors stay longer
       ...options 
     })
@@ -56,7 +56,7 @@ export const useToastStore = create((set, get) => ({
     return get().addToast({ 
       type: 'warning', 
       message,
-      title: 'Uyarı!',
+      title: 'Warning!',
       ...options 
     })
   },
@@ -78,4 +78,4 @@ export const toast = {
   info: (message, options) => useToastStore.getState().info(message, options),
 }
 
-console.log('🧪 Modern Toast Store başlatıldı')
+console.log('🧪 Modern Toast Store initialized')
