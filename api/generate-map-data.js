@@ -16,7 +16,7 @@ export default async function handler(req, res) {
         const limit = 1000; // Normal limit geri
 
         // Table optimized - no more cleanup needed
-        console.log('✅ Using optimized jobs table structure');
+        console.log('✅ Using optimized jobs table structure v2.0');
 
         // 1. Aktif olan tüm iş ilanlarını çek (sayfalama ile).
         let allJobs = [];
