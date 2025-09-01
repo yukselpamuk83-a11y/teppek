@@ -24,7 +24,7 @@ export default async function handler(req, res) {
             // Sadece popup için gerekli field'ları al
             const { data: chunk, error: chunkError } = await supabase
                 .from('jobs')
-                .select('id, title, lat, lon, company, city, country, salary_min, salary_max, currency, url, source, popup_html')
+                .select('id, title, lat, lon, company, city, country, salary_min, salary_max, currency, url, source, remote')
                 .range(offset, offset + limit - 1);
             
             // DEBUG: İlk kaydın tüm field'larını kontrol et
