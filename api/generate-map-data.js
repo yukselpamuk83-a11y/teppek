@@ -15,6 +15,16 @@ export default async function handler(req, res) {
 
         const limit = 1000; // Normal limit geri
 
+        // ONCE: Clear popup_html from all records
+        console.log('🧹 Clearing popup_html from all jobs...');
+        const { error: clearError } = await supabase
+            .from('jobs')
+            .update({ popup_html: null })
+            .neq('id', 0);
+        
+        if (clearError) console.warn('Clear popup_html error:', clearError);
+        else console.log('✅ popup_html cleared from all jobs');
+
         // 1. Aktif olan tüm iş ilanlarını çek (sayfalama ile).
         let allJobs = [];
         let offset = 0;
