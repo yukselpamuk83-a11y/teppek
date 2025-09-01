@@ -50,16 +50,14 @@ async function saveJobToDatabase(client, job, country) {
     INSERT INTO jobs (
       adzuna_id, title, company, country, city, 
       lat, lon, url, salary_min, salary_max, currency, remote, source,
-      marker_html, popup_html, icon_type
+      icon_type
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
     ) ON CONFLICT (adzuna_id) DO UPDATE SET
       title = EXCLUDED.title,
       company = EXCLUDED.company,
       salary_min = EXCLUDED.salary_min,
       salary_max = EXCLUDED.salary_max,
-      marker_html = EXCLUDED.marker_html,
-      popup_html = EXCLUDED.popup_html,
       created_at = NOW()
     RETURNING id;
   `;
@@ -74,13 +72,10 @@ async function saveJobToDatabase(client, job, country) {
   
   const isRemote = job.title.toLowerCase().includes('remote') || job.title.toLowerCase().includes('work from home');
   
-  // Pre-computed HTML
-  const markerHtml = `<div class="marker-container"><div class="icon-wrapper" style="border-color: #0097A7;"><i class="fa-solid fa-briefcase" style="color: #0097A7;"></i></div><div class="marker-label">${job.title.substring(0, 50)}</div></div>`;
+  // HTML generation removed - optimized table structure  
+  // Frontend generates marker and popup HTML dynamically
   
   const address = `${city || ''}, ${country.toUpperCase()}`.replace(/^,\\s*|,\\s*$/g, '');
-  
-  // Adzuna-branded popup HTML
-  const popupHtml = `
     <div class="custom-popup-container adzuna-popup">
       <div class="popup-header">
         <div class="popup-title">${job.title}</div>
@@ -130,8 +125,6 @@ async function saveJobToDatabase(client, job, country) {
     job.salary_currency?.substring(0, 3) || 'USD',
     isRemote,
     'adzuna',
-    markerHtml,
-    popupHtml,
     'job'
   ];
   
