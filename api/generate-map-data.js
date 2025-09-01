@@ -15,15 +15,8 @@ export default async function handler(req, res) {
 
         const limit = 1000; // Normal limit geri
 
-        // ONCE: Clear popup_html from all records
-        console.log('🧹 Clearing popup_html from all jobs...');
-        const { error: clearError } = await supabase
-            .from('jobs')
-            .update({ popup_html: null })
-            .neq('id', 0);
-        
-        if (clearError) console.warn('Clear popup_html error:', clearError);
-        else console.log('✅ popup_html cleared from all jobs');
+        // Table optimized - no more cleanup needed
+        console.log('✅ Using optimized jobs table structure');
 
         // 1. Aktif olan tüm iş ilanlarını çek (sayfalama ile).
         let allJobs = [];
@@ -31,25 +24,24 @@ export default async function handler(req, res) {
         let hasMoreJobs = true;
 
         while (hasMoreJobs) {
-            // Sadece popup için gerekli field'ları al
+            // Optimized bucket için gerekli field'ları al
             const { data: chunk, error: chunkError } = await supabase
                 .from('jobs')
-                .select('id, title, lat, lon, company, city, country, salary_min, salary_max, currency, url, source, remote')
+                .select('id, title, lat, lon, company, city, country, salary_min, salary_max, currency, url, source, remote, icon_type')
                 .range(offset, offset + limit - 1);
             
-            // DEBUG: İlk kaydın tüm field'larını kontrol et
+            // DEBUG: Optimized table structure
             if (offset === 0 && chunk && chunk.length > 0) {
-                console.log('🔍 DB\'deki tüm field\'lar:', Object.keys(chunk[0]));
-                console.log('🔍 İlk kayıt örneği:', {
+                console.log('🔍 Optimized DB fields:', Object.keys(chunk[0]));
+                console.log('🔍 Sample record:', {
                     id: chunk[0].id,
                     title: chunk[0].title,
                     source: chunk[0].source,
-                    popup_html: chunk[0].popup_html ? 'EXISTS' : 'MISSING',
+                    remote: chunk[0].remote,
+                    icon_type: chunk[0].icon_type,
                     salary_min: chunk[0].salary_min,
                     salary_max: chunk[0].salary_max,
-                    currency: chunk[0].currency,
-                    url: chunk[0].url,
-                    company: chunk[0].company
+                    currency: chunk[0].currency
                 });
             }
 
@@ -85,8 +77,9 @@ export default async function handler(req, res) {
                     url: job.url,
                     source: job.source,
                     remote: job.remote,
+                    icon_type: job.icon_type || 'job',
                     type: 'job'
-                    // popup_html removed - frontend will generate dynamically
+                    // Optimized: No popup_html, frontend generates dynamically
                 }
             }));
 
