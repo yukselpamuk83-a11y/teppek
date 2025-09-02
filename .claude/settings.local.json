@@ -47,7 +47,16 @@
       "Bash(npx supabase:*)",
       "Bash(del \"C:\\Users\\seher\\Desktop\\geoo\\src\\stores\\authStore.js\")",
       "Bash(rm:*)",
-      "WebFetch(domain:teppek-2wh3l2jnz-yuksels-projects-5a72b11a.vercel.app)"
+      "WebFetch(domain:teppek-2wh3l2jnz-yuksels-projects-5a72b11a.vercel.app)",
+      "Read(D:\\Yeni klasör/**)",
+      "Read(D:\\Yeni klasör/**)",
+      "Read(D:\\Yeni klasör/**)",
+      "Read(D:\\Yeni klasör/**)",
+      "Read(D:\\Yeni klasör/**)",
+      "Read(D:\\Yeni klasör/**)",
+      "Read(D:\\Yeni klasör/**)",
+      "Bash(ping:*)",
+      "WebFetch(domain:teppek-rkbltcwtt-yuksels-projects-5a72b11a.vercel.app)"
     ],
     "deny": [],
     "ask": [],

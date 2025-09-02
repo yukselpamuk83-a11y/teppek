@@ -1,0 +1,114 @@
+{
+  "extraction_info": {
+    "source": "Teppek.com Map Data",
+    "timestamp": "2025-01-26",
+    "format": "GeoJSON",
+    "total_features": "16,000+",
+    "data_types": ["jobs", "cvs"],
+    "sources": ["adzuna", "manual"]
+  },
+  "data_structure": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature", 
+        "geometry": {
+          "type": "Point",
+          "coordinates": [longitude, latitude]
+        },
+        "properties": {
+          "id": "unique_id",
+          "type": "job|cv",
+          "title": "position_title",
+          "company": "company_name",
+          "city": "city_name", 
+          "country": "country_code",
+          "salary_min": "minimum_salary",
+          "salary_max": "maximum_salary",
+          "currency": "currency_code",
+          "url": "application_url",
+          "source": "data_source",
+          "remote": "remote_work_flag",
+          "icon_type": "marker_type"
+        }
+      }
+    ]
+  },
+  "sample_data": {
+    "job_example": {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [-0.166198, 51.459689]},
+      "properties": {
+        "id": 1,
+        "title": "Senior Chef De Partie",
+        "company": "The Ivy Collection", 
+        "city": "Clapham",
+        "country": "GB",
+        "salary_min": 29319,
+        "salary_max": 29319,
+        "currency": "USD",
+        "url": "https://www.adzuna.co.uk/jobs/details/5363768912",
+        "source": "adzuna",
+        "type": "job"
+      }
+    },
+    "cv_example": {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [longitude, latitude]},
+      "properties": {
+        "id": "cv-123",
+        "title": "Software Developer",
+        "name": "John Doe",
+        "city": "London", 
+        "country": "GB",
+        "salary_min": 50000,
+        "salary_max": 70000,
+        "currency": "USD",
+        "contact": "contact_info",
+        "skills": "programming_skills",
+        "experience_years": 5,
+        "source": "manual",
+        "type": "cv"
+      }
+    }
+  },
+  "api_endpoints": {
+    "get_map_data": "/api/get-map-data",
+    "generate_map_data": "/api/generate-map-data",
+    "storage_url": "https://fcsggaggjtxqwatimplk.supabase.co/storage/v1/object/public/public-assets/map-data.geojson"
+  },
+  "database_tables": {
+    "jobs": {
+      "fields": ["id", "title", "company", "city", "country", "lat", "lon", "salary_min", "salary_max", "currency", "url", "source", "remote", "icon_type", "created_at"],
+      "source": "Supabase"
+    },
+    "cvs": {
+      "fields": ["id", "full_name", "title", "city", "country", "lat", "lon", "salary_expectation_min", "salary_expectation_max", "currency", "contact", "skills", "experience_years", "remote_available", "created_at"],
+      "source": "Supabase"
+    }
+  },
+  "filtering_options": {
+    "search_query": "text search in title/company",
+    "country": "country filter (GB, IT, FR, etc)",
+    "city": "city name filter",
+    "remote": "remote work filter (true/false/all)",
+    "type": "data type (jobs/cvs/all)",
+    "pagination": "page and limit parameters"
+  },
+  "map_implementation": {
+    "library": "Leaflet.js",
+    "clustering": "Leaflet.markercluster",
+    "tile_layers": ["OpenStreetMap", "ArcGIS Satellite"],
+    "marker_types": {
+      "job": "fa-briefcase icon",
+      "cv": "fa-user icon"
+    },
+    "popup_system": "Dynamic popup generation with source-specific styling"
+  },
+  "performance_optimization": {
+    "data_caching": "Supabase Storage for GeoJSON",
+    "clustering": "Marker clustering for large datasets", 
+    "pagination": "Server-side pagination (50 items/page)",
+    "lazy_loading": "Dynamic loading of map libraries"
+  }
+}

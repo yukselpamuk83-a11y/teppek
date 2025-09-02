@@ -1,0 +1,527 @@
+/* Mobile Responsive Timeline Styles */
+
+/* Base timeline modal responsive */
+@media (max-width: 768px) {
+  .timeline-modal-header {
+    padding: 16px !important;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .timeline-modal-header .flex {
+    width: 100%;
+    align-items: center;
+  }
+
+  .timeline-modal-header h2 {
+    font-size: 20px !important;
+  }
+
+  .timeline-modal-header p {
+    font-size: 16px !important;
+  }
+
+  .timeline-controls {
+    padding: 12px 16px !important;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .timeline-controls .flex:first-child {
+    justify-content: center;
+  }
+
+  .timeline-legend {
+    flex-wrap: wrap;
+    gap: 8px !important;
+    justify-content: flex-start;
+  }
+
+  .timeline-legend > div {
+    font-size: 12px !important;
+  }
+
+  .timeline-container {
+    padding: 16px !important;
+  }
+}
+
+/* Mobile timeline visualization */
+@media (max-width: 768px) {
+  .vis-timeline {
+    height: 250px !important;
+    min-height: 250px !important;
+  }
+
+  /* Timeline items mobile optimization */
+  .vis-item {
+    min-height: 40px !important;
+    font-size: 12px !important;
+  }
+
+  .timeline-item-content {
+    padding: 6px 8px !important;
+  }
+
+  .timeline-item-header {
+    gap: 4px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .timeline-item-title {
+    font-size: 11px !important;
+    line-height: 1.2;
+  }
+
+  .timeline-item-org {
+    font-size: 10px !important;
+  }
+
+  .timeline-item-period {
+    font-size: 9px !important;
+  }
+
+  /* Tooltip mobile */
+  .vis-tooltip {
+    max-width: 200px !important;
+    font-size: 11px !important;
+    padding: 6px 8px !important;
+  }
+}
+
+/* Very small screens (phones in portrait) */
+@media (max-width: 480px) {
+  /* Modal takes full screen on very small devices */
+  .fixed.inset-0 > div {
+    margin: 0 !important;
+    border-radius: 0 !important;
+    height: 100vh !important;
+    max-height: none !important;
+    max-width: none !important;
+  }
+
+  .timeline-modal-header {
+    padding: 12px !important;
+  }
+
+  .timeline-modal-header h2 {
+    font-size: 18px !important;
+  }
+
+  .timeline-controls {
+    padding: 8px 12px !important;
+  }
+
+  .control-btn {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .timeline-container {
+    padding: 12px !important;
+  }
+
+  .vis-timeline {
+    height: 200px !important;
+    min-height: 200px !important;
+  }
+
+  /* Make timeline items more touch-friendly */
+  .vis-item {
+    min-height: 44px !important;
+    cursor: pointer;
+  }
+
+  /* Timeline legend stacked on very small screens */
+  .timeline-legend {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px !important;
+  }
+}
+
+/* Touch optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .vis-item {
+    min-height: 44px !important;
+  }
+  
+  .control-btn {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+  
+  .timeline-controls button {
+    padding: 12px !important;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+  .timeline-modal-header {
+    padding: 12px 16px !important;
+  }
+  
+  .timeline-controls {
+    padding: 8px 16px !important;
+    flex-direction: row;
+  }
+  
+  .vis-timeline {
+    height: 180px !important;
+  }
+}
+
+/* Timeline period detail mobile */
+@media (max-width: 768px) {
+  .timeline-detail-panel {
+    padding: 16px !important;
+  }
+
+  .timeline-detail-panel .grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .detail-item {
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 8px;
+  }
+
+  .detail-item:last-child {
+    border-bottom: none;
+  }
+
+  .detail-label {
+    font-size: 12px !important;
+  }
+
+  .detail-value {
+    font-size: 14px !important;
+    margin-top: 4px;
+  }
+
+  .skills-list .skill-tag {
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+  }
+}
+
+/* CV Popup Mobile Responsive */
+@media (max-width: 768px) {
+  .cv-popup {
+    max-width: 280px !important;
+    width: auto !important;
+  }
+
+  .cv-popup-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px !important;
+  }
+
+  .cv-profile-image,
+  .cv-popup-photo-placeholder {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .cv-popup-name {
+    font-size: 14px !important;
+  }
+
+  .cv-popup-title {
+    font-size: 12px !important;
+  }
+
+  .cv-popup-stats {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+
+  .cv-stat-item {
+    font-size: 11px !important;
+  }
+
+  .timeline-preview-items {
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  .cv-popup-actions {
+    flex-direction: column;
+    gap: 6px !important;
+  }
+
+  .cv-timeline-btn,
+  .cv-contact-btn {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* Compact CV popup for very small screens */
+@media (max-width: 480px) {
+  .cv-popup {
+    max-width: 240px !important;
+  }
+
+  .cv-popup-header {
+    margin-bottom: 12px !important;
+  }
+
+  .cv-popup-timeline-preview {
+    margin-bottom: 12px !important;
+  }
+
+  .timeline-preview-items {
+    max-height: 100px;
+  }
+
+  .timeline-preview-item {
+    margin-bottom: 6px !important;
+  }
+
+  .timeline-preview-title {
+    font-size: 11px !important;
+  }
+
+  .timeline-preview-org {
+    font-size: 10px !important;
+  }
+
+  .timeline-preview-date {
+    font-size: 9px !important;
+  }
+}
+
+/* Filter System Mobile */
+@media (max-width: 768px) {
+  .dual-filter-system {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .filter-content {
+    padding: 16px !important;
+  }
+
+  .filter-tabs nav {
+    flex-direction: row;
+  }
+
+  .filter-tabs button {
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+  }
+
+  .filter-group {
+    margin-bottom: 16px;
+  }
+
+  .filter-label {
+    font-size: 13px !important;
+  }
+
+  .filter-input,
+  .filter-select {
+    padding: 10px 12px !important;
+    font-size: 14px !important;
+  }
+
+  .filter-skills-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .filter-checkbox-group,
+  .filter-radio-group {
+    gap: 8px !important;
+  }
+
+  .clear-filters-btn {
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+  }
+}
+
+/* Layer controls mobile */
+@media (max-width: 768px) {
+  .layer-controls {
+    padding: 12px !important;
+  }
+
+  .layer-toggle-item label {
+    gap: 12px !important;
+  }
+
+  .layer-bulk-controls .flex {
+    gap: 8px !important;
+  }
+
+  .layer-bulk-controls button {
+    padding: 10px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .compact-layer-controls {
+    padding: 8px !important;
+  }
+
+  .compact-layer-controls .flex {
+    gap: 8px !important;
+    flex-wrap: wrap;
+  }
+
+  .compact-layer-controls button {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    flex: 1;
+    min-width: 120px;
+  }
+}
+
+/* Performance indicators mobile */
+@media (max-width: 768px) {
+  .layer-status-indicator {
+    font-size: 11px !important;
+  }
+
+  .layer-status-indicator .w-2 {
+    width: 6px !important;
+    height: 6px !important;
+  }
+}
+
+/* Accessibility improvements for touch */
+@media (hover: none) {
+  .cv-timeline-btn,
+  .cv-contact-btn,
+  .control-btn,
+  .clear-filters-btn {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  
+  .filter-checkbox,
+  .filter-radio {
+    min-width: 20px;
+    min-height: 20px;
+  }
+  
+  .layer-toggle-item input + div {
+    min-height: 24px;
+  }
+}
+
+/* Timeline loading states mobile */
+@media (max-width: 768px) {
+  .timeline-loading {
+    padding: 40px 20px !important;
+    text-align: center;
+  }
+
+  .timeline-loading i {
+    font-size: 32px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .timeline-loading h3 {
+    font-size: 16px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .timeline-loading p {
+    font-size: 14px !important;
+  }
+}
+
+/* Dark mode mobile optimizations */
+@media (prefers-color-scheme: dark) and (max-width: 768px) {
+  .timeline-modal-header {
+    background: linear-gradient(135deg, #4c1d95 0%, #1e40af 100%) !important;
+  }
+  
+  .timeline-controls {
+    background-color: #1f2937 !important;
+    border-color: #374151 !important;
+  }
+  
+  .control-btn {
+    background-color: #374151 !important;
+    border-color: #4b5563 !important;
+    color: #f9fafb !important;
+  }
+  
+  .timeline-detail-panel {
+    background-color: #1f2937 !important;
+  }
+  
+  .detail-label {
+    color: #9ca3af !important;
+  }
+  
+  .detail-value {
+    color: #f9fafb !important;
+  }
+}
+
+/* Print styles for timeline */
+@media print {
+  .timeline-controls,
+  .cv-popup-actions,
+  .filter-content {
+    display: none !important;
+  }
+  
+  .timeline-modal-header {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .vis-timeline {
+    height: auto !important;
+    background: white !important;
+  }
+  
+  .timeline-detail-panel {
+    page-break-inside: avoid;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .vis-item {
+    border: 2px solid #000 !important;
+  }
+  
+  .timeline-item-content {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  
+  .control-btn {
+    border: 2px solid #000 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .vis-item,
+  .control-btn,
+  .cv-timeline-btn,
+  .cv-contact-btn {
+    transition: none !important;
+    transform: none !important;
+  }
+  
+  .timeline-modal-header,
+  .timeline-controls,
+  .timeline-container {
+    animation: none !important;
+  }
+}

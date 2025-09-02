@@ -106,93 +106,93 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
             await loadLeaflet()
             
             if (mapRef.current && !mapInstance.current && L && userLocation) {
-            // Default location fallback
-            const lat = userLocation?.lat || 41.01
-            const lng = userLocation?.lng || 28.97
+                // Default location fallback
+                const lat = userLocation?.lat || 41.01
+                const lng = userLocation?.lng || 28.97
             
-            try {
-                mapInstance.current = L.map(mapRef.current, {
-                maxBounds: [[-90, -180], [90, 180]], // Dünya sınırları
-                maxBoundsViscosity: 1.0,              // Sert sınır
-                minZoom: 2,                           // Minimum zoom
-                maxZoom: 18                           // Maximum zoom
-            }).setView([lat, lng], 10)
+                try {
+                    mapInstance.current = L.map(mapRef.current, {
+                        maxBounds: [[-90, -180], [90, 180]], // Dünya sınırları
+                        maxBoundsViscosity: 1.0,              // Sert sınır
+                        minZoom: 2,                           // Minimum zoom
+                        maxZoom: 18                           // Maximum zoom
+                    }).setView([lat, lng], 10)
             
-            const initialLayer = L.tileLayer(tileProviders.street.url, {
-                attribution: tileProviders.street.attribution,
-                noWrap: true,
-                bounds: [[-90, -180], [90, 180]]      // Tile sınırları
-            }).addTo(mapInstance.current)
-            setTileLayer(initialLayer)
+                    const initialLayer = L.tileLayer(tileProviders.street.url, {
+                        attribution: tileProviders.street.attribution,
+                        noWrap: true,
+                        bounds: [[-90, -180], [90, 180]]      // Tile sınırları
+                    }).addTo(mapInstance.current)
+                    setTileLayer(initialLayer)
 
-            circleRef.current = L.circle([lat, lng], {
-                radius: 50000, 
-                color: '#3b82f6',
-                fillColor: '#60a5fa',
-                fillOpacity: 0.1,
-                weight: 1
-            }).addTo(mapInstance.current)
+                    circleRef.current = L.circle([lat, lng], {
+                        radius: 50000, 
+                        color: '#3b82f6',
+                        fillColor: '#60a5fa',
+                        fillOpacity: 0.1,
+                        weight: 1
+                    }).addTo(mapInstance.current)
 
-            if (mapInstance.current) {
-                mapInstance.current.fitBounds(circleRef.current.getBounds())
-            }
-
-            clusterGroupRef.current = L.markerClusterGroup({
-                maxClusterRadius: 50,
-                spiderfyOnMaxZoom: true,
-                spiderfyDistanceMultiplier: 3,     // 3x uzun mesafe
-                spiderfyOnEveryZoom: true,         // Zoom 17'de de spiderfy aktif
-                showCoverageOnHover: false,
-                zoomToBoundsOnClick: true
-            })
-            mapInstance.current.addLayer(clusterGroupRef.current)
-            
-            // Zoom ve view değişimi event'leri - marker kaybolma sorunu için
-            mapInstance.current.on('zoomend moveend', () => {
-                setTimeout(() => {
-                    if (clusterGroupRef.current) {
-                        clusterGroupRef.current.refreshClusters()
+                    if (mapInstance.current) {
+                        mapInstance.current.fitBounds(circleRef.current.getBounds())
                     }
-                }, 100)
-            })
+
+                    clusterGroupRef.current = L.markerClusterGroup({
+                        maxClusterRadius: 50,
+                        spiderfyOnMaxZoom: true,
+                        spiderfyDistanceMultiplier: 3,     // 3x uzun mesafe
+                        spiderfyOnEveryZoom: true,         // Zoom 17'de de spiderfy aktif
+                        showCoverageOnHover: false,
+                        zoomToBoundsOnClick: true
+                    })
+                    mapInstance.current.addLayer(clusterGroupRef.current)
             
-            // Window resize event'i ayrı handle et
-            const handleResize = () => {
-                setTimeout(() => {
-                    if (mapInstance.current && clusterGroupRef.current) {
-                        mapInstance.current.invalidateSize()
-                        clusterGroupRef.current.refreshClusters()
-                        // F12 açıp kapattıktan sonra marker'ların kaybolması durumunda
-                        if (clusterGroupRef.current.getLayers().length === 0 && data && data.length > 0) {
-                            // Marker'ları yeniden ekle
-                            console.log('🔄 Markers lost after resize, re-adding...')
-                            // Force re-render markers by calling the effect manually
-                            setTimeout(() => window.dispatchEvent(new CustomEvent('force-marker-refresh')), 200)
+                    // Zoom ve view değişimi event'leri - marker kaybolma sorunu için
+                    mapInstance.current.on('zoomend moveend', () => {
+                        setTimeout(() => {
+                            if (clusterGroupRef.current) {
+                                clusterGroupRef.current.refreshClusters()
+                            }
+                        }, 100)
+                    })
+            
+                    // Window resize event'i ayrı handle et
+                    const handleResize = () => {
+                        setTimeout(() => {
+                            if (mapInstance.current && clusterGroupRef.current) {
+                                mapInstance.current.invalidateSize()
+                                clusterGroupRef.current.refreshClusters()
+                                // F12 açıp kapattıktan sonra marker'ların kaybolması durumunda
+                                if (clusterGroupRef.current.getLayers().length === 0 && data && data.length > 0) {
+                                    // Marker'ları yeniden ekle
+                                    console.log('🔄 Markers lost after resize, re-adding...')
+                                    // Force re-render markers by calling the effect manually
+                                    setTimeout(() => window.dispatchEvent(new CustomEvent('force-marker-refresh')), 200)
+                                }
+                            }
+                        }, 150)
+                    }
+                    
+                    window.addEventListener('resize', handleResize)
+                    
+                    // Harita boyut sorununu çöz
+                    setTimeout(() => {
+                        if (mapInstance.current) {
+                            mapInstance.current.invalidateSize()
                         }
+                    }, 100)
+                    
+                    // Cleanup function
+                    return () => {
+                        window.removeEventListener('resize', handleResize)
                     }
-                }, 150)
-            }
-            
-            window.addEventListener('resize', handleResize)
-            
-            // Harita boyut sorununu çöz
-            setTimeout(() => {
-                if (mapInstance.current) {
-                    mapInstance.current.invalidateSize()
+                } catch (error) {
+                    console.warn('Map initialization error:', error)
+                    // If map already exists, clear it
+                    if (mapRef.current) {
+                        mapRef.current.innerHTML = ''
+                    }
                 }
-            }, 100)
-            
-            // Cleanup function
-            return () => {
-                window.removeEventListener('resize', handleResize)
-            }
-            } catch (error) {
-                console.warn('Map initialization error:', error)
-                // If map already exists, clear it
-                if (mapRef.current) {
-                    mapRef.current.innerHTML = ''
-                }
-            }
             }
         }
         
