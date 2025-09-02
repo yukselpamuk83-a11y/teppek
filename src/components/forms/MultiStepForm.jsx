@@ -362,7 +362,7 @@ function DefaultStepRenderer({ fields, data, onChange, errors }) {
               <option value="">{field.placeholder}</option>
               {field.options?.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {option.label}
+                  {typeof option.label === 'string' ? option.label : JSON.stringify(option.label)}
                 </option>
               ))}
             </select>
