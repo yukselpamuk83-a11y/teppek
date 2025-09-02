@@ -1,0 +1,41 @@
+name: Deploy to Production Domains
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Deploy to Vercel
+        run: |
+          # Deploy and get deployment URL
+          DEPLOYMENT_URL=$(vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --scope=yuksels-projects-5a72b11a)
+          
+          # Extract deployment ID from URL
+          DEPLOYMENT_ID=$(echo $DEPLOYMENT_URL | sed 's|https://||' | cut -d'-' -f2)
+          
+          # Set aliases to production domains
+          vercel alias set $DEPLOYMENT_URL teppek.com --token=${{ secrets.VERCEL_TOKEN }} --scope=yuksels-projects-5a72b11a
+          vercel alias set $DEPLOYMENT_URL teppek.vercel.app --token=${{ secrets.VERCEL_TOKEN }} --scope=yuksels-projects-5a72b11a
+          
+          echo "✅ Deployed to production domains:"
+          echo "🌐 https://teppek.com"
+          echo "🌐 https://teppek.vercel.app"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: yuksels-projects-5a72b11a
+          VERCEL_PROJECT_ID: teppek

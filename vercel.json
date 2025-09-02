@@ -2,7 +2,14 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "alias": ["teppek.com", "www.teppek.com", "teppek.vercel.app"],
+  "github": {
+    "autoAlias": false
+  },
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  },
   "rewrites": [
     {
       "source": "/((?!api/|assets/).*)",
