@@ -320,9 +320,9 @@ export function RecentActivity({ activities = [] }) {
                 <IconComponent className={`w-4 h-4 ${activity.color}`} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">{activity.title}</p>
-                <p className="text-sm text-gray-500">{activity.description}</p>
-                <p className="text-xs text-gray-400 mt-1">{activity.timestamp}</p>
+                <p className="text-sm font-medium text-gray-900">{typeof activity.title === 'string' ? activity.title : JSON.stringify(activity.title)}</p>
+                <p className="text-sm text-gray-500">{typeof activity.description === 'string' ? activity.description : JSON.stringify(activity.description)}</p>
+                <p className="text-xs text-gray-400 mt-1">{typeof activity.timestamp === 'string' ? activity.timestamp : JSON.stringify(activity.timestamp)}</p>
               </div>
             </div>
           )
@@ -381,7 +381,7 @@ export function ProfileCompletion({ completionData = {} }) {
               <div className="w-4 h-4 bg-green-100 rounded-full flex items-center justify-center mr-3">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               </div>
-              {section}
+              {typeof section === 'string' ? section : JSON.stringify(section)}
             </div>
           ))}
         </div>
@@ -396,7 +396,7 @@ export function ProfileCompletion({ completionData = {} }) {
               <div className="w-4 h-4 bg-gray-100 rounded-full flex items-center justify-center mr-3">
                 <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
               </div>
-              {section}
+              {typeof section === 'string' ? section : JSON.stringify(section)}
             </div>
           ))}
         </div>
