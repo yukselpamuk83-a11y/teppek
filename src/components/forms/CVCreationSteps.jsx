@@ -713,3 +713,13 @@ function PreferencesStep({ data, onChange, errors }) {
     </div>
   )
 }
+
+// Export all step components
+export { 
+  PersonalInfoStep,
+  LocationStep, 
+  ProfileStep,
+  TimelineStep,
+  SkillsStep,
+  PreferencesStep
+}
