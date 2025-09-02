@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { MultiStepForm } from '../forms/MultiStepForm'
 import { JobPostingForm } from '../forms/JobPostingForm'
-import { PersonalInfoStep, LocationStep, ProfileStep, TimelineStep, SkillsStep, PreferencesStep } from '../forms/CVCreationSteps'
 import { TimelineBuilder } from '../forms/TimelineBuilder'
 
 export function FormManager({ activeForm, onClose }) {
