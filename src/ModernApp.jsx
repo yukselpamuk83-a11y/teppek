@@ -18,7 +18,7 @@ const MapComponent = lazy(() => import('./components/MapComponent'))
 const FilterComponent = lazy(() => import('./components/FilterComponent'))
 const ListComponent = lazy(() => import('./components/ListComponent'))
 const PaginationComponent = lazy(() => import('./components/PaginationComponent'))
-const UserDashboard = lazy(() => import('./components/modern/UserDashboard'))
+const DashboardPanel = lazy(() => import('./components/pages/DashboardPanel'))
 
 function ModernAppContent() {
   const { user, isAuthenticated, loading: authLoading } = useAuth()
@@ -376,11 +376,11 @@ function ModernAppContent() {
           <div className="min-h-screen bg-gray-50 flex items-center justify-center">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-              <p className="text-sm text-gray-600">Dashboard yükleniyor...</p>
+              <p className="text-sm text-gray-600">Panel yükleniyor...</p>
             </div>
           </div>
         }>
-          <UserDashboard />
+          <DashboardPanel onBackToMap={() => setCurrentView('map')} />
         </Suspense>
         
         {/* Toast Notifications */}
