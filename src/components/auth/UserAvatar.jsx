@@ -27,7 +27,7 @@ const UserAvatar = ({ showName = true, size = 'default' }) => {
   }
 
   const getUserInitials = () => {
-    if (userMetadata?.name) {
+    if (userMetadata?.name && typeof userMetadata.name === 'string') {
       return userMetadata.name
         .split(' ')
         .map(n => n[0])
@@ -44,7 +44,7 @@ const UserAvatar = ({ showName = true, size = 'default' }) => {
   }
 
   const getUserDisplayName = () => {
-    return userMetadata?.name || userEmail?.split('@')[0] || 'User'
+    return (typeof userMetadata?.name === 'string' ? userMetadata.name : userMetadata?.first_name) || userEmail?.split('@')[0] || 'User'
   }
 
   const avatarSize = size === 'small' ? 'h-8 w-8' : size === 'large' ? 'h-12 w-12' : 'h-10 w-10'

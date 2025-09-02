@@ -35,8 +35,8 @@ export function UserDashboard() {
   })
   
   const [profileData, setProfileData] = useState({
-    firstName: userMetadata?.first_name || userMetadata?.name?.split(' ')[0] || '',
-    lastName: userMetadata?.last_name || userMetadata?.name?.split(' ')[1] || '',
+    firstName: userMetadata?.first_name || (typeof userMetadata?.name === 'string' ? userMetadata.name.split(' ')[0] : '') || '',
+    lastName: userMetadata?.last_name || (typeof userMetadata?.name === 'string' ? userMetadata.name.split(' ')[1] : '') || '',
     email: user?.email || '',
     phone: userMetadata?.phone || '',
     location: userMetadata?.location || '',
@@ -117,7 +117,7 @@ export function UserDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold mb-2">
-                Hoş geldin, {userMetadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Kullanıcı'}! 👋
+                Hoş geldin, {typeof userMetadata?.name === 'string' ? userMetadata.name.split(' ')[0] : (userMetadata?.first_name || user?.email?.split('@')[0] || 'Kullanıcı')}! 👋
               </h1>
               <p className="opacity-90">
                 {isCompany ? 'İşveren Paneli' : 'İş Arayan Paneli'} - Son giriş: {stats.lastLogin.toLocaleDateString('tr-TR')}
