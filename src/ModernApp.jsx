@@ -18,6 +18,7 @@ const MapComponent = lazy(() => import('./components/MapComponent'))
 const FilterComponent = lazy(() => import('./components/FilterComponent'))
 const ListComponent = lazy(() => import('./components/ListComponent'))
 const PaginationComponent = lazy(() => import('./components/PaginationComponent'))
+const UserDashboard = lazy(() => import('./components/modern/UserDashboard'))
 
 function ModernAppContent() {
   const { user, isAuthenticated, loading: authLoading } = useAuth()
@@ -35,6 +36,7 @@ function ModernAppContent() {
   const [currentPage, setCurrentPage] = useState(1)
   const [userLocation, setUserLocation] = useState(null)
   const [showMobileSearch, setShowMobileSearch] = useState(false)
+  const [currentView, setCurrentView] = useState('map') // 'map' or 'dashboard'
   
   // Realtime data disabled to reduce database load
   // const realtimeData = useRealtimeData(userLocation)
@@ -352,10 +354,48 @@ function ModernAppContent() {
 
   // Dashboard view removed - only map/list view for now
 
+  // Handle view changes
+  const handleViewChange = useCallback((view) => {
+    setCurrentView(view)
+    // Analytics güvenli çağrı
+    if (analytics && analytics.events && analytics.events.viewChange) {
+      analytics.events.viewChange(view)
+    }
+  }, [])
+
+  // Dashboard view
+  if (currentView === 'dashboard' && isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <ModernHeader 
+          currentView={currentView} 
+          onViewChange={handleViewChange} 
+        />
+        
+        <Suspense fallback={
+          <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+              <p className="text-sm text-gray-600">Dashboard yükleniyor...</p>
+            </div>
+          </div>
+        }>
+          <UserDashboard />
+        </Suspense>
+        
+        {/* Toast Notifications */}
+        <ToastContainer toasts={toasts} removeToast={removeToast} />
+      </div>
+    )
+  }
+
   // Main map view (default)
   return (
     <div className="min-h-screen bg-gray-50">
-      <ModernHeader />
+      <ModernHeader 
+        currentView={currentView} 
+        onViewChange={handleViewChange} 
+      />
       
       {/* Auth Form removed - not needed */}
       

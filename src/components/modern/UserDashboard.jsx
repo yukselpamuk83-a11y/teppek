@@ -22,6 +22,7 @@ import {
   Eye,
   Settings
 } from 'lucide-react'
+import { DashboardActions } from '../dashboard/DashboardActions'
 
 export function UserDashboard() {
   const { user, userMetadata } = useAuth()
@@ -240,47 +241,15 @@ export function UserDashboard() {
           )}
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold mb-4">Hızlı İşlemler</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button 
-              variant="outline" 
-              className="justify-start h-auto p-4 hover:bg-blue-50 transition-colors"
-              onClick={handleLocationUpdate}
-            >
-              <MapPin className="h-5 w-5 mr-3 text-blue-600" />
-              <div className="text-left">
-                <div className="font-medium">Konum Güncelle</div>
-                <div className="text-sm text-gray-500">Yakınımdaki işleri göster</div>
-              </div>
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="justify-start h-auto p-4 hover:bg-green-50 transition-colors"
-              onClick={handleCVUpdate}
-            >
-              <Briefcase className="h-5 w-5 mr-3 text-green-600" />
-              <div className="text-left">
-                <div className="font-medium">{isCompany ? 'İlan Yayınla' : 'CV Güncelle'}</div>
-                <div className="text-sm text-gray-500">{isCompany ? 'Yeni pozisyon ekle' : 'Profilini güncel tut'}</div>
-              </div>
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="justify-start h-auto p-4 hover:bg-purple-50 transition-colors"
-              onClick={handleStatsView}
-            >
-              <TrendingUp className="h-5 w-5 mr-3 text-purple-600" />
-              <div className="text-left">
-                <div className="font-medium">İstatistikler</div>
-                <div className="text-sm text-gray-500">Detaylı analiz görüntüle</div>
-              </div>
-            </Button>
-          </div>
-        </div>
+        {/* Dashboard Actions - İş İlanı ve CV Oluşturma */}
+        <DashboardActions 
+          userStats={{
+            jobPosts: isCompany ? 5 : 0,
+            cvViews: isCompany ? 0 : stats.profileViews,
+            applications: stats.applications,
+            profileCompletion: 75
+          }}
+        />
 
         {/* Recent Activity */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

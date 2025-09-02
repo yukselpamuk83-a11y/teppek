@@ -2,12 +2,12 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '../ui/Button'
-import { Settings, BarChart3, LogIn, Globe } from 'lucide-react'
+import { Settings, BarChart3, LogIn, Globe, Home, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import UserAvatar from '../auth/UserAvatar'
 import AuthModal from '../auth/AuthModal'
 
-export function ModernHeader() {
+export function ModernHeader({ currentView = 'map', onViewChange }) {
   const { isAuthenticated, loading } = useAuth()
   const { t, i18n } = useTranslation()
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -41,6 +41,29 @@ export function ModernHeader() {
         
         {/* Navigation */}
         <div className="flex items-center space-x-3">
+          {/* View Navigation - Show if authenticated */}
+          {isAuthenticated && (
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant={currentView === 'map' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => onViewChange && onViewChange('map')}
+              >
+                <Home className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Harita</span>
+              </Button>
+              
+              <Button 
+                variant={currentView === 'dashboard' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => onViewChange && onViewChange('dashboard')}
+              >
+                <LayoutDashboard className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Panel</span>
+              </Button>
+            </div>
+          )}
+          
           {/* Language Switcher */}
           <Button 
             variant="ghost" 
