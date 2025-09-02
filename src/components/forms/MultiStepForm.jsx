@@ -115,6 +115,11 @@ export function MultiStepForm({
   const validateStep = (step, data) => {
     const errors = {}
     
+    // Skip validation if step has no fields (uses custom component)
+    if (!step.fields || !Array.isArray(step.fields)) {
+      return errors
+    }
+    
     step.fields.forEach(field => {
       if (field.required && (!data[field.name] || data[field.name].toString().trim() === '')) {
         errors[field.name] = `${field.label} alanı zorunludur`
@@ -232,13 +237,17 @@ export function MultiStepForm({
                 onChange={handleFieldChange}
                 errors={errors}
               />
-            ) : (
+            ) : currentStepData.fields ? (
               <DefaultStepRenderer
                 fields={currentStepData.fields}
                 data={formData}
                 onChange={handleFieldChange}
                 errors={errors}
               />
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Bu adım için özel bir bileşen tanımlanmalı</p>
+              </div>
             )}
           </div>
 
