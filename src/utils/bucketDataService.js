@@ -67,6 +67,8 @@ class BucketDataService {
         await this.initializeBucketUrl()
       }
 
+      // Cache busting kaldırıldı - performans için
+      // const cacheBuster = Date.now() // PERFORMANS OPTIMIZASYONU
       const response = await fetch(`${this.bucketUrl}/map-data.geojson`)
       
       if (!response.ok) {
@@ -259,6 +261,8 @@ class BucketDataService {
 
   async fetchMultipleFromBucket(itemIds) {
     try {
+      // Cache busting kaldırıldı - performans için
+      // const cacheBuster = Date.now() // PERFORMANS OPTIMIZASYONU
       const response = await fetch(`${this.bucketUrl}/map-data.geojson`)
       if (!response.ok) return {}
 

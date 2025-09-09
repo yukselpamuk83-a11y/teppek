@@ -1,0 +1,236 @@
+/* 🍎 APPLE SVG MARKERS - Ultra-High Performance CSS */
+
+/* 🚀 GPU-Accelerated Base Marker Container - 3x Larger */
+.apple-svg-marker-container {
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0); /* GPU acceleration trigger */
+  
+  /* Smooth Apple-style transitions */
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Apple's easing curve */
+  
+  /* Performance optimizations */
+  contain: layout style paint;
+  isolation: isolate;
+  
+  /* Large marker specific styles */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Individual SVG marker within container */
+.apple-svg-marker {
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: block;
+}
+
+/* Hover Performance - Hardware Accelerated for Container */
+.apple-svg-marker-container:hover {
+  transform: scale(1.1) translateZ(0);
+  filter: brightness(1.05);
+}
+
+.apple-svg-marker-container:hover .marker-text {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+/* Premium Sponsored Marker Pulse Animation - Enhanced for Large Size */
+@keyframes apple-premium-pulse {
+  0%, 100% { 
+    filter: brightness(1) drop-shadow(0 3px 8px rgba(255, 180, 0, 0.4));
+    transform: scale(1) translateZ(0);
+  }
+  50% { 
+    filter: brightness(1.2) drop-shadow(0 6px 16px rgba(255, 180, 0, 0.6));
+    transform: scale(1.03) translateZ(0);
+  }
+}
+
+.apple-svg-marker-container.premium {
+  animation: apple-premium-pulse 3s ease-in-out infinite;
+}
+
+/* Marker Text Styles */
+.marker-text {
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Apple-Style Loading States */
+.apple-svg-marker.loading {
+  opacity: 0.6;
+  animation: apple-loading-fade 1s ease-in-out infinite alternate;
+}
+
+@keyframes apple-loading-fade {
+  from { opacity: 0.4; }
+  to { opacity: 0.8; }
+}
+
+/* Cluster Integration - Apple Style */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background: linear-gradient(135deg, #007AFF 0%, #0056CC 100%);
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  font-weight: 600;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 
+    0 2px 8px rgba(0, 122, 255, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.2);
+  
+  /* Apple-style typography */
+  font-size: 13px;
+  line-height: 1;
+  
+  /* Performance */
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.marker-cluster:hover {
+  transform: scale(1.1) translateZ(0);
+  box-shadow: 
+    0 4px 16px rgba(0, 122, 255, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* Performance: Reduce repaints during map movement */
+.leaflet-marker-pane {
+  will-change: transform;
+}
+
+/* Apple System Colors for Different States */
+:root {
+  --apple-blue: #007AFF;
+  --apple-blue-dark: #0056CC;
+  --apple-orange: #FF9500;
+  --apple-orange-dark: #E6750A;
+  --apple-gold: #FFD60A;
+  --apple-gold-dark: #FFB000;
+  --apple-shadow: rgba(0, 0, 0, 0.25);
+  --apple-shadow-hover: rgba(0, 0, 0, 0.35);
+}
+
+/* Memory Optimization: Reduce DOM complexity */
+.apple-svg-marker svg {
+  display: block; /* Remove inline spacing */
+}
+
+/* 📱 Responsive Apple-Style Scaling for Medium Markers */
+@media (max-width: 768px) {
+  .apple-svg-marker-container {
+    /* Optimal size for mobile touch targets */
+    transform: scale(0.9) translateZ(0);
+  }
+  
+  .apple-svg-marker-container:hover {
+    transform: scale(1.0) translateZ(0);
+  }
+  
+  .marker-text {
+    font-size: 10px !important;
+    max-width: 120px !important;
+  }
+  
+  .marker-text div:last-child {
+    font-size: 9px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .apple-svg-marker-container {
+    /* Smaller for very small screens */
+    transform: scale(0.8) translateZ(0);
+  }
+  
+  .marker-text {
+    font-size: 9px !important;
+    max-width: 100px !important;
+  }
+}
+
+/* 🎯 High DPI Display Optimization */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
+  .apple-svg-marker {
+    /* Ensure crisp rendering on Retina displays */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* 🚀 Performance: Prevent layout thrashing for Large Markers */
+.leaflet-marker-icon.apple-svg-marker-container {
+  margin: 0 !important; /* Override Leaflet's margin calculations */
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Enhanced text visibility for full titles */
+.marker-text {
+  text-shadow: 
+    0 1px 3px rgba(255,255,255,0.95),
+    0 0 6px rgba(255,255,255,0.8),
+    1px 1px 2px rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.9) !important;
+  border-radius: 6px !important;
+  padding: 4px 6px !important;
+  backdrop-filter: blur(3px) !important;
+  border: 1px solid rgba(0,0,0,0.15) !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  word-wrap: break-word !important;
+  white-space: normal !important;
+  line-height: 1.2 !important;
+  max-width: 140px;
+}
+
+/* Enhanced visibility for text on different backgrounds */
+.marker-text div:first-child {
+  font-weight: 700;
+  margin-bottom: 1px;
+  color: #004D4D !important; /* Koyu renk daha okunabilir */
+}
+
+.marker-text div:last-child {
+  font-weight: 500;
+  opacity: 0.9;
+  color: #666 !important; /* Gri renk daha uyumlu */
+}
+
+/* Apple-Style Focus States for Accessibility - Large Markers */
+.apple-svg-marker-container:focus,
+.apple-svg-marker-container:focus-visible {
+  outline: 3px solid #007AFF;
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+/* Z-index management for overlapping large markers */
+.apple-svg-marker-container {
+  z-index: 100;
+}
+
+.apple-svg-marker-container.premium {
+  z-index: 200;
+}
+
+.apple-svg-marker-container:hover {
+  z-index: 1000 !important;
+}
+
+/* Performance optimization for text rendering */
+.marker-text {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}

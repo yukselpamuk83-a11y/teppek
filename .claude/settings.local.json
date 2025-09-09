@@ -60,7 +60,8 @@
       "WebFetch(domain:teppek.vercel.app)",
       "Bash(gh repo view:*)",
       "Bash(git remote set-url:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjc2dnYWdnanR4cXdhdGltcGxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3OTg2MzAsImV4cCI6MjA3MTM3NDYzMH0.VKTZTVSqBvzVrP8pabPqFfAetfMjZSj45YwkXPOM9Bg node generate-bucket-direct.cjs)"
     ],
     "deny": [],
     "ask": [],

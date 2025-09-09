@@ -16,6 +16,7 @@ import logger from './utils/logger.js'
 // Lazy loaded components - performans için
 const AuthCallback = lazy(() => import('./components/auth/AuthCallback'))
 const MapComponent = lazy(() => import('./components/MapComponent'))
+const MarkerFirstMap = lazy(() => import('./components/MarkerFirstMap')) // 🚀 NEW: Marker-First Approach
 const FilterComponent = lazy(() => import('./components/FilterComponent'))
 const ListComponent = lazy(() => import('./components/ListComponent'))
 const PaginationComponent = lazy(() => import('./components/PaginationComponent'))
@@ -38,6 +39,7 @@ function ModernAppContent() {
   const [userLocation, setUserLocation] = useState(null)
   const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [currentView, setCurrentView] = useState('map') // 'map' or 'dashboard'
+  const [useMarkerFirst, setUseMarkerFirst] = useState(false) // 🚀 PERFORMANCE: Temporarily disabled
   
   // Realtime data disabled to reduce database load
   // const realtimeData = useRealtimeData(userLocation)
@@ -347,18 +349,29 @@ function ModernAppContent() {
             )}
           >
             <Suspense fallback={
-              <div className="h-full flex items-center justify-center">
+              <div className="h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                  <p className="text-sm text-gray-600">Harita yükleniyor...</p>
+                  <p className="text-sm text-gray-600">🚀 Hızlı harita yükleniyor...</p>
                 </div>
               </div>
             }>
-              <MapComponent 
-                data={allFilteredData} 
-                selectedLocation={selectedLocation} 
-                userLocation={userLocation} 
-              />
+              {useMarkerFirst ? (
+                <MarkerFirstMap 
+                  data={allFilteredData} 
+                  selectedLocation={selectedLocation} 
+                  userLocation={userLocation} 
+                  onPremiumClick={handlePremiumClick}
+                />
+              ) : (
+                <MapComponent 
+                  data={allFilteredData} 
+                  selectedLocation={selectedLocation} 
+                  userLocation={userLocation} 
+                  onPremiumClick={handlePremiumClick}
+                  isSubscribed={true}
+                />
+              )}
             </Suspense>
           </ComponentErrorBoundary>
           
@@ -440,13 +453,22 @@ function ModernAppContent() {
                 </div>
               )}
             >
-              <MapComponent 
-                data={allFilteredData} 
-                selectedLocation={selectedLocation} 
-                userLocation={userLocation}
-                onPremiumClick={handlePremiumClick}
-                isSubscribed={true}
-              />
+              {useMarkerFirst ? (
+                <MarkerFirstMap 
+                  data={allFilteredData} 
+                  selectedLocation={selectedLocation} 
+                  userLocation={userLocation}
+                  onPremiumClick={handlePremiumClick}
+                />
+              ) : (
+                <MapComponent 
+                  data={allFilteredData} 
+                  selectedLocation={selectedLocation} 
+                  userLocation={userLocation}
+                  onPremiumClick={handlePremiumClick}
+                  isSubscribed={true}
+                />
+              )}
             </ComponentErrorBoundary>
           </div>
           

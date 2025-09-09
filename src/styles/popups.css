@@ -226,6 +226,7 @@
   text-decoration: none;
   font-weight: 600;
   font-size: 14px;
+  color: #FFFFFF !important;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;

@@ -1,0 +1,116 @@
+/* 🎯 TEXT STRIP MARKERS - Ultra Minimal & Clean */
+
+/* CSS Variables for Text Strips */
+:root {
+  --job-dark: #008B8B;  /* Koyu turkuaz */
+  --cv-dark: #CC6600;   /* Koyu turuncu */
+  --text-white: #FFFFFF;
+  --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.15);
+  --shadow-hover: 0 3px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* 📝 Text Strip Container */
+.text-strip-wrapper {
+  position: relative;
+  cursor: pointer;
+  z-index: 100;
+  
+  /* Performance Optimizations */
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  
+  /* Smooth Transitions */
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.text-strip-wrapper:hover {
+  transform: scale(1.05) translateZ(0);
+  z-index: 1000 !important;
+}
+
+/* 🎨 Text Strip Styles */
+.text-strip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-light);
+  
+  /* GPU Acceleration */
+  transform: translateZ(0);
+  transition: all 0.2s ease-out;
+}
+
+.text-strip:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-1px) translateZ(0);
+}
+
+/* Job Strip - Koyu Yeşil */
+.text-strip.job {
+  background: var(--job-dark);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* CV Strip - Koyu Turuncu */
+.text-strip.cv {
+  background: var(--cv-dark);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Strip Text */
+.strip-text {
+  color: var(--text-white);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
+  /* Enhanced Readability */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* 📱 Responsive Design */
+@media (max-width: 768px) {
+  .text-strip-wrapper {
+    transform: scale(0.9) translateZ(0);
+  }
+  
+  .strip-text {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .text-strip-wrapper {
+    transform: scale(0.8) translateZ(0);
+  }
+  
+  .strip-text {
+    font-size: 9px;
+  }
+}
+
+/* 🚀 Performance Optimizations */
+.text-strip-wrapper * {
+  pointer-events: none;
+}
+
+.text-strip-wrapper {
+  pointer-events: auto;
+}
+
+/* GPU Layer Creation */
+.text-strip {
+  transform: translateZ(0);
+  will-change: transform;
+}

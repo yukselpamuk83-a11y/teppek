@@ -13,10 +13,10 @@ export default async function handler(req, res) {
 
         console.log('✅ Supabase client initialized');
 
-        // Fetch all jobs with optimized fields
+        // Fetch minimal fields for markers and list only - popup data from DB
         const { data: jobs, error } = await supabase
             .from('jobs')
-            .select('id, title, lat, lon, company, city, country, salary_min, salary_max, currency, url, source, remote, icon_type');
+            .select('id, title, lat, lon, company, city, country, source, icon_type');
 
         if (error) throw error;
 
@@ -34,12 +34,7 @@ export default async function handler(req, res) {
                     company: job.company,
                     city: job.city,
                     country: job.country,
-                    salary_min: job.salary_min,
-                    salary_max: job.salary_max,
-                    currency: job.currency,
-                    url: job.url,
                     source: job.source,
-                    remote: job.remote,
                     icon_type: job.icon_type || 'job',
                     type: 'job'
                 }

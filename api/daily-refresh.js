@@ -17,16 +17,34 @@ function getAdzunaKeys() {
   return keys;
 }
 
-const COUNTRIES = ['gb', 'us', 'de', 'fr', 'ca', 'au', 'nl', 'it', 'es', 'sg', 'at', 'be', 'br', 'ch', 'in', 'mx', 'nz', 'pl', 'ru', 'za'];
+const COUNTRIES = ['at', 'au', 'be', 'br', 'ca', 'ch', 'de', 'es', 'fr', 'gb', 'in', 'it', 'mx', 'nl', 'nz', 'pl', 'sg', 'us', 'za'];
 
-// Son 24 saatin ilanlarını çek
+// Currency mapping function
+function getCurrencyByCountry(country) {
+  const currencyMap = {
+    'at': 'EUR', 'au': 'AUD', 'be': 'EUR', 'br': 'BRL', 'ca': 'CAD',
+    'ch': 'CHF', 'de': 'EUR', 'es': 'EUR', 'fr': 'EUR', 'gb': 'GBP',
+    'in': 'INR', 'it': 'EUR', 'mx': 'MXN', 'nl': 'EUR', 'nz': 'NZD',
+    'pl': 'PLN', 'sg': 'SGD', 'us': 'USD', 'za': 'ZAR'
+  };
+  return currencyMap[country.toLowerCase()] || 'USD';
+}
+
+// Son 24 saatin ilanlarını çek - Fixed API endpoint
 async function fetchDailyJobs(country, apiKey) {
-  const url = `https://api.adzuna.com/v1/api/jobs/${country}/search/1?` +
-    `app_id=${apiKey.app_id}&app_key=${apiKey.app_key}` +
-    `&results_per_page=50&sort_by=date&max_days_old=1` + // Sadece son 24 saat
-    `&salary_min=1&salary_max=999999` +
-    `&what_exclude=internship%20volunteer%20unpaid%20commission%20freelance` +
-    `&content-type=application/json`;
+  const params = new URLSearchParams({
+    app_id: apiKey.app_id,
+    app_key: apiKey.app_key,
+    results_per_page: '50',
+    sort_by: 'date',
+    max_days_old: '1', // Sadece son 24 saat
+    salary_min: '7', // Minimum $7
+    what_exclude: 'internship volunteer unpaid',
+    full_time: '1',
+    'content-type': 'application/json'
+  });
+  
+  const url = `http://api.adzuna.com/v1/api/jobs/${country}/search/1?${params}`;
   
   const response = await fetch(url);
   if (!response.ok) {
@@ -36,13 +54,22 @@ async function fetchDailyJobs(country, apiKey) {
   return response.json();
 }
 
-// Database'e kaydet (aynı logic)
+// Database'e kaydet - Enhanced validation
 async function saveJobToDatabase(client, job, country) {
-  if (!job.id || !job.title || !job.redirect_url || !job.latitude || !job.longitude || !job.salary_min || !job.salary_max) {
+  if (!job.id || !job.title || !job.redirect_url || !job.latitude || !job.longitude || 
+      (!job.salary_min && !job.salary_max)) {
     return false;
   }
   
-  if (job.title.length < 5 || job.title.toLowerCase().includes('earn money') || job.title.toLowerCase().includes('work from home $')) {
+  // Enhanced validation
+  const salaryMin = job.salary_min || 0;
+  const salaryMax = job.salary_max || 0;
+  
+  if (salaryMin < 7 && salaryMax < 7) {
+    return false;
+  }
+  
+  if (job.title.length < 3 || job.title.length > 500) {
     return false;
   }
   
@@ -50,14 +77,15 @@ async function saveJobToDatabase(client, job, country) {
     INSERT INTO jobs (
       adzuna_id, title, company, country, city, 
       lat, lon, url, salary_min, salary_max, currency, remote, source,
-      icon_type
+      icon_type, description
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
     ) ON CONFLICT (adzuna_id) DO UPDATE SET
       title = EXCLUDED.title,
       company = EXCLUDED.company,
       salary_min = EXCLUDED.salary_min,
       salary_max = EXCLUDED.salary_max,
+      description = EXCLUDED.description,
       created_at = NOW()
     RETURNING id;
   `;
@@ -72,60 +100,43 @@ async function saveJobToDatabase(client, job, country) {
   
   const isRemote = job.title.toLowerCase().includes('remote') || job.title.toLowerCase().includes('work from home');
   
-  // HTML generation removed - optimized table structure  
-  // Frontend generates marker and popup HTML dynamically
-  
-  const address = `${city || ''}, ${country.toUpperCase()}`.replace(/^,\\s*|,\\s*$/g, '');
-    <div class="custom-popup-container adzuna-popup">
-      <div class="popup-header">
-        <div class="popup-title">${job.title}</div>
-        <div class="popup-source">
-          <i class="fa-solid fa-globe"></i>
-          Adzuna
-        </div>
-      </div>
-      
-      <div class="popup-salary adzuna-salary">
-        <i class="fa-solid fa-dollar-sign"></i>
-        ${job.salary_currency || 'USD'} ${Math.round(job.salary_min)?.toLocaleString() || '?'} - ${Math.round(job.salary_max)?.toLocaleString() || '?'}
-      </div>
-      
-      <div class="popup-details">
-        <div class="popup-company">
-          <i class="fa-solid fa-building"></i>
-          ${job.company?.display_name || 'Şirket bilgisi mevcut değil'}
-        </div>
-        <div class="popup-location">
-          <i class="fa-solid fa-location-dot"></i>
-          ${address}
-        </div>
-      </div>
-      
-      <a href="${job.redirect_url}" target="_blank" rel="noopener noreferrer" class="popup-apply-btn adzuna-apply">
-        <i class="fa-solid fa-external-link"></i>
-        İlana Başvur
-      </a>
-      
-      <div class="popup-footer">
-        <small>Powered by Adzuna API</small>
-      </div>
-    </div>`;
+  // Enhanced description processing for popup
+  let description = null;
+  if (job.description) {
+    description = job.description
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
+      .replace(/&amp;/g, '&')  // Replace &amp; with &
+      .replace(/&lt;/g, '<')   // Replace &lt; with <
+      .replace(/&gt;/g, '>')   // Replace &gt; with >
+      .replace(/\s+/g, ' ')    // Replace multiple spaces with single space
+      .trim();
+    
+    if (description.length > 2000) {
+      description = description.substring(0, 2000).trim();
+    }
+    
+    if (description.length < 50) {
+      description = null;
+    }
+  }
   
   const values = [
     job.id.toString(),
-    job.title.substring(0, 200).trim(),
-    job.company?.display_name?.substring(0, 100) || null,
+    job.title.substring(0, 500).trim(), // Match DB schema
+    job.company?.display_name?.substring(0, 200) || null, // Match DB schema
     country.toUpperCase(),
-    city?.substring(0, 50) || null,
+    city?.substring(0, 100) || null, // Match DB schema
     parseFloat(job.latitude),
     parseFloat(job.longitude),
     job.redirect_url,
-    Math.round(job.salary_min),
-    Math.round(job.salary_max),
-    job.salary_currency?.substring(0, 3) || 'USD',
+    Math.round(salaryMin),
+    Math.round(salaryMax),
+    job.salary_currency?.substring(0, 3) || getCurrencyByCountry(country),
     isRemote,
     'adzuna',
-    'job'
+    'job',
+    description
   ];
   
   try {

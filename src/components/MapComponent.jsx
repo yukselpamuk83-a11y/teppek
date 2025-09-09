@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { debounce } from '../utils/debounce'
 import { createModernPopup } from '../utils/modernPopupGenerator'
 import { createPremiumPopup } from '../utils/popupGenerator'
+import '../styles/pure-css-markers.css' // 🎯 Pure CSS marker styles - Ultra Performance
 
 // Leaflet global import - bu şekilde çalışacak
 let L
@@ -113,16 +114,36 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
             
                 try {
                     mapInstance.current = L.map(mapRef.current, {
+                        // 🚀 SMART PERFORMANCE: Optimize edilmiş harita ayarları
                         maxBounds: [[-90, -180], [90, 180]], // Dünya sınırları
                         maxBoundsViscosity: 1.0,              // Sert sınır
-                        minZoom: 2,                           // Minimum zoom
-                        maxZoom: 18                           // Maximum zoom
-                    }).setView([lat, lng], 10)
+                        minZoom: 3,                           // Min zoom artırıldı (gereksiz dünya görünümü yok)
+                        maxZoom: 18,                          // Max zoom artırıldı (sokak detayları için)
+                        zoomControl: true,
+                        attributionControl: true,
+                        // VIEWPORT PERFORMANCE
+                        preferCanvas: false,                   // DOM daha hızlı marker'lar için
+                        renderer: L.canvas(),                 // Canvas renderer
+                        // LOADING OPTIMIZATION
+                        fadeAnimation: false,                 // Animasyon yok = hızlı
+                        zoomAnimation: true,                  // Sadece zoom animasyonu
+                        markerZoomAnimation: false            // Marker animasyon yok
+                    }).setView([lat, lng], 12) // Zoom artırıldı sokaklar için
             
                     const initialLayer = L.tileLayer(tileProviders.street.url, {
                         attribution: tileProviders.street.attribution,
                         noWrap: true,
-                        bounds: [[-90, -180], [90, 180]]      // Tile sınırları
+                        bounds: [[-90, -180], [90, 180]],     // Tile sınırları
+                        // 🚀 VIEWPORT-ONLY LOADING OPTIMIZATION
+                        maxZoom: 18,                          // Tile max zoom sınırı sokaklar için
+                        tileSize: 256,                        // Standard tile boyutu
+                        keepBuffer: 1,                        // Minimal buffer (default: 2)
+                        updateWhenZooming: false,             // Zoom sırasında update yok
+                        updateWhenIdle: true,                 // Sadece durduğunda update
+                        // NETWORK OPTIMIZATION  
+                        crossOrigin: true,                    // CORS optimization
+                        // CACHE OPTIMIZATION
+                        detectRetina: false                   // Retina detection off = faster
                     }).addTo(mapInstance.current)
                     setTileLayer(initialLayer)
 
@@ -243,66 +264,63 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
         
         console.log('🔄 MapComponent: Creating markers for', data.length, 'items')
         
-        // Cluster group'u tamamen temizle ve yeniden oluştur
+        // Cluster group'u tamamen temizle ve yeniden oluştur (kümeleme için gerekli)
         if (mapInstance.current) {
             mapInstance.current.removeLayer(clusterGroupRef.current)
             clusterGroupRef.current = L.markerClusterGroup({
-                maxClusterRadius: 50,
+                maxClusterRadius: 60, // Biraz daha büyük cluster - performans için
                 spiderfyOnMaxZoom: true,
-                spiderfyDistanceMultiplier: 3,     // 3x uzun mesafe
-                spiderfyOnEveryZoom: true,         // Zoom 17'de de spiderfy aktif
+                spiderfyDistanceMultiplier: 2,     // Daha kısa mesafe - minimal dots için
+                spiderfyOnEveryZoom: false,        // Sadece max zoom'da - performans
                 showCoverageOnHover: false,
-                zoomToBoundsOnClick: true
+                zoomToBoundsOnClick: true,
+                // 🚀 PERFORMANCE: Cluster animasyonlarını hızlandır
+                animateAddingMarkers: false,       // Animasyon yok
+                removeOutsideVisibleBounds: true   // Görünmeyen marker'ları kaldır
             })
             mapInstance.current.addLayer(clusterGroupRef.current)
         }
         
         // processedData'dan marker oluştur
         data.forEach((item, index) => {
-            console.log(`📍 Creating marker ${index + 1}:`, item.title, 'at', item.location)
+            // console.log(`📍 Creating marker ${index + 1}:`, item.title, 'at', item.location) // Performance: Log kaldırıldı
             // Development modunda tüm ilanları göster
             const isDevelopment = import.meta.env.DEV
             // Tüm veriyi açık göster - premium kaldırıldı
             const canView = true
             
-            // Basit marker HTML oluştur
-            const iconClass = item.type === 'job' ? 'fa-briefcase' : 'fa-user'
-            const iconColor = item.type === 'job' ? '#0097A7' : '#FB8C00'
-            const markerHtml = `<div class="marker-container ${item.isSponsored ? 'sponsored-marker' : ''}">
-                <div class="icon-wrapper" style="border-color: ${item.isSponsored ? '#FBBF24' : iconColor};">
-                    ${item.isSponsored ? '<i class="fa-solid fa-star absolute -top-2 -right-2 text-yellow-400 text-xl"></i>' : ''}
-                    <i class="fa-solid ${iconClass}" style="color: ${iconColor};"></i>
+            // 🎯 PURE CSS MARKERS: Zero JS, Ultra Performance, Perfect Styling
+            const fullTitle = item.title || 'Başlık Belirtilmemiş'
+            
+            // Tek satırlı metin şeridi - dinamik genişlik (büyük yazı için)
+            const textWidth = Math.max(140, Math.min(220, fullTitle.length * 8)) // 8px per character
+            const markerHeight = 28
+            
+            // Koyu renkli metin şeridi HTML
+            const cssMarkerHtml = `
+                <div class="text-strip ${item.type}" 
+                     style="width: ${textWidth}px; height: ${markerHeight}px;"
+                     title="${item.type === 'job' ? 'İş İlanı' : 'CV'}: ${item.title}">
+                    <span class="strip-text">${fullTitle}</span>
                 </div>
-                <div class="marker-label">${item.title}</div>
-            </div>`
+            `
             
             const customIcon = L.divIcon({ 
-                html: markerHtml, 
-                className: '', 
-                iconSize: [120, 90], 
-                iconAnchor: [60, 26] 
+                html: cssMarkerHtml, 
+                className: 'text-strip-wrapper', 
+                iconSize: [textWidth, markerHeight],
+                iconAnchor: [textWidth/2, markerHeight/2] // Center alignment
             })
             
             const leafletMarker = L.marker([item.location.lat, item.location.lng], { icon: customIcon })
             
-            // Debug: item içeriğini kontrol et
-            if (index === 0) {
-                console.log('🔍 MapComponent - İlk item verisi:', {
-                    title: item.title,
-                    city: item.city,
-                    country: item.country,
-                    address: item.address,
-                    source: item.source,
-                    allFields: Object.keys(item)
-                })
-            }
+            // Debug log kaldırıldı - performans optimizasyonu
             
-            // Modern popup sistemi - bucket-first data with modern design
+            // Modern popup sistem - performant ve simple
             if (canView) {
-                // Async popup loading with modern design
-                leafletMarker.bindPopup('<div class="popup-loading"><div class="popup-loading-spinner"></div>Yükleniyor...</div>')
+                // Async popup loading with full data
+                leafletMarker.bindPopup('<div class="popup-loading">🔄 Yükleniyor...</div>')
                 
-                // Load popup content asynchronously
                 leafletMarker.on('click', async function(e) {
                     try {
                         const modernPopupContent = await createModernPopup(item)
@@ -310,13 +328,10 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
                         this.openPopup()
                     } catch (error) {
                         console.error('Error loading popup:', error)
-                        // Fallback to basic popup
                         this.setPopupContent(`
-                            <div class="modern-popup-container bg-gray-50 border-gray-200 border-2 rounded-xl shadow-lg max-w-sm p-4">
-                                <h3 class="text-lg font-semibold mb-2">${item.title || 'Başlık Yok'}</h3>
-                                <div class="text-sm text-gray-600">${item.company || 'Şirket Belirtilmemiş'}</div>
-                                <div class="text-sm text-gray-600">${item.city || 'Konum Belirtilmemiş'}</div>
-                                <div class="mt-2 text-xs text-red-500">Popup yüklenemedi</div>
+                            <div class="error-popup">
+                                <h3>${item.title || 'İlan Başlığı'}</h3>
+                                <div>Popup yüklenemedi</div>
                             </div>
                         `)
                         this.openPopup()

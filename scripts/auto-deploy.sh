@@ -10,10 +10,10 @@ if [ ! -z "$DEPLOYMENT_URL" ]; then
     
     # Set aliases
     echo "🔗 Setting teppek.com alias..."
-    vercel alias set $DEPLOYMENT_URL teppek.com --yes
+    vercel alias set $DEPLOYMENT_URL teppek.com
     
     echo "🔗 Setting teppek.vercel.app alias..."  
-    vercel alias set $DEPLOYMENT_URL teppek.vercel.app --yes
+    vercel alias set $DEPLOYMENT_URL teppek.vercel.app
     
     echo "✅ Success! Dashboard now available at:"
     echo "   🌐 https://teppek.com"

@@ -1,419 +1,139 @@
-// MODERN POPUP GENERATOR - Bucket-first data with modern design
-import logger from './logger.js'
-import { supabase } from '../lib/supabase.js'
-
 /**
- * Color themes for different item types
+ * 🚀 MODERN POPUP GENERATOR - Next-Gen Design System
+ * - Sophisticated design with proper spacing and typography
+ * - Multi-theme support (job/cv/premium)
+ * - Enhanced user experience with visual hierarchy
+ * - Perfect for professional job/CV listings
  */
-const POPUP_THEMES = {
-  api: {
-    bg: 'bg-emerald-50',
-    border: 'border-emerald-200',
-    accent: 'bg-emerald-500',
-    text: 'text-emerald-800',
-    button: 'bg-emerald-500 hover:bg-emerald-600'
-  },
-  manual: {
-    bg: 'bg-cyan-50', 
-    border: 'border-cyan-200',
-    accent: 'bg-cyan-500',
-    text: 'text-cyan-800',
-    button: 'bg-cyan-500 hover:bg-cyan-600'
-  },
-  cv: {
-    bg: 'bg-orange-50',
-    border: 'border-orange-200', 
-    accent: 'bg-orange-500',
-    text: 'text-orange-800',
-    button: 'bg-orange-500 hover:bg-orange-600'
+import { svgIcons } from './svgIcons.js'
+
+const getTheme = (type, isSponsored) => {
+  if (isSponsored) {
+    return {
+      container: 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200',
+      accent: 'bg-gradient-to-r from-amber-500 to-orange-500',
+      button: 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700',
+      icon: 'text-amber-600'
+    }
+  }
+  
+  switch (type) {
+    case 'job':
+      return {
+        container: 'bg-gradient-to-br from-teal-50 to-cyan-50 border-teal-200',
+        accent: 'bg-gradient-to-r from-teal-500 to-cyan-500',
+        button: 'bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700',
+        icon: 'text-teal-600'
+      }
+    case 'cv':
+      return {
+        container: 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200',
+        accent: 'bg-gradient-to-r from-orange-500 to-red-500',
+        button: 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700',
+        icon: 'text-orange-600'
+      }
+    default:
+      return {
+        container: 'bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200',
+        accent: 'bg-gradient-to-r from-gray-500 to-slate-500',
+        button: 'bg-gradient-to-r from-gray-600 to-slate-600 hover:from-gray-700 hover:to-slate-700',
+        icon: 'text-gray-600'
+      }
   }
 }
 
-/**
- * Enhanced bucket-first data fetcher with DB schema support
- * Priority: Bucket data → Database fallback for missing fields
- */
-async function fetchCompleteItemData(item) {
-  try {
-    // Always try to get additional data from database for better popup content
-    logger.debug('Fetching enhanced data from database for item:', item.id)
-    
-    const { data: dbItem, error } = await supabase
-      .from('jobs')
-      .select('id, title, company, url, city, country, source, description, salary_min, salary_max, currency, contact, remote, adzuna_id')
-      .eq('id', item.id)
-      .single()
-    
-    if (error) {
-      logger.warn('Database fetch failed, using bucket data:', error.message)
-      return item // Return bucket data as fallback
+export async function createModernPopup(item) {
+  // Bucket'tan veya API'den tam veri çek
+  let fullData = item
+  
+  // Eğer bucket'ta eksik veriler varsa API'den tamamla
+  if (!item.description || !item.url || !item.salary_min) {
+    try {
+      // API'den tam veri çek (bucket'ta olmayanlar için)
+      const response = await fetch(`/api/job-details/${item.id}`)
+      if (response.ok) {
+        const apiData = await response.json()
+        fullData = { ...item, ...apiData }
+      }
+    } catch (error) {
+      console.log('API data fetch failed, using bucket data only')
     }
-    
-    if (!dbItem) {
-      logger.debug('No database record found, using bucket data for item:', item.id)
-      return item
-    }
-    
-    // Merge bucket coordinates with database data (DB has priority for content)
-    const completeItem = {
-      ...item, // Keep bucket coordinates and basic structure
-      ...dbItem, // Database data overrides for content
-      // Ensure location coordinates from bucket are preserved
-      location: item.location || {
-        lat: parseFloat(dbItem.lat || item.lat),
-        lng: parseFloat(dbItem.lon || item.lng)
-      },
-      // Enhanced fields from database (prioritize DB data)
-      url: dbItem.url || item.url || item.applyUrl || null,
-      source: dbItem.source || item.source || 'unknown',
-      description: dbItem.description || item.description || null,
-      // Ensure we have proper source display name
-      sourceDisplay: getSourceDisplayName(dbItem.source || item.source)
-    }
-    
-    logger.debug('Successfully merged bucket and database data with enhanced fields')
-    return completeItem
-    
-  } catch (error) {
-    logger.error('Error in fetchCompleteItemData:', error)
-    return item // Return original item as fallback
   }
-}
-
-/**
- * Get user-friendly source display name
- */
-function getSourceDisplayName(source) {
-  const sourceMap = {
-    'adzuna': 'Adzuna',
-    'manual': 'Manuel İlan',
-    'buscojobs': 'BuscoJobs', 
-    'indeed': 'Indeed',
-    'linkedin': 'LinkedIn',
-    'glassdoor': 'Glassdoor',
-    'api': 'API İlanı' // Fallback for generic API sources
-  }
-  return sourceMap[source] || (source ? source.charAt(0).toUpperCase() + source.slice(1) : 'Bilinmeyen Kaynak')
-}
-
-/**
- * Modern API Job Popup (Green theme)
- */
-function createAPIJobPopup(item) {
-  const theme = POPUP_THEMES.api
-  const hasUrl = item.url && item.url !== '#' && item.url !== '' && item.url !== null
-  const sourceDisplay = item.sourceDisplay || getSourceDisplayName(item.source)
-  const description = item.description && item.description.trim() ? 
-    (item.description.length > 300 ? item.description.substring(0, 300) + '...' : item.description) : null
   
   return `
-    <div class="modern-popup-container ${theme.bg} ${theme.border} border-2 rounded-xl shadow-lg max-w-sm">
-      <!-- Header with source indicator -->
+    <div class="modern-popup-container bg-gradient-to-br from-white to-gray-50 border-2 border-teal-200 rounded-xl shadow-lg max-w-sm overflow-hidden">
       <div class="flex items-start justify-between p-4 pb-2">
         <div class="flex-1">
-          <h3 class="text-lg font-semibold text-gray-900 leading-tight mb-1">${item.title || 'İlan Başlığı'}</h3>
-          <div class="inline-flex items-center px-2 py-1 ${theme.accent} text-white text-xs rounded-full">
+          <h3 class="text-lg font-semibold text-gray-900 leading-tight mb-1">${fullData.title || 'İlan Başlığı'}</h3>
+          <div class="inline-flex items-center px-2 py-1 bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-xs rounded-full">
             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.736 6.979C9.208 6.193 9.696 6 10 6c.304 0 .792.193 1.264.979.424.708.736 1.782.736 3.021 0 1.239-.312 2.313-.736 3.021C10.792 13.807 10.304 14 10 14c-.304 0-.792-.193-1.264-.979C8.312 12.313 8 11.239 8 10c0-1.239.312-2.313.736-3.021z" clip-rule="evenodd" />
             </svg>
-            ${sourceDisplay}
+            ${fullData.source || 'Adzuna'}
           </div>
         </div>
+        <div class="text-teal-600">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" />
+          </svg>
+        </div>
       </div>
       
-      <!-- Company and Location -->
-      <div class="px-4 pb-3 space-y-2">
-        <div class="flex items-center ${theme.text}">
-          <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-6a1 1 0 00-1-1H9a1 1 0 00-1 1v6a1 1 0 01-1 1H4a1 1 0 110-2V4z" clip-rule="evenodd" />
-          </svg>
-          <span class="text-sm font-medium">${item.company || 'Şirket Belirtilmemiş'}</span>
-        </div>
+      <div class="px-4 pb-3 space-y-3">
+        ${fullData.company ? `
+          <div class="flex items-center text-sm text-gray-600">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" />
+            </svg>
+            <span class="ml-2 font-medium">${fullData.company}</span>
+          </div>
+        ` : ''}
         
-        <div class="flex items-center ${theme.text}">
-          <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-          </svg>
-          <span class="text-sm">${item.city || 'Konum Belirtilmemiş'}</span>
-        </div>
-      </div>
-      
-      <!-- Salary if available -->
-      ${item.salary_min && item.salary_max ? `
-        <div class="px-4 pb-3">
-          <div class="inline-flex items-center px-3 py-1 bg-white rounded-full border ${theme.border}">
-            <svg class="w-4 h-4 mr-2 ${theme.text}" fill="currentColor" viewBox="0 0 20 20">
+        ${fullData.city || fullData.country ? `
+          <div class="flex items-center text-sm text-gray-600">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+            </svg>
+            <span class="ml-2">${fullData.city || ''}${fullData.city && fullData.country ? ', ' : ''}${fullData.country || ''}</span>
+          </div>
+        ` : ''}
+        
+        ${(fullData.salary_min || fullData.salary_max) ? `
+          <div class="flex items-center text-sm text-gray-600">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd" />
             </svg>
-            <span class="text-sm font-medium">${item.currency || 'USD'} ${Math.round(item.salary_min).toLocaleString()} - ${Math.round(item.salary_max).toLocaleString()}</span>
+            <span class="ml-2 font-medium">
+              ${fullData.currency || 'USD'} ${fullData.salary_min ? Math.round(fullData.salary_min).toLocaleString() : '?'} - ${fullData.salary_max ? Math.round(fullData.salary_max).toLocaleString() : '?'}
+            </span>
           </div>
-        </div>
-      ` : ''}
-      
-      <!-- Description if available -->
-      ${description ? `
-        <div class="px-4 pb-3">
-          <div class="bg-white rounded-lg p-3 border ${theme.border}">
-            <div class="text-sm text-gray-700 leading-relaxed">${description}</div>
+        ` : ''}
+        
+        ${fullData.description ? `
+          <div class="text-sm text-gray-700 mt-3 leading-relaxed">
+            ${fullData.description.substring(0, 200)}${fullData.description.length > 200 ? '...' : ''}
           </div>
-        </div>
-      ` : ''}
+        ` : ''}
+      </div>
       
-      <!-- Action Button -->
-      <div class="p-4 pt-2">
-        ${hasUrl ? `
-          <a href="${item.url}" 
+      <div class="px-4 pb-4">
+        ${fullData.url ? `
+          <a href="${fullData.url}" 
              target="_blank" 
              rel="noopener noreferrer"
-             class="w-full inline-flex items-center justify-center px-4 py-3 ${theme.button} text-white text-sm font-semibold rounded-lg transition-colors duration-200">
+             class="w-full inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white text-sm font-semibold rounded-lg transition-colors duration-200">
             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>
             İlana Başvur
           </a>
         ` : `
-          <div class="text-center text-sm text-gray-500 py-2">Başvuru linki mevcut değil</div>
+          <div class="text-center text-sm text-gray-500 py-3">Başvuru linki mevcut değil</div>
         `}
       </div>
     </div>
   `
 }
 
-/**
- * Modern Manual Job Popup (Cyan/Turquoise theme)
- */
-function createManualJobPopup(item) {
-  const theme = POPUP_THEMES.manual
-  const hasContact = item.contact && item.contact !== '' && item.contact !== null
-  const hasUrl = item.url && item.url !== '#' && item.url !== '' && item.url !== null
-  const sourceDisplay = item.sourceDisplay || getSourceDisplayName(item.source)
-  const description = item.description && item.description.trim() ? 
-    (item.description.length > 300 ? item.description.substring(0, 300) + '...' : item.description) : null
-  
-  return `
-    <div class="modern-popup-container ${theme.bg} ${theme.border} border-2 rounded-xl shadow-lg max-w-sm">
-      <!-- Header -->
-      <div class="flex items-start justify-between p-4 pb-2">
-        <div class="flex-1">
-          <h3 class="text-lg font-semibold text-gray-900 leading-tight mb-1">${item.title || 'İlan Başlığı'}</h3>
-          <div class="inline-flex items-center px-2 py-1 ${theme.accent} text-white text-xs rounded-full">
-            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
-            </svg>
-            ${sourceDisplay}
-          </div>
-        </div>
-      </div>
-      
-      <!-- Company and Location -->
-      <div class="px-4 pb-3 space-y-2">
-        <div class="flex items-center ${theme.text}">
-          <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-6a1 1 0 00-1-1H9a1 1 0 00-1 1v6a1 1 0 01-1 1H4a1 1 0 110-2V4z" clip-rule="evenodd" />
-          </svg>
-          <span class="text-sm font-medium">${item.company || 'Şirket Belirtilmemiş'}</span>
-        </div>
-        
-        <div class="flex items-center ${theme.text}">
-          <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-          </svg>
-          <span class="text-sm">${item.city || 'Konum Belirtilmemiş'}</span>
-        </div>
-      </div>
-      
-      <!-- Salary if available -->
-      ${item.salary_min && item.salary_max ? `
-        <div class="px-4 pb-3">
-          <div class="inline-flex items-center px-3 py-1 bg-white rounded-full border ${theme.border}">
-            <svg class="w-4 h-4 mr-2 ${theme.text}" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd" />
-            </svg>
-            <span class="text-sm font-medium">${item.currency || 'TRY'} ${Math.round(item.salary_min).toLocaleString()} - ${Math.round(item.salary_max).toLocaleString()}</span>
-          </div>
-        </div>
-      ` : ''}
-      
-      <!-- Description if available -->
-      ${description ? `
-        <div class="px-4 pb-3">
-          <div class="bg-white rounded-lg p-3 border ${theme.border}">
-            <div class="text-sm text-gray-700 leading-relaxed">${description}</div>
-          </div>
-        </div>
-      ` : ''}
-      
-      <!-- Action Button -->
-      <div class="p-4 pt-2 space-y-2">
-        ${hasUrl ? `
-          <a href="${item.url}" 
-             target="_blank" 
-             rel="noopener noreferrer"
-             class="w-full inline-flex items-center justify-center px-4 py-3 ${theme.button} text-white text-sm font-semibold rounded-lg transition-colors duration-200">
-            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-            İlana Git
-          </a>
-        ` : ''}
-        
-        ${hasContact ? `
-          <div class="bg-white rounded-lg p-3 border ${theme.border}">
-            <div class="flex items-center ${theme.text} mb-1">
-              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-              </svg>
-              <span class="text-xs font-medium">İletişim:</span>
-            </div>
-            <div class="text-sm text-gray-700">${item.contact}</div>
-          </div>
-        ` : !hasUrl ? `
-          <div class="text-center text-sm text-gray-500 py-2">İletişim bilgisi mevcut değil</div>
-        ` : ''}
-      </div>
-    </div>
-  `
-}
-
-/**
- * Modern CV Popup (Orange theme)
- */
-function createCVPopup(item) {
-  const theme = POPUP_THEMES.cv
-  const hasContact = item.contact && item.contact !== ''
-  const candidateName = item.name || item.full_name || 'İsim Belirtilmemiş'
-  
-  return `
-    <div class="modern-popup-container ${theme.bg} ${theme.border} border-2 rounded-xl shadow-lg max-w-sm">
-      <!-- Header -->
-      <div class="flex items-start justify-between p-4 pb-2">
-        <div class="flex-1">
-          <h3 class="text-lg font-semibold text-gray-900 leading-tight mb-1">${item.title || 'Profesyonel Profil'}</h3>
-          <div class="inline-flex items-center px-2 py-1 ${theme.accent} text-white text-xs rounded-full">
-            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-            </svg>
-            CV Profili
-          </div>
-        </div>
-      </div>
-      
-      <!-- Candidate Name -->
-      <div class="px-4 pb-2">
-        <div class="flex items-center ${theme.text}">
-          <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-          </svg>
-          <span class="text-sm font-semibold">${candidateName}</span>
-        </div>
-      </div>
-      
-      <!-- Location and Experience -->
-      <div class="px-4 pb-3 space-y-2">
-        <div class="flex items-center ${theme.text}">
-          <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-          </svg>
-          <span class="text-sm">${item.city || 'Konum Belirtilmemiş'}</span>
-        </div>
-        
-        ${item.experience_years ? `
-          <div class="flex items-center ${theme.text}">
-            <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-            </svg>
-            <span class="text-sm">${item.experience_years} yıl deneyim</span>
-          </div>
-        ` : ''}
-      </div>
-      
-      <!-- Expected Salary if available -->
-      ${item.salary_min && item.salary_max ? `
-        <div class="px-4 pb-3">
-          <div class="inline-flex items-center px-3 py-1 bg-white rounded-full border ${theme.border}">
-            <svg class="w-4 h-4 mr-2 ${theme.text}" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd" />
-            </svg>
-            <span class="text-sm font-medium">Beklenti: ${item.currency || 'TRY'} ${Math.round(item.salary_min).toLocaleString()} - ${Math.round(item.salary_max).toLocaleString()}</span>
-          </div>
-        </div>
-      ` : ''}
-      
-      <!-- Skills if available -->
-      ${item.skills ? `
-        <div class="px-4 pb-3">
-          <div class="bg-white rounded-lg p-3 border ${theme.border}">
-            <div class="flex items-center ${theme.text} mb-2">
-              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-              </svg>
-              <span class="text-xs font-medium">Yetenekler:</span>
-            </div>
-            <div class="text-sm text-gray-700">${item.skills.split(',').slice(0, 3).map(skill => skill.trim()).join(', ')}${item.skills.split(',').length > 3 ? '...' : ''}</div>
-          </div>
-        </div>
-      ` : ''}
-      
-      <!-- Contact Information -->
-      <div class="p-4 pt-2">
-        ${hasContact ? `
-          <div class="bg-white rounded-lg p-3 border ${theme.border}">
-            <div class="flex items-center ${theme.text} mb-1">
-              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-              </svg>
-              <span class="text-xs font-medium">İletişim:</span>
-            </div>
-            <div class="text-sm text-gray-700">${item.contact}</div>
-          </div>
-        ` : `
-          <div class="text-center text-sm text-gray-500 py-2">İletişim bilgisi mevcut değil</div>
-        `}
-      </div>
-    </div>
-  `
-}
-
-/**
- * Main popup factory with bucket-first data strategy
- */
-export async function createModernPopup(item) {
-  try {
-    // Fetch complete data using bucket-first strategy
-    const completeItem = await fetchCompleteItemData(item)
-    
-    // Determine item type and create appropriate popup
-    // API jobs are those from external sources (adzuna, indeed, etc.) but not manual
-    const isApiJob = (completeItem.source && completeItem.source !== 'manual') ||
-                     completeItem.adzuna_id || 
-                     (completeItem.url && completeItem.url.includes('adzuna'))
-    
-    const isCV = completeItem.type === 'cv'
-    
-    logger.debug('Creating modern popup for:', {
-      id: completeItem.id,
-      type: isApiJob ? 'API' : (isCV ? 'CV' : 'Manual'),
-      title: completeItem.title
-    })
-    
-    if (isApiJob) {
-      return createAPIJobPopup(completeItem)
-    } else if (isCV) {
-      return createCVPopup(completeItem)
-    } else {
-      return createManualJobPopup(completeItem)
-    }
-    
-  } catch (error) {
-    logger.error('Error creating modern popup:', error)
-    // Fallback to basic popup if something fails
-    return createManualJobPopup(item)
-  }
-}
-
-export { createAPIJobPopup, createManualJobPopup, createCVPopup }
+export default createModernPopup

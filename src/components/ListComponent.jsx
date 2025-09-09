@@ -1,6 +1,6 @@
 import { memo, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getDistance } from '../utils/distance'
+// import { getDistance } from '../utils/distance' // MESAFE HESAPLAMASI KALDIRILDI
 import logger from '../utils/logger.js'
 
 // Action SVG Icons
@@ -34,11 +34,8 @@ const VirtualJobRow = memo(({ index, style, data }) => {
     const { items, userLocation, onRowClick, isSubscribed, onPremiumClick, onEdit, onDelete, onReport } = data
     const item = items[index]
     
-    // Sadece görünen kayıtlar için mesafe hesapla - performans optimizasyonu
-    const distance = useMemo(() => {
-        if (!userLocation || !item.location) return 0
-        return getDistance(userLocation.lat, userLocation.lng, item.location.lat, item.location.lng)
-    }, [userLocation, item.location])
+    // Mesafe hesaplamasi kaldırıldı - performans optimizasyonu
+    // const distance = 0 // Kullanılmıyor artık
     // Tüm veriyi açık göster - premium kaldırıldı
     const canView = true
     
@@ -81,24 +78,17 @@ const VirtualJobRow = memo(({ index, style, data }) => {
                 )}
             </div>
             
-            {/* Uzaklık kolonu */}
-            <div className="w-20 px-3 py-3 text-right flex-shrink-0">
-                <span className={`text-sm font-medium text-gray-700 ${
-                    !canView && 'blur-sm'
-                }`}>
-                    {distance.toFixed(1)} km
-                </span>
-            </div>
+            {/* Uzaklık kolonu kaldırıldı - performans optimizasyonu */}
             
-            {/* Konum kolonu */}
-            <div className="w-32 px-3 py-3 flex-shrink-0">
+            {/* Konum kolonu - genişletildi */}
+            <div className="w-40 px-3 py-3 flex-shrink-0">
                 <span className="text-xs text-gray-600 truncate block">
                     {item.address}
                 </span>
             </div>
             
-            {/* Aksiyonlar kolonu */}
-            <div className="w-32 px-3 py-3 flex-shrink-0">
+            {/* Aksiyonlar kolonu - genişletildi */}
+            <div className="w-36 px-3 py-3 flex-shrink-0">
                 <div className="flex gap-1 items-center">
                     {/* Contact button for jobs with contact info */}
                     {item.type === 'job' && !item.isOwner && canView && item.contact && (
@@ -202,9 +192,9 @@ function ListComponent({ data, onRowClick, isSubscribed, userLocation, onPremium
             <div className="border-b bg-gray-100 flex items-center text-sm font-semibold text-gray-600">
                 <div className="w-24 px-3 py-3 flex-shrink-0">{t('list.type')}</div>
                 <div className="flex-grow px-3 py-3 min-w-0">{t('list.titlePosition')}</div>
-                <div className="w-20 px-3 py-3 text-right flex-shrink-0">{t('list.distance')}</div>
-                <div className="w-32 px-3 py-3 flex-shrink-0">{t('list.location')}</div>
-                <div className="w-32 px-3 py-3 flex-shrink-0">{t('list.actions')}</div>
+                {/* Mesafe kolonu kaldırıldı */}
+                <div className="w-40 px-3 py-3 flex-shrink-0">{t('list.location')}</div>
+                <div className="w-36 px-3 py-3 flex-shrink-0">{t('list.actions')}</div>
             </div>
             
             {/* Normal list - Ana sayfa scroll kullan */}

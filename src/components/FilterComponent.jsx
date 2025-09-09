@@ -14,13 +14,13 @@ const FilterComponent = memo(({ onFilterChange, setCurrentPage, isSubscribed, on
     }, [localFilterType, localKeyword, onFilterChange, setCurrentPage])
 
     const handleClear = useCallback(() => {
-        logger.debug('🧹 TEMIZLE - Cache\'den ilk veri yükleniyor')
+        logger.debug('🧹 TEMIZLE - Filtreleri sıfırlıyor (bucket verisi memory\'de)')
         setLocalKeyword('')
         setLocalFilterType('all')
         setCurrentPage(1)
         
-        // İlk açılışta gelen DB verisini restore et
-        onFilterChange({ type: 'all', keyword: '', restoreInitialData: true })
+        // Sadece filtreleri sıfırla - bucket verisi zaten memory'de
+        onFilterChange({ type: 'all', keyword: '' })
     }, [onFilterChange, setCurrentPage])
 
     return (
