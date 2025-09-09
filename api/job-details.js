@@ -22,22 +22,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Gerçek database'den tüm gerekli veri çek
+    // Sadece popup için gerekli field'ları çek
     const { data, error } = await supabase
       .from('jobs')
       .select(`
         id, title, company, 
         description, 
         salary_min, salary_max, currency, 
-        url, source, remote,
-        city, country,
-        created_at, updated_at,
-        adzuna_id,
-        type,
-        contact,
-        skills,
-        experience_years,
-        name, full_name
+        url,
+        city, country
       `)
       .eq('id', parseInt(id))
       .single();
@@ -60,22 +53,18 @@ export default async function handler(req, res) {
       hasLocation: !!(data.city || data.country)
     });
 
-    // Tüm field'ları döndür
+    // Sadece istenen field'ları döndür: maaş, link, açıklama, şehir, ülke
     res.status(200).json({
       success: true,
-      ...data, // Tüm data'yı direkt döndür
-      // Legacy field mapping (eski popup'lar için)
+      title: data.title || 'İlan Başlığı',
+      company: data.company || '',
       description: data.description || '',
       salary_min: data.salary_min,
       salary_max: data.salary_max, 
       currency: data.currency || 'USD',
       url: data.url || '',
-      source: data.source || 'manual',
-      remote: data.remote || false,
       city: data.city || '',
-      country: data.country || '',
-      company: data.company || '',
-      title: data.title || 'İlan Başlığı'
+      country: data.country || ''
     });
 
   } catch (error) {
