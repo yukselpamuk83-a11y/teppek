@@ -368,6 +368,17 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
             {/* Kontrol paneli - Sol alt köşe */}
             <div className="absolute bottom-4 left-4 z-[1000] flex flex-col gap-2">
                 <button 
+                    onClick={() => {
+                        if (mapInstance.current) {
+                            // Dünya görünümü - minimum zoom level
+                            mapInstance.current.setView([20, 0], 2)
+                        }
+                    }} 
+                    className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
+                >
+                    🌍 All World
+                </button>
+                <button 
                     onClick={() => mapInstance.current && userLocation && mapInstance.current.setView([userLocation?.lat || 41.01, userLocation?.lng || 28.97], 14)} 
                     className="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg shadow-lg hover:bg-green-700 transition-colors"
                 >
