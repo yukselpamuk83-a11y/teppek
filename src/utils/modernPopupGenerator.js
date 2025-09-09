@@ -25,11 +25,9 @@ export async function createModernPopup(item) {
   if (needsApiData) {
     console.log('🌐 Fetching additional data from API for item:', item.id)
     try {
-      // Farklı API endpoint'leri dene
+      // Sadece çalışan endpoint kullan
       const endpoints = [
-        `/api/job-details/${item.id}`,
-        `/api/jobs/${item.id}`,
-        `/api/adzuna-job/${item.id}`
+        `/api/job-details?id=${item.id}`
       ]
       
       for (const endpoint of endpoints) {
