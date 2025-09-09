@@ -30,45 +30,48 @@ const POPUP_THEMES = {
 }
 
 /**
- * Bucket-first data fetcher
- * Priority: Bucket data → Database fallback
+ * Enhanced bucket-first data fetcher with DB schema support
+ * Priority: Bucket data → Database fallback for missing fields
  */
 async function fetchCompleteItemData(item) {
   try {
-    // First check if we already have complete data from bucket
-    const hasCompleteData = item.title && item.company && item.city && (item.url || item.contact)
-    
-    if (hasCompleteData) {
-      logger.debug('Using complete bucket data for item:', item.id)
-      return item
-    }
-    
-    // Fallback to database if bucket data is incomplete
-    logger.debug('Fetching additional data from database for item:', item.id)
+    // Always try to get additional data from database for better popup content
+    logger.debug('Fetching enhanced data from database for item:', item.id)
     
     const { data: dbItem, error } = await supabase
-      .from('jobs') // or appropriate table
-      .select('*')
+      .from('jobs')
+      .select('id, title, company, url, city, country, source, description, salary_min, salary_max, currency, contact, remote, adzuna_id')
       .eq('id', item.id)
       .single()
     
     if (error) {
-      logger.warn('Database fallback failed:', error.message)
-      return item // Return bucket data even if incomplete
+      logger.warn('Database fetch failed, using bucket data:', error.message)
+      return item // Return bucket data as fallback
     }
     
-    // Merge bucket data with database data
+    if (!dbItem) {
+      logger.debug('No database record found, using bucket data for item:', item.id)
+      return item
+    }
+    
+    // Merge bucket coordinates with database data (DB has priority for content)
     const completeItem = {
-      ...dbItem,
-      ...item, // Bucket data overrides database
-      // Ensure we preserve bucket coordinates
+      ...item, // Keep bucket coordinates and basic structure
+      ...dbItem, // Database data overrides for content
+      // Ensure location coordinates from bucket are preserved
       location: item.location || {
-        lat: dbItem.lat,
-        lng: dbItem.lng
-      }
+        lat: parseFloat(dbItem.lat || item.lat),
+        lng: parseFloat(dbItem.lon || item.lng)
+      },
+      // Enhanced fields from database (prioritize DB data)
+      url: dbItem.url || item.url || item.applyUrl || null,
+      source: dbItem.source || item.source || 'unknown',
+      description: dbItem.description || item.description || null,
+      // Ensure we have proper source display name
+      sourceDisplay: getSourceDisplayName(dbItem.source || item.source)
     }
     
-    logger.debug('Successfully merged bucket and database data')
+    logger.debug('Successfully merged bucket and database data with enhanced fields')
     return completeItem
     
   } catch (error) {
@@ -78,11 +81,30 @@ async function fetchCompleteItemData(item) {
 }
 
 /**
+ * Get user-friendly source display name
+ */
+function getSourceDisplayName(source) {
+  const sourceMap = {
+    'adzuna': 'Adzuna',
+    'manual': 'Manuel İlan',
+    'buscojobs': 'BuscoJobs', 
+    'indeed': 'Indeed',
+    'linkedin': 'LinkedIn',
+    'glassdoor': 'Glassdoor',
+    'api': 'API İlanı' // Fallback for generic API sources
+  }
+  return sourceMap[source] || (source ? source.charAt(0).toUpperCase() + source.slice(1) : 'Bilinmeyen Kaynak')
+}
+
+/**
  * Modern API Job Popup (Green theme)
  */
 function createAPIJobPopup(item) {
   const theme = POPUP_THEMES.api
-  const hasUrl = item.url && item.url !== '#'
+  const hasUrl = item.url && item.url !== '#' && item.url !== '' && item.url !== null
+  const sourceDisplay = item.sourceDisplay || getSourceDisplayName(item.source)
+  const description = item.description && item.description.trim() ? 
+    (item.description.length > 300 ? item.description.substring(0, 300) + '...' : item.description) : null
   
   return `
     <div class="modern-popup-container ${theme.bg} ${theme.border} border-2 rounded-xl shadow-lg max-w-sm">
@@ -94,7 +116,7 @@ function createAPIJobPopup(item) {
             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.736 6.979C9.208 6.193 9.696 6 10 6c.304 0 .792.193 1.264.979.424.708.736 1.782.736 3.021 0 1.239-.312 2.313-.736 3.021C10.792 13.807 10.304 14 10 14c-.304 0-.792-.193-1.264-.979C8.312 12.313 8 11.239 8 10c0-1.239.312-2.313.736-3.021z" clip-rule="evenodd" />
             </svg>
-            API İlanı
+            ${sourceDisplay}
           </div>
         </div>
       </div>
@@ -129,6 +151,15 @@ function createAPIJobPopup(item) {
         </div>
       ` : ''}
       
+      <!-- Description if available -->
+      ${description ? `
+        <div class="px-4 pb-3">
+          <div class="bg-white rounded-lg p-3 border ${theme.border}">
+            <div class="text-sm text-gray-700 leading-relaxed">${description}</div>
+          </div>
+        </div>
+      ` : ''}
+      
       <!-- Action Button -->
       <div class="p-4 pt-2">
         ${hasUrl ? `
@@ -154,8 +185,11 @@ function createAPIJobPopup(item) {
  */
 function createManualJobPopup(item) {
   const theme = POPUP_THEMES.manual
-  const hasContact = item.contact && item.contact !== ''
-  const hasUrl = item.url && item.url !== '#'
+  const hasContact = item.contact && item.contact !== '' && item.contact !== null
+  const hasUrl = item.url && item.url !== '#' && item.url !== '' && item.url !== null
+  const sourceDisplay = item.sourceDisplay || getSourceDisplayName(item.source)
+  const description = item.description && item.description.trim() ? 
+    (item.description.length > 300 ? item.description.substring(0, 300) + '...' : item.description) : null
   
   return `
     <div class="modern-popup-container ${theme.bg} ${theme.border} border-2 rounded-xl shadow-lg max-w-sm">
@@ -167,7 +201,7 @@ function createManualJobPopup(item) {
             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
             </svg>
-            Manuel İlan
+            ${sourceDisplay}
           </div>
         </div>
       </div>
@@ -198,6 +232,15 @@ function createManualJobPopup(item) {
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd" />
             </svg>
             <span class="text-sm font-medium">${item.currency || 'TRY'} ${Math.round(item.salary_min).toLocaleString()} - ${Math.round(item.salary_max).toLocaleString()}</span>
+          </div>
+        </div>
+      ` : ''}
+      
+      <!-- Description if available -->
+      ${description ? `
+        <div class="px-4 pb-3">
+          <div class="bg-white rounded-lg p-3 border ${theme.border}">
+            <div class="text-sm text-gray-700 leading-relaxed">${description}</div>
           </div>
         </div>
       ` : ''}
@@ -345,10 +388,10 @@ export async function createModernPopup(item) {
     const completeItem = await fetchCompleteItemData(item)
     
     // Determine item type and create appropriate popup
-    const isApiJob = completeItem.source === 'adzuna' || 
+    // API jobs are those from external sources (adzuna, indeed, etc.) but not manual
+    const isApiJob = (completeItem.source && completeItem.source !== 'manual') ||
                      completeItem.adzuna_id || 
-                     (completeItem.url && completeItem.url.includes('adzuna')) ||
-                     completeItem.source === 'api'
+                     (completeItem.url && completeItem.url.includes('adzuna'))
     
     const isCV = completeItem.type === 'cv'
     
