@@ -7,22 +7,95 @@
 import { svgIcons } from './svgIcons.js'
 
 export async function createModernPopup(item) {
-  // Bucket'tan veya API'den tam veri çek
-  let fullData = item
+  console.log('🔍 Creating popup for:', item.title, 'ID:', item.id)
+  console.log('📊 Bucket data:', {
+    hasDescription: !!item.description,
+    hasUrl: !!item.url,
+    hasSalary: !!(item.salary_min && item.salary_max),
+    hasCity: !!item.city,
+    hasCountry: !!item.country
+  })
   
-  // Eğer bucket'ta eksik veriler varsa API'den tamamla
-  if (!item.description || !item.url || !item.salary_min) {
+  // Bucket'tan veya API'den tam veri çek
+  let fullData = { ...item }
+  
+  // Her zaman API'den tam veri çekmeye çalış (eksik veriler için)
+  const needsApiData = !item.description || !item.url || !item.salary_min || !item.salary_max
+  
+  if (needsApiData) {
+    console.log('🌐 Fetching additional data from API for item:', item.id)
     try {
-      // API'den tam veri çek (bucket'ta olmayanlar için)
-      const response = await fetch(`/api/job-details/${item.id}`)
-      if (response.ok) {
-        const apiData = await response.json()
-        fullData = { ...item, ...apiData }
+      // Farklı API endpoint'leri dene
+      const endpoints = [
+        `/api/job-details/${item.id}`,
+        `/api/jobs/${item.id}`,
+        `/api/adzuna-job/${item.id}`
+      ]
+      
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`📡 Trying API endpoint: ${endpoint}`)
+          const response = await fetch(endpoint)
+          if (response.ok) {
+            const apiResponse = await response.json()
+            
+            // API response'u handle et (success wrapper varsa)
+            const apiData = apiResponse.success ? apiResponse : apiResponse
+            
+            console.log('✅ API data received:', {
+              hasDescription: !!apiData.description,
+              hasUrl: !!apiData.url,
+              hasSalary: !!(apiData.salary_min && apiData.salary_max),
+              hasCity: !!apiData.city,
+              hasCountry: !!apiData.country,
+              hasCompany: !!apiData.company
+            })
+            
+            // API'den gelen verileri bucket verisi üzerine merge et
+            fullData = { 
+              ...fullData, 
+              ...apiData,
+              // Legacy field mapping - eski popup'ların field isimleri
+              description: apiData.description?.text || apiData.description || fullData.description?.text || fullData.description,
+              // Lokasyon bilgileri
+              city: apiData.city || fullData.city,
+              country: apiData.country || fullData.country,
+              // Maaş bilgileri
+              salary_min: apiData.salary_min || fullData.salary_min,
+              salary_max: apiData.salary_max || fullData.salary_max,
+              currency: apiData.currency || fullData.currency,
+              // URL ve diğer
+              url: apiData.url || fullData.url,
+              company: apiData.company || fullData.company,
+              title: apiData.title || fullData.title,
+              source: apiData.source || fullData.source,
+              // CV için özel field'lar
+              contact: apiData.contact || fullData.contact,
+              skills: apiData.skills || fullData.skills,
+              experience_years: apiData.experience_years || fullData.experience_years,
+              name: apiData.name || apiData.full_name || fullData.name || fullData.full_name,
+              remote: apiData.remote || fullData.remote
+            }
+            console.log('✅ Merged data successfully with all fields')
+            break // İlk başarılı API çağrısından sonra dur
+          }
+        } catch (endpointError) {
+          console.log(`❌ Endpoint ${endpoint} failed:`, endpointError.message)
+          continue
+        }
       }
     } catch (error) {
-      console.log('API data fetch failed, using bucket data only')
+      console.log('❌ All API endpoints failed, using bucket data only:', error.message)
     }
   }
+  
+  console.log('📋 Final data for popup:', {
+    title: fullData.title,
+    hasDescription: !!fullData.description,
+    hasUrl: !!fullData.url,
+    hasSalary: !!(fullData.salary_min && fullData.salary_max),
+    hasLocation: !!(fullData.city || fullData.country)
+  })
 
   // Enhanced Adzuna detection - multiple fallback checks
   const isAdzunaJob = fullData.source === 'adzuna' || 
