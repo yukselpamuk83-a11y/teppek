@@ -28,11 +28,7 @@ export function createAdzunaJobPopup(item) {
       <div class="popup-details">
         <div class="popup-company">
           ${svgIcons.building}
-<<<<<<< Updated upstream
-          ${item.company || 'Company information not available'}
-=======
           ${item.company || 'Şirket bilgisi mevcut değil'}
->>>>>>> Stashed changes
         </div>
         <div class="popup-location">
           ${svgIcons.location}
@@ -49,11 +45,7 @@ export function createAdzunaJobPopup(item) {
       ${item.url ? `
         <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="popup-apply-btn adzuna-apply">
           ${svgIcons.externalLink}
-<<<<<<< Updated upstream
-          Apply Now
-=======
           İlana Başvur
->>>>>>> Stashed changes
         </a>
       ` : ''}
       
@@ -77,11 +69,7 @@ export function createManualJobPopup(item) {
         <div class="popup-title">${item.title}</div>
         <div class="popup-source manual-source">
           ${svgIcons.userPlus}
-<<<<<<< Updated upstream
-          Manual Listing
-=======
           Manuel İlan
->>>>>>> Stashed changes
         </div>
       </div>
       
@@ -95,11 +83,7 @@ export function createManualJobPopup(item) {
       <div class="popup-details">
         <div class="popup-company">
           ${svgIcons.building}
-<<<<<<< Updated upstream
-          ${item.company || 'Company information not available'}
-=======
           ${item.company || 'Şirket bilgisi mevcut değil'}
->>>>>>> Stashed changes
         </div>
         <div class="popup-location">
           ${svgIcons.location}
@@ -117,11 +101,7 @@ export function createManualJobPopup(item) {
         <div class="popup-contact manual-contact">
           <div class="contact-label">
             ${svgIcons.envelope}
-<<<<<<< Updated upstream
-            Contact Information
-=======
             İletişim Bilgileri
->>>>>>> Stashed changes
           </div>
           <div class="contact-info">${item.contact}</div>
         </div>
@@ -147,22 +127,14 @@ export function createCVPopup(item) {
         <div class="popup-title">${item.title || 'Profesyonel Profil'}</div>
         <div class="popup-source cv-source">
           ${svgIcons.user}
-<<<<<<< Updated upstream
-          Candidate Profile
-=======
           Aday Profili
->>>>>>> Stashed changes
         </div>
       </div>
       
       <div class="popup-candidate">
         <div class="candidate-name">
           ${svgIcons.userTie}
-<<<<<<< Updated upstream
-          ${item.name || item.full_name || 'Name not specified'}
-=======
           ${item.name || item.full_name || 'İsim belirtilmemiş'}
->>>>>>> Stashed changes
         </div>
       </div>
       
@@ -206,11 +178,7 @@ export function createCVPopup(item) {
         <div class="popup-contact cv-contact">
           <div class="contact-label">
             ${svgIcons.envelope}
-<<<<<<< Updated upstream
-            Contact
-=======
             İletişim
->>>>>>> Stashed changes
           </div>
           <div class="contact-info">${item.contact}</div>
         </div>

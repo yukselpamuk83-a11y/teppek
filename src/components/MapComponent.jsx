@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { debounce } from '../utils/debounce'
-import { createPopup, createPremiumPopup } from '../utils/popupGenerator'
+import { createModernPopup } from '../utils/modernPopupGenerator'
+import { createPremiumPopup } from '../utils/popupGenerator'
 
 // Leaflet global import - bu şekilde çalışacak
 let L
@@ -296,18 +297,38 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
                 })
             }
             
-            // Yeni popup sistemi - kaynak bazlı tasarım
-            const popupContent = canView ? createPopup(item) : createPremiumPopup()
+            // Modern popup sistemi - bucket-first data with modern design
+            if (canView) {
+                // Async popup loading with modern design
+                leafletMarker.bindPopup('<div class="popup-loading"><div class="popup-loading-spinner"></div>Yükleniyor...</div>')
+                
+                // Load popup content asynchronously
+                leafletMarker.on('click', async function(e) {
+                    try {
+                        const modernPopupContent = await createModernPopup(item)
+                        this.setPopupContent(modernPopupContent)
+                        this.openPopup()
+                    } catch (error) {
+                        console.error('Error loading popup:', error)
+                        // Fallback to basic popup
+                        this.setPopupContent(`
+                            <div class="modern-popup-container bg-gray-50 border-gray-200 border-2 rounded-xl shadow-lg max-w-sm p-4">
+                                <h3 class="text-lg font-semibold mb-2">${item.title || 'Başlık Yok'}</h3>
+                                <div class="text-sm text-gray-600">${item.company || 'Şirket Belirtilmemiş'}</div>
+                                <div class="text-sm text-gray-600">${item.city || 'Konum Belirtilmemiş'}</div>
+                                <div class="mt-2 text-xs text-red-500">Popup yüklenemedi</div>
+                            </div>
+                        `)
+                        this.openPopup()
+                    }
+                })
+            } else {
+                // Premium popup for restricted content
+                leafletMarker.bindPopup(createPremiumPopup())
+            }
             
             // Global premium handler for popup buttons
             window.handlePremiumClick = onPremiumClick
-            
-            leafletMarker.bindPopup(popupContent)
-            
-            // Click-only popup functionality
-            leafletMarker.on('click', function(e) {
-                this.openPopup()
-            })
             
             if (!canView) {
                 leafletMarker.on('popupopen', () => {

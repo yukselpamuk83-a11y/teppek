@@ -1,0 +1,106 @@
+/* MODERN POPUP STYLES - Clean, minimal design with color coding */
+
+/* Popup container base styles */
+.modern-popup-container {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.5;
+  color: #374151;
+  position: relative;
+}
+
+/* Remove default leaflet popup styles */
+.leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  font-size: 14px !important;
+}
+
+.leaflet-popup-tip {
+  background: white !important;
+}
+
+/* Hover effects for interactive elements */
+.modern-popup-container a {
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.modern-popup-container a:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Button focus states */
+.modern-popup-container button:focus,
+.modern-popup-container a:focus {
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .modern-popup-container {
+    max-width: calc(100vw - 40px) !important;
+  }
+}
+
+/* Animation for popup appearance */
+@keyframes popupFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modern-popup-container {
+  animation: popupFadeIn 0.2s ease-out;
+}
+
+/* Custom scrollbar for long content */
+.modern-popup-container *::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modern-popup-container *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modern-popup-container *::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+/* Loading state */
+.popup-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+}
+
+.popup-loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
