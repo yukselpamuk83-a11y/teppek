@@ -1,5 +1,5 @@
 // Enhanced Error Handler for Production Apps
-import { logger } from './logger'
+import logger from './logger'
 
 class ErrorHandler {
   constructor() {
