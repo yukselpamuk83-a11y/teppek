@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import logger from '../utils/logger.js'
 
 // Simple in-memory cache
 const memoryCache = new Map()
@@ -66,7 +67,7 @@ export function useDataCache(key, fetchFunction, options = {}) {
         
         setData(newData)
       } catch (err) {
-        console.error('Cache fetch error:', err)
+        logger.error('Cache fetch error:', err)
         setError(err)
       } finally {
         setLoading(false)

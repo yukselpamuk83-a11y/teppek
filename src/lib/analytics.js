@@ -1,11 +1,13 @@
 // DENEYSEL PROJE - Vercel Analytics Integration
 // Mevcut canlı sitenizde zaten çalışan analytics'e benzer yapı
 
+import logger from '../utils/logger.js'
+
 // Development mode için analytics mock
 export const analytics = {
   track: (event, properties = {}) => {
     if (import.meta.env.DEV) {
-      console.log('📊 Analytics Event [DEV]:', event, properties)
+      logger.debug('📊 Analytics Event [DEV]:', event, properties)
       return
     }
     

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
+import logger from '../utils/logger.js'
 import { debounce } from '../utils/debounce'
 import { createPopup, createPremiumPopup } from '../utils/popupGenerator'
 import { createCVPopup, createCVPremiumPopup, CV_POPUP_STYLES } from '../utils/cvPopupGenerator'
@@ -114,7 +115,7 @@ function EnhancedMapComponent({
         setL(window.L)
         setMarkerClusterGroup(window.L.markerClusterGroup)
       } catch (error) {
-        console.error('Failed to load Leaflet:', error)
+        logger.error('Failed to load Leaflet:', error)
       }
     } else if (window.L) {
       setL(window.L)
@@ -233,7 +234,7 @@ function EnhancedMapComponent({
           mapInstance.current.fitBounds(circleRef.current.getBounds())
           
         } catch (error) {
-          console.error('Map initialization error:', error)
+          logger.error('Map initialization error:', error)
         }
       }
     }

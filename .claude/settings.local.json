@@ -59,7 +59,8 @@
       "WebFetch(domain:teppek-rkbltcwtt-yuksels-projects-5a72b11a.vercel.app)",
       "WebFetch(domain:teppek.vercel.app)",
       "Bash(gh repo view:*)",
-      "Bash(git remote set-url:*)"
+      "Bash(git remote set-url:*)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": [],

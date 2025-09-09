@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { getDistance } from '../utils/distance'
+import logger from '../utils/logger.js'
 
 // OPTIMIZED VERSION - Only listens to INSERT events, not UPDATE/DELETE
 // Fetches only last 24 hours of data to reduce load
@@ -100,10 +101,10 @@ export function useRealtimeData(userLocation) {
         }))
 
         setRealtimeData([...formattedJobs, ...formattedCvs])
-        console.log('✅ Manual entries loaded:', formattedJobs.length + formattedCvs.length)
+        logger.info('✅ Manual entries loaded:', formattedJobs.length + formattedCvs.length)
 
       } catch (error) {
-        console.error('Manual entries fetch error:', error)
+        logger.error('Manual entries fetch error:', error)
       }
     }
 
@@ -120,7 +121,7 @@ export function useRealtimeData(userLocation) {
           filter: 'source=eq.manual'
         }, 
         (payload) => {
-          console.log('🔄 Job realtime update:', payload)
+          logger.debug('🔄 Job realtime update:', payload)
           
           if (payload.eventType === 'INSERT') {
             const newJob = {

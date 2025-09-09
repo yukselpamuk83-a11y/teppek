@@ -1,5 +1,6 @@
 // DENEYSEL PROJE - Toast Store with Zustand
 import { create } from 'zustand'
+import logger from '../utils/logger.js'
 
 let toastId = 0
 
@@ -78,4 +79,4 @@ export const toast = {
   info: (message, options) => useToastStore.getState().info(message, options),
 }
 
-console.log('🧪 Modern Toast Store initialized')
+logger.info('🧪 Modern Toast Store initialized')

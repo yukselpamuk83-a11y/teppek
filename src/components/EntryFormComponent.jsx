@@ -1,6 +1,7 @@
 import { useState } from 'react'
 // Auth import kaldırıldı
 import { toast } from '../stores/toastStore'
+import logger from '../utils/logger.js'
 
 function EntryFormComponent({ onAddEntry, userLocation }) {
     const user = null // Auth kaldırıldı
@@ -57,7 +58,7 @@ function EntryFormComponent({ onAddEntry, userLocation }) {
                 country = data.address?.country || 'Turkey'
             }
         } catch (error) {
-            console.log('Adres çekilemedi, koordinat kullanılıyor')
+            logger.debug('Adres çekilemedi, koordinat kullanılıyor')
         }
         
         if (entryType === 'job') {
@@ -90,11 +91,11 @@ function EntryFormComponent({ onAddEntry, userLocation }) {
                 }
                 
                 const result = await response.json()
-                console.log('✅ İş ilanı oluşturuldu:', result)
+                logger.info('✅ İş ilanı oluşturuldu:', result)
                 toast.success('İş ilanı başarıyla eklendi!')
                 
             } catch (error) {
-                console.error('İş ilanı hatası:', error)
+                logger.error('İş ilanı hatası:', error)
                 toast.error('İş ilanı eklenirken hata oluştu: ' + error.message)
                 return
             }
@@ -131,11 +132,11 @@ function EntryFormComponent({ onAddEntry, userLocation }) {
                 }
                 
                 const result = await response.json()
-                console.log('✅ CV oluşturuldu:', result)
+                logger.info('✅ CV oluşturuldu:', result)
                 toast.success('CV başarıyla eklendi!')
                 
             } catch (error) {
-                console.error('CV hatası:', error)
+                logger.error('CV hatası:', error)
                 toast.error('CV eklenirken hata oluştu: ' + error.message)
                 return
             }

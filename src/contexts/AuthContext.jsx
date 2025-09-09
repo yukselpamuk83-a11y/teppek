@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { supabase, authHelpers } from '../lib/supabase'
 import { useToastStore } from '../stores/toastStore'
+import logger from '../utils/logger.js'
 
 const AuthContext = createContext({})
 
@@ -31,14 +32,14 @@ export const AuthProvider = ({ children }) => {
         
         if (isMounted) {
           if (error) {
-            console.error('Error getting session:', error)
+            logger.error('Error getting session:', error)
           } else {
             setSession(session)
             setUser(session?.user ?? null)
           }
         }
       } catch (error) {
-        console.error('Auth initialization error:', error)
+        logger.error('Auth initialization error:', error)
       } finally {
         if (isMounted) {
           setLoading(false)
@@ -53,7 +54,7 @@ export const AuthProvider = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (isMounted) {
-          console.log('🔐 Auth state change:', event, session?.user?.email)
+          logger.debug('🔐 Auth state change:', event, session?.user?.email)
           
           setSession(session)
           setUser(session?.user ?? null)
@@ -76,10 +77,10 @@ export const AuthProvider = ({ children }) => {
               })
               break
             case 'TOKEN_REFRESHED':
-              console.log('🔄 Token refreshed')
+              logger.debug('🔄 Token refreshed')
               break
             case 'USER_UPDATED':
-              console.log('👤 User updated')
+              logger.debug('👤 User updated')
               break
           }
         }

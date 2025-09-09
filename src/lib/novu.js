@@ -1,4 +1,5 @@
 import { Novu } from '@novu/api';
+import logger from '../utils/logger.js';
 
 // Initialize Novu with your API key
 const novu = new Novu(import.meta.env.VITE_NOVU_API_KEY || '');
@@ -23,10 +24,10 @@ export async function sendNotification(subscriberId, templateId, payload = {}) {
       payload: payload
     });
     
-    console.log('Notification sent:', result);
+    logger.info('Notification sent:', result);
     return result;
   } catch (error) {
-    console.error('Error sending notification:', error);
+    logger.error('Error sending notification:', error);
     throw error;
   }
 }
@@ -40,10 +41,10 @@ export async function createSubscriber(userId, email, firstName = '', lastName =
       lastName: lastName
     });
     
-    console.log('Subscriber created/updated:', subscriber);
+    logger.info('Subscriber created/updated:', subscriber);
     return subscriber;
   } catch (error) {
-    console.error('Error creating subscriber:', error);
+    logger.error('Error creating subscriber:', error);
     throw error;
   }
 }
@@ -58,7 +59,7 @@ export async function updateSubscriberPreferences(subscriberId, channelType, ena
     
     return result;
   } catch (error) {
-    console.error('Error updating preferences:', error);
+    logger.error('Error updating preferences:', error);
     throw error;
   }
 }
@@ -69,7 +70,7 @@ export async function getSubscriberPreferences(subscriberId) {
     const preferences = await novu.subscribers.getPreference(subscriberId);
     return preferences;
   } catch (error) {
-    console.error('Error getting preferences:', error);
+    logger.error('Error getting preferences:', error);
     throw error;
   }
 }
@@ -80,7 +81,7 @@ export async function deleteSubscriber(subscriberId) {
     const result = await novu.subscribers.delete(subscriberId);
     return result;
   } catch (error) {
-    console.error('Error deleting subscriber:', error);
+    logger.error('Error deleting subscriber:', error);
     throw error;
   }
 }

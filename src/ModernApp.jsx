@@ -11,6 +11,7 @@ import { useRealtimeData } from './hooks/useRealtimeData'
 import { useDataCache } from './hooks/useDataCache'
 import { getDistance } from './utils/distance'
 import NotificationInbox from './components/ui/inbox/NotificationInbox'
+import logger from './utils/logger.js'
 
 // Lazy loaded components - performans için
 const AuthCallback = lazy(() => import('./components/auth/AuthCallback'))
@@ -56,10 +57,10 @@ function ModernAppContent() {
           lng: position.coords.longitude,
         }
         setUserLocation(location)
-        console.log('✅ Konum alındı:', location)
+        logger.debug('✅ Konum alındı:', location)
       },
       (error) => {
-        console.warn("Konum alınamadı:", error)
+        logger.warn("Konum alınamadı:", error)
         const fallbackLocation = { lat: 41.01, lng: 28.97 } // Istanbul
         setUserLocation(fallbackLocation)
       }
@@ -81,84 +82,8 @@ function ModernAppContent() {
       const measureDataLoad = speedInsights.measureDataLoad('jobs')
       
       try {
-        console.log('🔄 Modern App: İş ilanları yükleniyor...')
+        logger.debug('🔄 Modern App: İş ilanları yükleniyor...')
         
-        // Development'ta fake data, Production'da gerçek API
-        if (import.meta.env.MODE === 'development') {
-          console.log('🧪 Development mode: Fake data kullanılıyor')
-          
-          // Fake data generator
-          const generateFakeJobs = () => {
-            const companies = ['Teknoloji A.Ş.', 'Yazılım Ltd.', 'Digital Corp', 'Tech Solutions', 'Innovation Co.']
-            const titles = ['Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'DevOps Engineer', 'UI/UX Designer']
-            const cities = ['İstanbul', 'Ankara', 'İzmir', 'Bursa', 'Antalya']
-            const countries = ['Turkey', 'Germany', 'Netherlands', 'UK', 'USA']
-            
-            const jobs = []
-            for (let i = 0; i < 50; i++) {
-              const lat = 41.01 + (Math.random() - 0.5) * 0.1
-              const lng = 28.97 + (Math.random() - 0.5) * 0.1
-              
-              const cityName = cities[Math.floor(Math.random() * cities.length)]
-              const countryName = countries[Math.floor(Math.random() * countries.length)]
-              
-              jobs.push({
-                id: i + 1,
-                title: titles[Math.floor(Math.random() * titles.length)],
-                company: companies[Math.floor(Math.random() * companies.length)],
-                city: cityName,
-                country: countryName,
-                lat: lat,
-                lon: lng,
-                source: 'fake',
-                created_at: new Date().toISOString(),
-                salary_min: Math.floor(Math.random() * 5000) + 3000,
-                salary_max: Math.floor(Math.random() * 10000) + 8000,
-                currency: 'TRY',
-                remote: Math.random() > 0.7
-              })
-            }
-            return jobs
-          }
-          
-          const fakeJobs = generateFakeJobs()
-          
-          const formattedJobs = fakeJobs.map(job => ({
-            id: `fake-${job.id}`,
-            type: 'job',
-            title: job.title,
-            company: job.company || 'Şirket Belirtilmemiş',
-            name: job.company,
-            city: job.city,
-            country: job.country,
-            location: {
-              lat: parseFloat(job.lat),
-              lng: parseFloat(job.lon)
-            },
-            address: `${job.city || ''}, ${job.country || ''}`.replace(/^,\s*|,\s*$/g, ''),
-            salary_min: job.salary_min,
-            salary_max: job.salary_max,
-            currency: job.currency,
-            source: job.source,
-            postedDate: job.created_at,
-            distance: userLocation ? getDistance(
-              userLocation.lat, 
-              userLocation.lng, 
-              parseFloat(job.lat), 
-              parseFloat(job.lon)
-            ) : 0
-          }))
-          
-          // DÜZELTME: setData kaldırıldı, sadece data return ediyoruz
-          measureDataLoad(formattedJobs.length)
-          analytics && analytics.track && analytics.track('jobs_loaded', { 
-            count: formattedJobs.length,
-            source: 'fake_data_dev' 
-          })
-          
-          console.log(`✅ Modern App: ${formattedJobs.length} fake ilan yüklendi`)
-          return formattedJobs
-        }
         
         // Production'da gerçek API call - statik GeoJSON dosyası
         try {
@@ -214,12 +139,12 @@ function ModernAppContent() {
               source: 'static_geojson' 
             })
             
-            console.log(`✅ Modern App: ${formattedData.length} kayıt yüklendi (${formattedData.filter(item => item.type === 'job').length} iş ilanı, ${formattedData.filter(item => item.type === 'cv').length} CV)`)
+            logger.info(`✅ Modern App: ${formattedData.length} kayıt yüklendi (${formattedData.filter(item => item.type === 'job').length} iş ilanı, ${formattedData.filter(item => item.type === 'cv').length} CV)`)
             
             // DEBUG: İlk kayıtın field'larını kontrol et
             if (formattedData.length > 0) {
-              console.log('🔍 Frontend\'e gelen field\'lar:', Object.keys(formattedData[0]))
-              console.log('🔍 İlk kayıt örneği:', {
+              logger.debug('🔍 Frontend\'e gelen field\'lar:', Object.keys(formattedData[0]))
+              logger.debug('🔍 İlk kayıt örneği:', {
                 title: formattedData[0].title,
                 source: formattedData[0].source,
                 city: formattedData[0].city,
@@ -232,12 +157,12 @@ function ModernAppContent() {
             return formattedData
           }
         } catch (staticError) {
-          console.error('Static GeoJSON yükleme hatası:', staticError)
+          logger.error('Static GeoJSON yükleme hatası:', staticError)
           analytics && analytics.track && analytics.track('static_geojson_error', { error: staticError.message })
           return [] // Static yükleme başarısız olursa boş array dön
         }
       } catch (error) {
-        console.error('Modern App: Veri yükleme hatası:', error)
+        logger.error('Modern App: Veri yükleme hatası:', error)
         analytics && analytics.track && analytics.track('data_load_error', { error: error.message })
         return [] // Genel hata durumunda boş array dön
       }

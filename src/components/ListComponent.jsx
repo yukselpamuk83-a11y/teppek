@@ -1,6 +1,7 @@
 import { memo, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getDistance } from '../utils/distance'
+import logger from '../utils/logger.js'
 
 // Action SVG Icons
 const EditIcon = () => (
@@ -164,13 +165,13 @@ function ListComponent({ data, onRowClick, isSubscribed, userLocation, onPremium
     
     // Action handlers
     const handleEdit = (item) => {
-        console.log('🖊️ Edit item:', item.id)
+        logger.debug('🖊️ Edit item:', item.id)
         // TODO: Open edit modal/form
         alert(`Edit ${item.title}`) // Temporary placeholder
     }
     
     const handleDelete = (item) => {
-        console.log('🗑️ Delete item:', item.id)
+        logger.debug('🗑️ Delete item:', item.id)
         if (window.confirm(`Are you sure you want to delete "${item.title}"?`)) {
             // TODO: Call delete API
             alert(`Delete ${item.title}`) // Temporary placeholder
@@ -178,7 +179,7 @@ function ListComponent({ data, onRowClick, isSubscribed, userLocation, onPremium
     }
     
     const handleReport = (item) => {
-        console.log('⚠️ Report item:', item.id)
+        logger.debug('⚠️ Report item:', item.id)
         if (window.confirm(`Report "${item.title}" for inappropriate content?`)) {
             // TODO: Call report API
             alert(`Reported ${item.title}`) // Temporary placeholder
@@ -193,7 +194,7 @@ function ListComponent({ data, onRowClick, isSubscribed, userLocation, onPremium
         )
     }
 
-    console.log(`📋 ListComponent render: ${data.length} kayıt gösterilecek`)
+    logger.debug(`📋 ListComponent render: ${data.length} kayıt gösterilecek`)
 
     return (
         <div className="flex-grow flex flex-col bg-white">

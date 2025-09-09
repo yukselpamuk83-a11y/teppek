@@ -1,5 +1,6 @@
 import { useState, memo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
+import logger from '../utils/logger.js'
 
 const FilterComponent = memo(({ onFilterChange, setCurrentPage, isSubscribed, onSubscribeToggle }) => {
     const { t } = useTranslation()
@@ -7,13 +8,13 @@ const FilterComponent = memo(({ onFilterChange, setCurrentPage, isSubscribed, on
     const [localFilterType, setLocalFilterType] = useState('all')
 
     const handleFilter = useCallback(() => {
-        console.log('🔍 Frontend filtre uygulanıyor...')
+        logger.debug('🔍 Frontend filtre uygulanıyor...')
         onFilterChange({ type: localFilterType, keyword: localKeyword })
         setCurrentPage(1)
     }, [localFilterType, localKeyword, onFilterChange, setCurrentPage])
 
     const handleClear = useCallback(() => {
-        console.log('🧹 TEMIZLE - Cache\'den ilk veri yükleniyor')
+        logger.debug('🧹 TEMIZLE - Cache\'den ilk veri yükleniyor')
         setLocalKeyword('')
         setLocalFilterType('all')
         setCurrentPage(1)

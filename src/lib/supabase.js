@@ -1,5 +1,6 @@
 // DENEYSEL PROJE - Supabase Client Configuration
 import { createClient } from '@supabase/supabase-js'
+import logger from '../utils/logger.js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -12,8 +13,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 const devSupabaseUrl = supabaseUrl
 const devSupabaseKey = supabaseAnonKey
 
-console.log('🔑 Supabase URL:', devSupabaseUrl)
-console.log('🔑 Supabase Key (first 20 chars):', devSupabaseKey?.substring(0, 20) + '...')
+logger.debug('🔑 Supabase URL:', devSupabaseUrl)
+logger.debug('🔑 Supabase Key configured:', devSupabaseKey ? 'Yes' : 'No')
 
 export const supabase = createClient(devSupabaseUrl, devSupabaseKey, {
   auth: {
@@ -124,4 +125,4 @@ export const authHelpers = {
   }
 }
 
-console.log('🧪 Deneysel Supabase Client başlatıldı - Canlı siteyi etkilemez')
+logger.info('🧪 Deneysel Supabase Client başlatıldı - Canlı siteyi etkilemez')
