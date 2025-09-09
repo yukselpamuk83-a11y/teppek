@@ -132,12 +132,17 @@ function createAdzunaJobPopup(item) {
         </div>
       </div>
       
-      ${item.salary_min && item.salary_max ? `
+      ${(item.salary_min || item.salary_max) ? `
         <div class="popup-salary adzuna-salary">
           ${svgIcons.dollar}
-          ${item.currency || 'USD'} ${Math.round(item.salary_min)?.toLocaleString() || '?'} - ${Math.round(item.salary_max)?.toLocaleString() || '?'}
+          ${item.currency || 'USD'} ${item.salary_min ? Math.round(item.salary_min).toLocaleString() : '?'} - ${item.salary_max ? Math.round(item.salary_max).toLocaleString() : '?'}
         </div>
-      ` : ''}
+      ` : `
+        <div class="popup-salary adzuna-salary" style="background: #fee2e2; color: #dc2626;">
+          ${svgIcons.dollar}
+          Maaş bilgisi API'den yükleniyor...
+        </div>
+      `}
       
       <div class="popup-details">
         <div class="popup-company">
@@ -161,7 +166,12 @@ function createAdzunaJobPopup(item) {
           ${svgIcons.externalLink}
           İlana Başvur
         </a>
-      ` : ''}
+      ` : `
+        <div class="popup-apply-btn" style="background: #fee2e2; color: #dc2626; text-align: center; padding: 12px; margin: 16px; border-radius: 8px;">
+          ${svgIcons.externalLink}
+          Başvuru linki API'den yükleniyor...
+        </div>
+      `}
       
       <div class="popup-footer">
         <small>Powered by Adzuna API</small>
@@ -187,12 +197,17 @@ function createManualJobPopup(item) {
         </div>
       </div>
       
-      ${item.salary_min && item.salary_max ? `
+      ${(item.salary_min || item.salary_max) ? `
         <div class="popup-salary manual-salary">
           ${svgIcons.moneyBillWave}
-          ${item.currency || 'TRY'} ${Math.round(item.salary_min)?.toLocaleString() || '?'} - ${Math.round(item.salary_max)?.toLocaleString() || '?'}
+          ${item.currency || 'TRY'} ${item.salary_min ? Math.round(item.salary_min).toLocaleString() : '?'} - ${item.salary_max ? Math.round(item.salary_max).toLocaleString() : '?'}
         </div>
-      ` : ''}
+      ` : `
+        <div class="popup-salary manual-salary" style="background: #fef3c7; color: #d97706;">
+          ${svgIcons.moneyBillWave}
+          Maaş bilgisi API'den yükleniyor...
+        </div>
+      `}
       
       <div class="popup-details">
         <div class="popup-company">
@@ -226,7 +241,12 @@ function createManualJobPopup(item) {
           ${svgIcons.externalLink}
           İlana Başvur
         </a>
-      ` : ''}
+      ` : `
+        <div class="popup-apply-btn" style="background: #fef3c7; color: #d97706; text-align: center; padding: 12px; margin: 16px; border-radius: 8px;">
+          ${svgIcons.externalLink}
+          Başvuru linki API'den yükleniyor...
+        </div>
+      `}
       
       <div class="popup-footer">
         <small>Local Listing • Teppek</small>
