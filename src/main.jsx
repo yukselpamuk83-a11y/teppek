@@ -7,7 +7,6 @@ import './utils/errorHandler' // Initialize global error handling
 import './i18n'
 import './styles/index.css'
 import './styles/popups.css'
-import './styles/modernPopups.css'
 
 // Environment indicator
 logger.info(`🚀 Teppek Modern ${import.meta.env.PROD ? 'Production' : 'Development'} Mode`)

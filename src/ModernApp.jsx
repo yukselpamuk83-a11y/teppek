@@ -16,7 +16,6 @@ import logger from './utils/logger.js'
 // Lazy loaded components - performans için
 const AuthCallback = lazy(() => import('./components/auth/AuthCallback'))
 const MapComponent = lazy(() => import('./components/MapComponent'))
-const MarkerFirstMap = lazy(() => import('./components/MarkerFirstMap')) // 🚀 NEW: Marker-First Approach
 const FilterComponent = lazy(() => import('./components/FilterComponent'))
 const ListComponent = lazy(() => import('./components/ListComponent'))
 const PaginationComponent = lazy(() => import('./components/PaginationComponent'))
@@ -39,7 +38,6 @@ function ModernAppContent() {
   const [userLocation, setUserLocation] = useState(null)
   const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [currentView, setCurrentView] = useState('map') // 'map' or 'dashboard'
-  const [useMarkerFirst, setUseMarkerFirst] = useState(false) // 🚀 PERFORMANCE: Temporarily disabled
   
   // Realtime data disabled to reduce database load
   // const realtimeData = useRealtimeData(userLocation)
@@ -356,14 +354,6 @@ function ModernAppContent() {
                 </div>
               </div>
             }>
-              {useMarkerFirst ? (
-                <MarkerFirstMap 
-                  data={allFilteredData} 
-                  selectedLocation={selectedLocation} 
-                  userLocation={userLocation} 
-                  onPremiumClick={handlePremiumClick}
-                />
-              ) : (
                 <MapComponent 
                   data={allFilteredData} 
                   selectedLocation={selectedLocation} 
@@ -371,7 +361,6 @@ function ModernAppContent() {
                   onPremiumClick={handlePremiumClick}
                   isSubscribed={true}
                 />
-              )}
             </Suspense>
           </ComponentErrorBoundary>
           
@@ -453,14 +442,6 @@ function ModernAppContent() {
                 </div>
               )}
             >
-              {useMarkerFirst ? (
-                <MarkerFirstMap 
-                  data={allFilteredData} 
-                  selectedLocation={selectedLocation} 
-                  userLocation={userLocation}
-                  onPremiumClick={handlePremiumClick}
-                />
-              ) : (
                 <MapComponent 
                   data={allFilteredData} 
                   selectedLocation={selectedLocation} 
@@ -468,7 +449,6 @@ function ModernAppContent() {
                   onPremiumClick={handlePremiumClick}
                   isSubscribed={true}
                 />
-              )}
             </ComponentErrorBoundary>
           </div>
           
