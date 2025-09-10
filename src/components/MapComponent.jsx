@@ -3,82 +3,24 @@ import { useTranslation } from 'react-i18next'
 import { debounce } from '../utils/debounce'
 import { createModernPopup } from '../utils/modernPopupGenerator'
 import { createPremiumPopup } from '../utils/popupGenerator'
+import { preloadCriticalMapTiles, optimizeLeafletMap, getTileOptimizerStats, createOptimizedTileLayer } from '../utils/mapTileOptimizer'
+import { tileServiceWorker } from '../utils/tileServiceWorker'
 import '../styles/pure-css-markers.css' // 🎯 Pure CSS marker styles - Ultra Performance
 
-// Leaflet global import - bu şekilde çalışacak
-let L
-let MarkerClusterGroup
+// 🚀 PERFORMANCE FIX: Use bundled Leaflet instead of CDN to eliminate duplicate loading
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+import 'leaflet.markercluster'
+import 'leaflet.markercluster/dist/MarkerCluster.css'
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
-const loadLeaflet = async () => {
-    if (typeof window !== 'undefined') {
-        // Load CSS files first
-        const cssFiles = [
-            'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-            'https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css',
-            'https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css'
-        ]
-        
-        cssFiles.forEach(href => {
-            try {
-                if (!document.querySelector(`link[href="${href}"]`)) {
-                    const link = document.createElement('link')
-                    link.rel = 'stylesheet'
-                    link.href = href
-                    if (document.head) {
-                        document.head.appendChild(link)
-                    }
-                }
-            } catch (error) {
-                console.warn('Could not load CSS:', href, error)
-            }
-        })
-        
-        // Load Leaflet JS
-        if (!window.L) {
-            try {
-                await new Promise((resolve, reject) => {
-                    const script = document.createElement('script')
-                    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
-                    script.onload = resolve
-                    script.onerror = reject
-                    if (document.head) {
-                        document.head.appendChild(script)
-                    } else {
-                        reject(new Error('Document head not available'))
-                    }
-                })
-            } catch (error) {
-                console.warn('Could not load Leaflet JS:', error)
-                return
-            }
-        }
-        
-        // Load MarkerCluster JS
-        if (!window.L?.markerClusterGroup) {
-            try {
-                await new Promise((resolve, reject) => {
-                    const script = document.createElement('script')
-                    script.src = 'https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js'
-                    script.onload = resolve
-                    script.onerror = reject
-                    if (document.head) {
-                        document.head.appendChild(script)
-                    } else {
-                        reject(new Error('Document head not available'))
-                    }
-                })
-            } catch (error) {
-                console.warn('Could not load MarkerCluster JS:', error)
-                return
-            }
-        }
-        
-        L = window.L
-        MarkerClusterGroup = L.markerClusterGroup
-    }
-}
-
-function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPremiumClick }) {
+function MapComponent({ 
+    data, 
+    selectedLocation, 
+    isSubscribed, 
+    userLocation, 
+    onPremiumClick
+}) {
     const { t } = useTranslation()
     const mapRef = useRef(null)
     const mapInstance = useRef(null)
@@ -86,65 +28,130 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
     const circleRef = useRef(null)
     const userMarkerRef = useRef(null)
     const [tileLayer, setTileLayer] = useState(null)
+    const [tileOptimizerStats, setTileOptimizerStats] = useState(null)
+    
+    // 🚀 MOBILE OPTIMIZATION: Detect mobile and adjust map performance
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+    const [isLowMemoryDevice] = useState(() => {
+        const deviceMemory = navigator.deviceMemory || 4
+        const connection = navigator.connection
+        return deviceMemory < 4 || (connection && connection.effectiveType?.includes('2g'))
+    })
 
+    // 🚀 ADVANCED TILE OPTIMIZATION: CloudFlare proxy + Vector tiles + Smart caching
     const tileProviders = {
-        street: { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
-        satellite: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attribution: 'Tiles &copy; Esri' }
+        street: { 
+            url: 'https://geoo-tiles.yukselpamuk83.workers.dev/osm/{z}/{x}/{y}.png', 
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, via CloudFlare proxy',
+            optimized: true,
+            type: 'raster'
+        },
+        satellite: { 
+            url: 'https://geoo-tiles.yukselpamuk83.workers.dev/satellite/{z}/{x}/{y}.jpg', 
+            attribution: 'Tiles &copy; Esri, via CloudFlare proxy',
+            optimized: true,
+            type: 'raster'
+        }
     }
 
     const changeMapLayer = useCallback(debounce((layerKey) => {
         if (mapInstance.current && tileLayer) {
             mapInstance.current.removeLayer(tileLayer)
         }
+        
+        // Create optimized tile layer
         const newLayer = L.tileLayer(tileProviders[layerKey].url, {
             attribution: tileProviders[layerKey].attribution,
-            noWrap: true
-        }).addTo(mapInstance.current)
+            noWrap: true,
+            updateWhenIdle: true,
+            updateWhenZooming: false,
+            keepBuffer: isMobile ? 1 : 2,
+            detectRetina: !isMobile && window.devicePixelRatio > 1,
+            className: `advanced-tiles-${layerKey}`,
+            maxZoom: isMobile ? 16 : 18
+        })
+        
+        if (mapInstance.current) {
+            newLayer.addTo(mapInstance.current)
+        }
         setTileLayer(newLayer)
-    }, 150), [tileLayer])
+        
+        console.log(`🚀 Switched to optimized ${layerKey} tiles with CloudFlare proxy`)
+    }, 150), [tileLayer, isMobile])
 
+    // Map initialization  
     useEffect(() => {
         const initMap = async () => {
-            await loadLeaflet()
-            
-            if (mapRef.current && !mapInstance.current && L && userLocation) {
+            if (mapRef.current && !mapInstance.current && userLocation) {
                 // Default location fallback
                 const lat = userLocation?.lat || 41.01
                 const lng = userLocation?.lng || 28.97
+                
+                // 🚀 ADVANCED TILE PRELOADING: Adaptive based on device and connection
+                const preloadOptions = {
+                    radius: isMobile ? 1 : isLowMemoryDevice ? 2 : 3,
+                    useVector: !isMobile && 12 >= 10,
+                    adaptToConnection: true
+                }
+                
+                // Skip preloading for now - create map first
+                console.log('🗺️ Creating map without preloading for faster startup')
             
                 try {
-                    mapInstance.current = L.map(mapRef.current, {
-                        // 🚀 SMART PERFORMANCE: Optimize edilmiş harita ayarları
+                    // 🚀 MOBILE OPTIMIZATION: Adjust map settings based on device capability
+                    const mapOptions = {
                         maxBounds: [[-90, -180], [90, 180]], // Dünya sınırları
                         maxBoundsViscosity: 1.0,              // Sert sınır
-                        minZoom: 3,                           // Min zoom artırıldı (gereksiz dünya görünümü yok)
-                        maxZoom: 18,                          // Max zoom artırıldı (sokak detayları için)
+                        minZoom: isMobile ? 4 : 3,            // Higher min zoom for mobile
+                        maxZoom: isMobile ? 16 : 18,          // Lower max zoom for mobile
                         zoomControl: true,
-                        attributionControl: true,
-                        // VIEWPORT PERFORMANCE
-                        preferCanvas: false,                   // DOM daha hızlı marker'lar için
-                        renderer: L.canvas(),                 // Canvas renderer
+                        attributionControl: !isMobile,        // Hide attribution on mobile to save space
+                        // MOBILE PERFORMANCE OPTIMIZATIONS
+                        preferCanvas: isMobile,               // Canvas renderer for mobile
+                        renderer: isMobile ? L.canvas() : L.svg(), // Canvas for mobile, SVG for desktop
                         // LOADING OPTIMIZATION
-                        fadeAnimation: false,                 // Animasyon yok = hızlı
-                        zoomAnimation: true,                  // Sadece zoom animasyonu
-                        markerZoomAnimation: false            // Marker animasyon yok
-                    }).setView([lat, lng], 12) // Zoom artırıldı sokaklar için
+                        fadeAnimation: !isMobile,             // No fade animation on mobile
+                        zoomAnimation: !isLowMemoryDevice,    // No zoom animation on low memory
+                        markerZoomAnimation: false,           // Always disable marker animation
+                        // MOBILE TOUCH OPTIMIZATIONS
+                        tap: isMobile,                        // Enable tap for mobile
+                        tapTolerance: isMobile ? 20 : 15,     // Larger tap tolerance for mobile
+                        touchZoom: isMobile,                  // Enable touch zoom
+                        doubleClickZoom: !isMobile,           // Only enable double click zoom on desktop
+                        // MEMORY OPTIMIZATIONS
+                        trackResize: !isLowMemoryDevice,      // Don't track resize on low memory devices
+                        closePopupOnClick: isMobile           // Auto-close popups on mobile
+                    }
+                    
+                    // 🚀 LCP OPTIMIZATION: Much lower zoom for mobile to reduce tile count
+                    const initialZoom = isMobile ? 8 : 12  // Much lower zoom for mobile LCP
+                    mapInstance.current = L.map(mapRef.current, mapOptions).setView([lat, lng], initialZoom)
             
-                    const initialLayer = L.tileLayer(tileProviders.street.url, {
-                        attribution: tileProviders.street.attribution,
+                    // 🚀 MOBILE OPTIMIZATION: Adjust tile layer based on device capability
+                    const tileOptions = {
+                        attribution: isMobile ? '' : tileProviders.street.attribution, // Remove attribution on mobile
                         noWrap: true,
-                        bounds: [[-90, -180], [90, 180]],     // Tile sınırları
-                        // 🚀 VIEWPORT-ONLY LOADING OPTIMIZATION
-                        maxZoom: 18,                          // Tile max zoom sınırı sokaklar için
-                        tileSize: 256,                        // Standard tile boyutu
-                        keepBuffer: 1,                        // Minimal buffer (default: 2)
-                        updateWhenZooming: false,             // Zoom sırasında update yok
-                        updateWhenIdle: true,                 // Sadece durduğunda update
-                        // NETWORK OPTIMIZATION  
-                        crossOrigin: true,                    // CORS optimization
-                        // CACHE OPTIMIZATION
-                        detectRetina: false                   // Retina detection off = faster
+                        bounds: [[-90, -180], [90, 180]],
+                        maxZoom: isMobile ? 16 : 18,          // Lower max zoom for mobile
+                        tileSize: 256,
+                        keepBuffer: isLowMemoryDevice ? 0 : 1, // No buffer on low memory devices
+                        updateWhenZooming: !isMobile,         // Don't update while zooming on mobile
+                        updateWhenIdle: true,
+                        crossOrigin: 'anonymous',
+                        detectRetina: !isMobile,              // No retina detection on mobile
+                        className: isMobile ? 'mobile-optimized-tiles' : 'lcp-optimized-tiles',
+                        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+                    }
+                    
+                    // Create initial tile layer with CloudFlare proxy
+                    const initialLayer = L.tileLayer(tileProviders.street.url, {
+                        ...tileOptions,
+                        attribution: isMobile ? '' : tileProviders.street.attribution
                     }).addTo(mapInstance.current)
+                    
+                    // 🚀 Apply Leaflet optimization
+                    optimizeLeafletMap(mapInstance.current)
+                    
                     setTileLayer(initialLayer)
 
                     circleRef.current = L.circle([lat, lng], {
@@ -204,9 +211,41 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
                         }
                     }, 100)
                     
+                    // Setup tile performance monitoring
+                    const setupTileStatsMonitoring = () => {
+                        const updateStats = async () => {
+                            try {
+                                const stats = await getTileOptimizerStats()
+                                setTileOptimizerStats(stats)
+                                
+                                // Log performance metrics periodically
+                                if (stats?.performance) {
+                                    console.log('📊 Tile Performance:', {
+                                        avgLoadTime: `${stats.performance.averageLoadTime?.toFixed(1) || 0}ms`,
+                                        cacheHitRate: `${stats.performance.cacheHitRate?.toFixed(1) || 0}%`,
+                                        memoryUsage: stats.memory?.estimatedMemoryUsage?.total || '0 MB'
+                                    })
+                                }
+                            } catch (error) {
+                                console.warn('⚠️ Failed to get tile optimizer stats:', error)
+                            }
+                        }
+                        
+                        // Update stats every 30 seconds
+                        const statsInterval = setInterval(updateStats, 30000)
+                        
+                        // Initial stats update
+                        setTimeout(updateStats, 5000)
+                        
+                        return () => clearInterval(statsInterval)
+                    }
+                    
+                    const cleanupTileStats = setupTileStatsMonitoring()
+                    
                     // Cleanup function
                     return () => {
                         window.removeEventListener('resize', handleResize)
+                        if (cleanupTileStats) cleanupTileStats()
                     }
                 } catch (error) {
                     console.warn('Map initialization error:', error)
@@ -250,9 +289,9 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
         return () => window.removeEventListener('force-marker-refresh', handleForceRefresh)
     }, [])
     
-    // Filtrelenmiş data kullan (App.jsx'ten gelen processedData)
+    // Marker rendering
     useEffect(() => {
-        console.log('🗺️ MapComponent: Data effect triggered')
+        console.log('🗺️ MapComponent: Marker rendering triggered')
         console.log('📍 Data length:', data?.length)
         console.log('📍 User location:', userLocation)
         console.log('📍 Cluster group exists:', !!clusterGroupRef.current)
@@ -354,7 +393,7 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
             
             clusterGroupRef.current.addLayer(leafletMarker)
         })
-    }, [data, isSubscribed, forceRefresh])
+    }, [data, isSubscribed, forceRefresh, userLocation])
 
     useEffect(() => {
         if (selectedLocation && mapInstance.current) {
@@ -384,11 +423,29 @@ function MapComponent({ data, selectedLocation, isSubscribed, userLocation, onPr
                 >
                     {t('buttons.location')}
                 </button>
+                {/* Advanced Tile Layer Controls */}
                 <div className="bg-white rounded-lg shadow-lg flex">
-                     <button onClick={() => changeMapLayer('street')} className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-l-lg transition-colors">{t('map.street')}</button>
-                     <button onClick={() => changeMapLayer('satellite')} className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-r-lg border-l transition-colors">{t('map.satellite')}</button>
+                     <button onClick={() => changeMapLayer('street')} className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-l-lg transition-colors">
+                        🗺️ {t('map.street')}
+                     </button>
+                     <button onClick={() => changeMapLayer('satellite')} className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-r-lg border-l transition-colors">
+                        🛰️ {t('map.satellite')}
+                     </button>
                 </div>
+                
+                {/* Tile Performance Stats (Development mode) */}
+                {import.meta.env.DEV && tileOptimizerStats && (
+                    <div className="bg-black bg-opacity-80 text-white text-xs p-2 rounded-lg max-w-48">
+                        <div className="font-semibold mb-1">🚀 Tile Stats</div>
+                        <div>Cache: {tileOptimizerStats.memory?.preloadedTiles || 0} tiles</div>
+                        <div>Hit Rate: {tileOptimizerStats.performance?.cacheHitRate?.toFixed(1) || 0}%</div>
+                        <div>Avg Load: {tileOptimizerStats.performance?.averageLoadTime?.toFixed(0) || 0}ms</div>
+                        <div>Memory: {tileOptimizerStats.memory?.estimatedMemoryUsage?.total || '0 MB'}</div>
+                        <div className="text-green-400">SW v{tileOptimizerStats.serviceWorker?.version || '1.0'}</div>
+                    </div>
+                )}
             </div>
+            
         </div>
     )
 }

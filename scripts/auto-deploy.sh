@@ -2,8 +2,8 @@
 
 echo "🚀 Auto-deploying to teppek.com domains..."
 
-# Deploy to Vercel
-DEPLOYMENT_URL=$(vercel --prod --yes 2>/dev/null | tail -1)
+# Deploy to Vercel (--yes parametresi kaldırıldı)
+DEPLOYMENT_URL=$(vercel --prod 2>/dev/null | tail -1)
 
 if [ ! -z "$DEPLOYMENT_URL" ]; then
     echo "📦 Deployment URL: $DEPLOYMENT_URL"

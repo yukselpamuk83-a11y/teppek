@@ -34,7 +34,10 @@ export function ModernHeader({ currentView = 'map', onViewChange }) {
             {/* Brand Name and Tagline */}
             <div className="flex items-center space-x-2">
               <h1 className="text-xl font-bold text-gray-900 leading-none">Teppek</h1>
-              <p className="text-xs text-gray-500 leading-none">{t('brand.tagline')}</p>
+              {/* 🚀 MOBILE LCP OPTIMIZATION: Hide tagline on mobile to reduce LCP */}
+              <p className="text-xs text-gray-500 leading-none hidden sm:block">
+                Global Job Search Platform
+              </p>
             </div>
           </div>
         </div>

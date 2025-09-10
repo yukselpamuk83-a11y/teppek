@@ -13,9 +13,28 @@ import { getDistance } from './utils/distance'
 import NotificationInbox from './components/ui/inbox/NotificationInbox'
 import logger from './utils/logger.js'
 
-// Lazy loaded components - performans için
+// 🚀 PERFORMANCE: Aggressive lazy loading with priority
 const AuthCallback = lazy(() => import('./components/auth/AuthCallback'))
-const MapComponent = lazy(() => import('./components/MapComponent'))
+
+// 🚀 MOBILE LCP OPTIMIZATION: Different loading strategies for mobile/desktop
+const MapComponent = lazy(() => {
+  // Add delay for mobile to prioritize LCP
+  const isMobileDevice = window.innerWidth < 768
+  const delay = isMobileDevice ? 100 : 0
+  
+  return new Promise(resolve => {
+    setTimeout(() => {
+      import('./components/MapComponent').then(module => {
+        // Preload Leaflet dependencies when map component loads (desktop only)
+        if (!isMobileDevice) {
+          import('leaflet')
+          import('leaflet.markercluster')
+        }
+        resolve(module)
+      })
+    }, delay)
+  })
+})
 const FilterComponent = lazy(() => import('./components/FilterComponent'))
 const ListComponent = lazy(() => import('./components/ListComponent'))
 const PaginationComponent = lazy(() => import('./components/PaginationComponent'))
@@ -39,33 +58,58 @@ function ModernAppContent() {
   const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [currentView, setCurrentView] = useState('map') // 'map' or 'dashboard'
   
+  // 🚀 MOBILE OPTIMIZATION: Limit data for mobile devices
+  const [isLowMemoryDevice, setIsLowMemoryDevice] = useState(false)
+  const [mobileDataLimit, setMobileDataLimit] = useState(1000) // Default mobile limit
+  
+  
   // Realtime data disabled to reduce database load
   // const realtimeData = useRealtimeData(userLocation)
   const realtimeData = [] // Empty array for now
   
-  const itemsPerPage = 100 // İlk 100 ilan performans için
+  // 🚀 MOBILE OPTIMIZATION: Reduce items per page on mobile
+  const itemsPerPage = isMobile ? 20 : 100
 
   // Check for auth callback
   const isAuthCallback = window.location.pathname === '/auth/callback'
 
-  // Get user location
+  // Set user location and detect device capabilities
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const location = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        }
-        setUserLocation(location)
-        logger.debug('✅ Konum alındı:', location)
-      },
-      (error) => {
-        logger.warn("Konum alınamadı:", error)
-        const fallbackLocation = { lat: 41.01, lng: 28.97 } // Istanbul
-        setUserLocation(fallbackLocation)
+    const fallbackLocation = { lat: 41.01, lng: 28.97 } // Istanbul
+    setUserLocation(fallbackLocation)
+    logger.debug('✅ Fallback location set:', fallbackLocation)
+    
+    // 🚀 MOBILE OPTIMIZATION: Device capability detection
+    const detectDeviceCapabilities = () => {
+      const isMobileDevice = window.innerWidth < 768
+      const deviceMemory = navigator.deviceMemory || 4 // Default 4GB if not available
+      const connection = navigator.connection
+      
+      // Low memory device detection
+      const lowMemory = deviceMemory < 4 || 
+                       (connection && (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g'))
+      
+      setIsLowMemoryDevice(lowMemory)
+      
+      // Set mobile data limits based on device capability
+      if (isMobileDevice) {
+        const limit = lowMemory ? 300 : 1000 // Ultra-low for weak devices
+        setMobileDataLimit(limit)
+        logger.info(`📱 Mobile device detected: Memory=${deviceMemory}GB, Limit=${limit}`)
       }
-    )
-  }, [])
+    }
+    
+    detectDeviceCapabilities()
+    
+    // 🚀 CONDITIONAL TILE PRELOADING: Only for desktop or high-end mobile
+    if (!isMobile || !isLowMemoryDevice) {
+      import('./utils/mapTileOptimizer').then(({ preloadCriticalMapTiles }) => {
+        preloadCriticalMapTiles(fallbackLocation.lat, fallbackLocation.lng, 12)
+          .then(() => logger.debug('✅ Critical tiles preloaded'))
+          .catch(err => logger.warn('⚠️ Tile preloading failed:', err))
+      })
+    }
+  }, [isMobile, isLowMemoryDevice])
 
   // Responsive handling
   useEffect(() => {
@@ -75,6 +119,7 @@ function ModernAppContent() {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
 
   // Cached data fetching function - DÜZELTME: setData çağrısını kaldır, sadece data return et
   const fetchJobsData = useCallback(async () => {
@@ -128,33 +173,27 @@ function ModernAppContent() {
                 feature.geometry.coordinates[0]
               ) : 0
             }))
-            // Filter kaldırıldı - tüm veriler gelsin
-            
-            // DÜZELTME: setData kaldırıldı, sadece data return ediyoruz
-            measureDataLoad(formattedData.length)
-            analytics && analytics.track && analytics.track('data_loaded', { 
-              count: formattedData.length,
-              jobs: formattedData.filter(item => item.type === 'job').length,
-              cvs: formattedData.filter(item => item.type === 'cv').length,
-              source: 'static_geojson' 
+            // 🚀 MOBILE OPTIMIZATION: Keep all data for map, only limit mobile list display
+            // Priority sorting for better mobile UX: jobs first, then by distance
+            const sortedData = [...formattedData].sort((a, b) => {
+              // Jobs have priority over CVs
+              if (a.type === 'job' && b.type !== 'job') return -1
+              if (a.type !== 'job' && b.type === 'job') return 1
+              // Then sort by distance if user location available
+              return (a.distance || 0) - (b.distance || 0)
             })
             
-            logger.info(`✅ Modern App: ${formattedData.length} kayıt yüklendi (${formattedData.filter(item => item.type === 'job').length} iş ilanı, ${formattedData.filter(item => item.type === 'cv').length} CV)`)
+            measureDataLoad(sortedData.length)
+            analytics && analytics.track && analytics.track('data_loaded', { 
+              count: sortedData.length,
+              jobs: sortedData.filter(item => item.type === 'job').length,
+              cvs: sortedData.filter(item => item.type === 'cv').length,
+              source: 'static_geojson'
+            })
             
-            // DEBUG: İlk kayıtın field'larını kontrol et
-            if (formattedData.length > 0) {
-              logger.debug('🔍 Frontend\'e gelen field\'lar:', Object.keys(formattedData[0]))
-              logger.debug('🔍 İlk kayıt örneği:', {
-                title: formattedData[0].title,
-                source: formattedData[0].source,
-                city: formattedData[0].city,
-                country: formattedData[0].country,
-                address: formattedData[0].address,
-                popup_html: formattedData[0].popup_html ? 'VAR' : 'YOK'
-              })
-            }
+            logger.info(`✅ Modern App: ${sortedData.length} kayıt yüklendi (${sortedData.filter(item => item.type === 'job').length} iş ilanı, ${sortedData.filter(item => item.type === 'cv').length} CV)`)
             
-            return formattedData
+            return sortedData
           }
         } catch (staticError) {
           logger.error('Static GeoJSON yükleme hatası:', staticError)
@@ -390,7 +429,22 @@ function ModernAppContent() {
                 </button>
               </div>
               
-              <ComponentErrorBoundary componentName="Filter">
+              <ComponentErrorBoundary 
+                componentName="Filter"
+                fallback={(error, retry) => (
+                  <div className="h-16 flex items-center justify-center bg-gray-50 rounded">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-600 mb-2">Filtre yüklenemedi</p>
+                      <button 
+                        onClick={retry}
+                        className="text-xs bg-blue-600 text-white px-3 py-1 rounded"
+                      >
+                        Tekrar Dene
+                      </button>
+                    </div>
+                  </div>
+                )}
+              >
                 <Suspense fallback={<div className="h-16 animate-pulse bg-gray-200 rounded"></div>}>
                   <FilterComponent 
                     onFilterChange={handleFilterChange}
@@ -402,10 +456,26 @@ function ModernAppContent() {
               <div className="flex-1 mt-4 overflow-y-auto">
                 <div className="mb-2 text-xs text-gray-600">
                   {t('list.foundResults', { count: allFilteredData.length })}
+                  <span className="ml-2">• Sayfa {currentPage}/{totalPages}</span>
                 </div>
-                <ComponentErrorBoundary componentName="İş Listesi">
+                <ComponentErrorBoundary 
+                  componentName="İş Listesi"
+                  fallback={(error, retry) => (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 mb-3">Liste yüklenemedi</p>
+                        <button 
+                          onClick={retry}
+                          className="bg-blue-600 text-white px-4 py-2 rounded text-sm"
+                        >
+                          Tekrar Dene
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                >
                   <ListComponent 
-                    data={paginatedData.slice(0, 50)} 
+                    data={paginatedData} 
                     onRowClick={(location) => {
                       handleRowClick(location);
                       setShowMobileSearch(false); // Close search when item selected
@@ -415,6 +485,29 @@ function ModernAppContent() {
                     userLocation={userLocation} 
                   />
                 </ComponentErrorBoundary>
+                
+                {/* Mobile Pagination */}
+                {totalPages > 1 && (
+                  <div className="mt-4 flex justify-center space-x-2">
+                    <button 
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded disabled:opacity-50"
+                    >
+                      Önceki
+                    </button>
+                    <span className="px-3 py-1 text-xs text-gray-600">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <button 
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded disabled:opacity-50"
+                    >
+                      Sonraki
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}

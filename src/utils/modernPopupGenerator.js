@@ -130,17 +130,12 @@ function createAdzunaJobPopup(item) {
         </div>
       </div>
       
-      ${(item.salary_min || item.salary_max) ? `
+      ${(item.salary_min && item.salary_max) ? `
         <div class="popup-salary adzuna-salary">
           ${svgIcons.dollar}
           ${item.currency || 'USD'} ${item.salary_min ? Math.round(item.salary_min).toLocaleString() : '?'} - ${item.salary_max ? Math.round(item.salary_max).toLocaleString() : '?'}
         </div>
-      ` : `
-        <div class="popup-salary adzuna-salary" style="background: #fee2e2; color: #dc2626;">
-          ${svgIcons.dollar}
-          Maaş bilgisi API'den yükleniyor...
-        </div>
-      `}
+      ` : ''}
       
       <div class="popup-details">
         <div class="popup-company">
@@ -195,17 +190,12 @@ function createManualJobPopup(item) {
         </div>
       </div>
       
-      ${(item.salary_min || item.salary_max) ? `
+      ${(item.salary_min && item.salary_max) ? `
         <div class="popup-salary manual-salary">
           ${svgIcons.moneyBillWave}
           ${item.currency || 'TRY'} ${item.salary_min ? Math.round(item.salary_min).toLocaleString() : '?'} - ${item.salary_max ? Math.round(item.salary_max).toLocaleString() : '?'}
         </div>
-      ` : `
-        <div class="popup-salary manual-salary" style="background: #fef3c7; color: #d97706;">
-          ${svgIcons.moneyBillWave}
-          Maaş bilgisi API'den yükleniyor...
-        </div>
-      `}
+      ` : ''}
       
       <div class="popup-details">
         <div class="popup-company">
