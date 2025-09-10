@@ -16,25 +16,8 @@ import logger from './utils/logger.js'
 // 🚀 PERFORMANCE: Aggressive lazy loading with priority
 const AuthCallback = lazy(() => import('./components/auth/AuthCallback'))
 
-// 🚀 MOBILE LCP OPTIMIZATION: Different loading strategies for mobile/desktop
-const MapComponent = lazy(() => {
-  // Add delay for mobile to prioritize LCP
-  const isMobileDevice = window.innerWidth < 768
-  const delay = isMobileDevice ? 100 : 0
-  
-  return new Promise(resolve => {
-    setTimeout(() => {
-      import('./components/MapComponent').then(module => {
-        // Preload Leaflet dependencies when map component loads (desktop only)
-        if (!isMobileDevice) {
-          import('leaflet')
-          import('leaflet.markercluster')
-        }
-        resolve(module)
-      })
-    }, delay)
-  })
-})
+// 🚀 SIMPLIFIED: Fast loading without delays
+const MapComponent = lazy(() => import('./components/MapComponent'))
 const FilterComponent = lazy(() => import('./components/FilterComponent'))
 const ListComponent = lazy(() => import('./components/ListComponent'))
 const PaginationComponent = lazy(() => import('./components/PaginationComponent'))
@@ -103,11 +86,8 @@ function ModernAppContent() {
     
     // 🚀 CONDITIONAL TILE PRELOADING: Only for desktop or high-end mobile
     if (!isMobile || !isLowMemoryDevice) {
-      import('./utils/mapTileOptimizer').then(({ preloadCriticalMapTiles }) => {
-        preloadCriticalMapTiles(fallbackLocation.lat, fallbackLocation.lng, 12)
-          .then(() => logger.debug('✅ Critical tiles preloaded'))
-          .catch(err => logger.warn('⚠️ Tile preloading failed:', err))
-      })
+      // Skip tile preloading for better startup performance
+      logger.debug('🚀 Skipping tile preloading for faster startup')
     }
   }, [isMobile, isLowMemoryDevice])
 
