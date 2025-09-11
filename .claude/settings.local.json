@@ -1,13 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir C:UsersseherDesktopgeoo.claude)"
+      "Bash(echo $VITE_SUPABASE_URL)",
+      "Bash(printenv)",
+      "Bash(rm:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
-    "ask": [],
-    "additionalDirectories": [
-      "C:\\Users\\seher",
-      "C:\\Users\\seher\\Desktop"
-    ]
+    "ask": []
   }
 }
